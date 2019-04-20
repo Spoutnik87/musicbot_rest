@@ -21,12 +21,12 @@ import java.util.Set;
 @Table(name = "Permission")
 public class Permission extends AuditModel implements Serializable {
 
-    public static Permission CREATE_MEDIA = new Permission("Créer un media", "CREATE_MEDIA");
-    public static Permission DELETE_MEDIA = new Permission("Supprimer un media", "DELETE_MEDIA");
-    public static Permission READ_MEDIA = new Permission("Voir un media", "READ_MEDIA");
-    public static Permission CHANGE_MODE = new Permission("Changer le mode", "CHANGE_MODE");
-    public static Permission PLAY_MEDIA = new Permission("Jouer un media", "PLAY_MEDIA");
-    public static Permission STOP_MEDIA = new Permission("Arreter un media", "STOP_MEDIA");
+    public static final Permission CREATE_MEDIA = new Permission("Créer un media", "CREATE_MEDIA");
+    public static final Permission DELETE_MEDIA = new Permission("Supprimer un media", "DELETE_MEDIA");
+    public static final Permission READ_MEDIA = new Permission("Voir un media", "READ_MEDIA");
+    public static final Permission CHANGE_MODE = new Permission("Changer le mode", "CHANGE_MODE");
+    public static final Permission PLAY_MEDIA = new Permission("Jouer un media", "PLAY_MEDIA");
+    public static final Permission STOP_MEDIA = new Permission("Arreter un media", "STOP_MEDIA");
 
     @JsonView(Views.Public.class)
     @NonNull

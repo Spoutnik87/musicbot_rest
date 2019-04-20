@@ -1,6 +1,7 @@
 package fr.spoutnik87.musicbot_rest.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonView;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -47,4 +48,11 @@ public class User extends AuditModel implements Serializable {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     @JsonBackReference
     private Set<UserGroup> userGroupSet;
+
+    @JsonView(Views.Public.class)
+    @NonNull
+    @ManyToOne
+    @JoinColumn(name = "role_id")
+    @JsonManagedReference
+    private Role role;
 }

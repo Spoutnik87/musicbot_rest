@@ -1,7 +1,6 @@
 package fr.spoutnik87.musicbot_rest.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonView;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,8 +15,11 @@ import java.util.Set;
 @RequiredArgsConstructor
 @Data
 @Entity
-@Table(name = "Server")
-public class Server extends AuditModel implements Serializable {
+@Table(name = "Role")
+public class Role extends AuditModel implements Serializable {
+
+    public static final Role ADMIN = new Role("ADMIN", 1);
+    public static final Role USER = new Role("USER", 2);
 
     @JsonView(Views.Public.class)
     @NonNull
@@ -25,8 +27,11 @@ public class Server extends AuditModel implements Serializable {
     private String name;
 
     @JsonView(Views.Public.class)
-    @OneToOne(mappedBy = "server", cascade = CascadeType.ALL)
-    @JoinColumn(name = "bot_id")
+    @NonNull
+    private int lvl;
+
+    @JsonView(Views.Public.class)
+    @OneToMany(mappedBy = "role", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonBackReference
-    private Bot bot;
+    private Set<User> userSet;
 }

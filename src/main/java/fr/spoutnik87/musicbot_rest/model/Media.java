@@ -38,8 +38,4 @@ public class Media extends AuditModel implements Serializable {
     @JsonManagedReference
     private Category category;
 
-    @JsonView(Views.Public.class)
-    @OneToMany(mappedBy = "media", cascade = CascadeType.ALL)
-    @JsonBackReference
-    private Set<MediaGroup> mediaGroupSet;
 }
