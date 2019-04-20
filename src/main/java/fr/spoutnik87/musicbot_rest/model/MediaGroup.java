@@ -7,24 +7,30 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
-import javax.persistence.*;
+import javax.persistence.Entity;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 import java.io.Serializable;
 
 @NoArgsConstructor
 @RequiredArgsConstructor
 @Data
 @Entity
-@Table(name = "Bot")
-public class Bot extends AuditModel implements Serializable {
+@Table(name = "MediaGroup")
+public class MediaGroup extends AuditModel implements Serializable {
 
     @JsonView(Views.Public.class)
     @NonNull
-    @Column(nullable = false)
-    private String name;
+    @ManyToOne
+    @JoinColumn(name = "media_id")
+    @JsonManagedReference
+    private Media media;
 
     @JsonView(Views.Public.class)
-    @OneToOne()
-    @JoinColumn(name = "server_id")
+    @NonNull
+    @ManyToOne
+    @JoinColumn(name = "group_id")
     @JsonManagedReference
-    private Server server;
+    private Group group;
 }

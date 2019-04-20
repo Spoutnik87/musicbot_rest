@@ -7,17 +7,15 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.OneToMany;
+import javax.persistence.*;
 import java.io.Serializable;
-import java.util.List;
+import java.util.Set;
 
 @NoArgsConstructor
 @RequiredArgsConstructor
 @Data
 @Entity
+@Table(name = "MediaType")
 public class MediaType extends AuditModel implements Serializable {
 
     @JsonView(Views.Public.class)
@@ -28,5 +26,5 @@ public class MediaType extends AuditModel implements Serializable {
     @JsonView(Views.Public.class)
     @OneToMany(mappedBy = "mediaType", cascade = CascadeType.ALL)
     @JsonBackReference
-    private List<Media> mediaList;
+    private Set<Media> mediaSet;
 }

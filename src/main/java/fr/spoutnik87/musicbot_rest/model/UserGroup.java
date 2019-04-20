@@ -16,27 +16,27 @@ import java.util.Set;
 @RequiredArgsConstructor
 @Data
 @Entity
-@Table(name = "GroupTable")
-public class Group extends AuditModel implements Serializable {
+@Table(name = "UserGroup")
+public class UserGroup extends AuditModel implements Serializable {
 
     @JsonView(Views.Public.class)
     @NonNull
-    @Column(nullable = false)
-    private String name;
-
-    @JsonView(Views.Public.class)
     @ManyToOne
-    @JoinColumn(name = "server_id")
+    @JoinColumn(name = "user_id")
     @JsonManagedReference
-    private Server server;
+    private User user;
 
     @JsonView(Views.Public.class)
-    @OneToMany(mappedBy = "group", cascade = CascadeType.ALL)
-    @JsonBackReference
-    private Set<UserGroup> userGroupSet;
+    @NonNull
+    @ManyToOne
+    @JoinColumn(name = "group_id")
+    @JsonManagedReference
+    private Group group;
 
     @JsonView(Views.Public.class)
-    @OneToMany(mappedBy = "group", cascade = CascadeType.ALL)
+    @NonNull
+    @ManyToMany(cascade = CascadeType.ALL)
+    @JoinTable(name = "usergrouppermission", joinColumns = @JoinColumn(name = "usergroup_id", referencedColumnName = "id"), inverseJoinColumns = @JoinColumn(name = "permission_id", referencedColumnName = "id"))
     @JsonBackReference
-    private Set<MediaGroup> mediaGroupSet;
+    private Set<Permission> permissionSet;
 }

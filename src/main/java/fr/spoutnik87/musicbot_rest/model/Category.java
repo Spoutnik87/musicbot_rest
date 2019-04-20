@@ -7,17 +7,16 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.OneToMany;
-import java.util.List;
+import javax.persistence.*;
+import java.io.Serializable;
+import java.util.Set;
 
 @NoArgsConstructor
 @RequiredArgsConstructor
 @Data
 @Entity
-public class Category {
+@Table(name = "Category")
+public class Category extends AuditModel implements Serializable {
 
     @JsonView(Views.Public.class)
     @NonNull
@@ -27,5 +26,5 @@ public class Category {
     @JsonView(Views.Public.class)
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL)
     @JsonBackReference
-    private List<Category> categories;
+    private Set<Media> mediaSet;
 }

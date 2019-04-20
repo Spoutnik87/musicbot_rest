@@ -1,19 +1,21 @@
 package fr.spoutnik87.musicbot_rest.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonView;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
+import javax.persistence.*;
 import java.io.Serializable;
+import java.util.Set;
 
 @NoArgsConstructor
 @RequiredArgsConstructor
 @Data
 @Entity
+@Table(name = "UserTable")
 public class User extends AuditModel implements Serializable {
 
     @JsonView(Views.Public.class)
@@ -40,4 +42,9 @@ public class User extends AuditModel implements Serializable {
     @NonNull
     @Column(nullable = false)
     private String password;
+
+    @JsonView(Views.Public.class)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonBackReference
+    private Set<UserGroup> userGroupSet;
 }

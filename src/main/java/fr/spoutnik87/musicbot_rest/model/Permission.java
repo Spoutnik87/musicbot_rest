@@ -1,5 +1,6 @@
 package fr.spoutnik87.musicbot_rest.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonView;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -8,12 +9,16 @@ import lombok.RequiredArgsConstructor;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.ManyToMany;
+import javax.persistence.Table;
 import java.io.Serializable;
+import java.util.Set;
 
 @NoArgsConstructor
 @RequiredArgsConstructor
 @Data
 @Entity
+@Table(name = "Permission")
 public class Permission extends AuditModel implements Serializable {
 
     public static Permission CREATE_MEDIA = new Permission("Créer un media", "CREATE_MEDIA");
@@ -32,4 +37,9 @@ public class Permission extends AuditModel implements Serializable {
     @NonNull
     @Column(nullable = false)
     private String value;
+
+    @JsonView(Views.Public.class)
+    @ManyToMany(mappedBy = "permissionSet")
+    @JsonManagedReference
+    private Set<UserGroup> userGroupSet;
 }
