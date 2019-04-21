@@ -12,12 +12,11 @@ import org.springframework.stereotype.Component;
 @Order(2)
 public class RoleLoader implements ApplicationListener<ContextRefreshedEvent> {
 
-    @Autowired
-    private RoleRepository roleRepository;
+  @Autowired private RoleRepository roleRepository;
 
-    @Override
-    public void onApplicationEvent(ContextRefreshedEvent contextRefreshedEvent) {
-        this.roleRepository.save(Role.ADMIN);
-        this.roleRepository.save(Role.USER);
-    }
+  @Override
+  public void onApplicationEvent(ContextRefreshedEvent contextRefreshedEvent) {
+    this.roleRepository.save(Role.ADMIN);
+    this.roleRepository.save(Role.USER);
+  }
 }

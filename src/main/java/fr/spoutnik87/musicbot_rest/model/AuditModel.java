@@ -12,8 +12,8 @@ import java.io.Serializable;
 @Data
 public abstract class AuditModel implements Serializable {
 
-    @JsonView
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+  @JsonView
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private long id;
 }

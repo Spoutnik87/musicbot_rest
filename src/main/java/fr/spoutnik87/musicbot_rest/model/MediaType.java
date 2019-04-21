@@ -18,13 +18,13 @@ import java.util.Set;
 @Table(name = "MediaType")
 public class MediaType extends AuditModel implements Serializable {
 
-    @JsonView(Views.Public.class)
-    @NonNull
-    @Column(nullable = false)
-    private String name;
+  @JsonView(Views.Public.class)
+  @NonNull
+  @Column(nullable = false)
+  private String name;
 
-    @JsonView(Views.Public.class)
-    @OneToMany(mappedBy = "mediaType", cascade = CascadeType.ALL)
-    @JsonBackReference
-    private Set<Media> mediaSet;
+  @JsonView(Views.Public.class)
+  @OneToMany(mappedBy = "mediaType", cascade = CascadeType.ALL)
+  @JsonBackReference
+  private Set<Media> mediaSet;
 }

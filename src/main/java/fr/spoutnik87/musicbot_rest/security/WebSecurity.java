@@ -15,73 +15,85 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.ArrayList;
 import java.util.List;
 
-import static fr.spoutnik87.musicbot_rest.security.SecurityConstants.SIGN_UP_URL;
-
 @EnableWebSecurity
 public class WebSecurity extends WebSecurityConfigurerAdapter {
 
-    private UserDetailsServiceImpl userDetailsService;
-    private BCryptPasswordEncoder bCryptPasswordEncoder;
+  private UserDetailsServiceImpl userDetailsService;
+  private BCryptPasswordEncoder bCryptPasswordEncoder;
+  private SecurityConfiguration securityConfiguration;
 
-    private static final String[] AUTH_WHITELIST = {
-            // -- swagger ui
-            "/swagger-resources/**",
-            "/swagger-ui.html",
-            "/v2/api-docs",
-            "/webjars/**"
-    };
+  private static final String[] AUTH_WHITELIST = {
+    // -- swagger ui
+    "/swagger-resources/**", "/swagger-ui.html", "/v2/api-docs", "/webjars/**"
+  };
 
-    public WebSecurity(UserDetailsServiceImpl userDetailsService, BCryptPasswordEncoder bCryptPasswordEncoder) {
-        this.userDetailsService = userDetailsService;
-        this.bCryptPasswordEncoder = bCryptPasswordEncoder;
-    }
+  public WebSecurity(
+      UserDetailsServiceImpl userDetailsService,
+      BCryptPasswordEncoder bCryptPasswordEncoder,
+      SecurityConfiguration securityConfiguration) {
+    this.userDetailsService = userDetailsService;
+    this.bCryptPasswordEncoder = bCryptPasswordEncoder;
+    this.securityConfiguration = securityConfiguration;
+  }
 
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-        http.cors().and().csrf().disable().authorizeRequests()
-                .antMatchers(HttpMethod.POST, SIGN_UP_URL).permitAll()
-                .antMatchers(AUTH_WHITELIST).permitAll()
-                .anyRequest().authenticated()
-                .and()
-                .addFilter(new JWTAuthenticationFilter(userDetailsService, authenticationManager()))
-                .addFilter(new JWTAuthorizationFilter(userDetailsService, authenticationManager()))
-                // this disables session creation on Spring Security
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-    }
+  @Override
+  protected void configure(HttpSecurity http) throws Exception {
+    http.cors()
+        .and()
+        .csrf()
+        .disable()
+        .authorizeRequests()
+        .antMatchers(HttpMethod.POST, securityConfiguration.getSignUpUrl())
+        .permitAll()
+        .antMatchers(AUTH_WHITELIST)
+        .permitAll()
+        .anyRequest()
+        .authenticated()
+        .and()
+        .addFilter(
+            new JWTAuthenticationFilter(
+                userDetailsService, authenticationManager(), securityConfiguration))
+        .addFilter(
+            new JWTAuthorizationFilter(
+                userDetailsService, authenticationManager(), securityConfiguration))
+        // this disables session creation on Spring Security
+        .sessionManagement()
+        .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+  }
 
-    @Override
-    public void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService(userDetailsService).passwordEncoder(bCryptPasswordEncoder);
-    }
+  @Override
+  public void configure(AuthenticationManagerBuilder auth) throws Exception {
+    auth.userDetailsService(userDetailsService).passwordEncoder(bCryptPasswordEncoder);
+  }
 
-    @Bean
-    CorsConfigurationSource corsConfigurationSource() {
-        final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        final CorsConfiguration configuration = new CorsConfiguration();
-        List<String> allowedOrigins = new ArrayList<>();
-        allowedOrigins.add("*");
-        List<String> allowedMethods = new ArrayList<>();
-        allowedMethods.add("HEAD");
-        allowedMethods.add("GET");
-        allowedMethods.add("POST");
-        allowedMethods.add("PUT");
-        allowedMethods.add("DELETE");
-        allowedMethods.add("PATCH");
-        allowedMethods.add("OPTIONS");
-        List<String> allowedHeaders = new ArrayList<>();
-        allowedHeaders.add("*");
-        List<String> exposedHeaders = new ArrayList<>();
-        exposedHeaders.add("X-Auth-Token");
-        exposedHeaders.add("Authorization");
-        exposedHeaders.add("Access-Control-Allow-Origin");
-        exposedHeaders.add("Access-Control-Allow-Credentials");
+  @Bean
+  CorsConfigurationSource corsConfigurationSource() {
+    final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    final CorsConfiguration configuration = new CorsConfiguration();
+    List<String> allowedOrigins = new ArrayList<>();
+    allowedOrigins.add("*");
+    List<String> allowedMethods = new ArrayList<>();
+    allowedMethods.add("HEAD");
+    allowedMethods.add("GET");
+    allowedMethods.add("POST");
+    allowedMethods.add("PUT");
+    allowedMethods.add("DELETE");
+    allowedMethods.add("PATCH");
+    allowedMethods.add("OPTIONS");
+    List<String> allowedHeaders = new ArrayList<>();
+    allowedHeaders.add("*");
+    List<String> exposedHeaders = new ArrayList<>();
+    exposedHeaders.add("X-Auth-Token");
+    exposedHeaders.add("Authorization");
+    exposedHeaders.add("Access-Control-Allow-Origin");
+    exposedHeaders.add("Access-Control-Allow-Credentials");
 
-        configuration.setAllowedOrigins(allowedOrigins);
-        configuration.setAllowedMethods(allowedMethods);
-        configuration.setAllowCredentials(true);
-        configuration.setAllowedHeaders(allowedHeaders);
-        configuration.setExposedHeaders(exposedHeaders);
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
-    }
+    configuration.setAllowedOrigins(allowedOrigins);
+    configuration.setAllowedMethods(allowedMethods);
+    configuration.setAllowCredentials(true);
+    configuration.setAllowedHeaders(allowedHeaders);
+    configuration.setExposedHeaders(exposedHeaders);
+    source.registerCorsConfiguration("/**", configuration);
+    return source;
+  }
 }

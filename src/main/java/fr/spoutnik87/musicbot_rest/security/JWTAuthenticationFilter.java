@@ -18,54 +18,66 @@ import java.io.IOException;
 import java.util.Date;
 
 import static com.auth0.jwt.algorithms.Algorithm.HMAC512;
-import static fr.spoutnik87.musicbot_rest.security.SecurityConstants.*;
-
 
 public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
-    private UserDetailsServiceImpl userDetailsService;
-    private AuthenticationManager authenticationManager;
+  private UserDetailsServiceImpl userDetailsService;
+  private AuthenticationManager authenticationManager;
 
-    public JWTAuthenticationFilter(UserDetailsServiceImpl userDetailsService, AuthenticationManager authenticationManager) {
-        this.userDetailsService = userDetailsService;
-        this.authenticationManager = authenticationManager;
+  private SecurityConfiguration securityConfiguration;
+
+  public JWTAuthenticationFilter(
+      UserDetailsServiceImpl userDetailsService,
+      AuthenticationManager authenticationManager,
+      SecurityConfiguration securityConfiguration) {
+    this.userDetailsService = userDetailsService;
+    this.authenticationManager = authenticationManager;
+    this.securityConfiguration = securityConfiguration;
+  }
+
+  @Override
+  public Authentication attemptAuthentication(HttpServletRequest req, HttpServletResponse res)
+      throws AuthenticationException {
+    try {
+      fr.spoutnik87.musicbot_rest.security.User creds =
+          new ObjectMapper()
+              .readValue(req.getInputStream(), fr.spoutnik87.musicbot_rest.security.User.class);
+
+      return authenticationManager.authenticate(
+          new UsernamePasswordAuthenticationToken(
+              creds.getEmail(),
+              creds.getPassword(),
+              userDetailsService.loadUserByUsername(creds.getEmail()).getAuthorities()));
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
+  }
 
-    @Override
-    public Authentication attemptAuthentication(HttpServletRequest req, HttpServletResponse res) throws AuthenticationException {
-        try {
-            fr.spoutnik87.musicbot_rest.security.User creds = new ObjectMapper().readValue(req.getInputStream(), fr.spoutnik87.musicbot_rest.security.User.class);
-
-            return authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(creds.getEmail(), creds.getPassword(), userDetailsService.loadUserByUsername(creds.getEmail()).getAuthorities()));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+  @Override
+  protected void successfulAuthentication(
+      HttpServletRequest req, HttpServletResponse res, FilterChain chain, Authentication auth) {
+    String token =
+        JWT.create()
+            .withSubject(((UserDetails) auth.getPrincipal()).getUsername())
+            .withExpiresAt(
+                new Date(
+                    System.currentTimeMillis() + this.securityConfiguration.getExpirationTime()))
+            .sign(HMAC512(this.securityConfiguration.getSecret().getBytes()));
+    res.addHeader("Access-Control-Expose-Headers", "Authorization");
+    res.addHeader(
+        this.securityConfiguration.getHeaderString(),
+        this.securityConfiguration.getTokenPrefix() + token);
+    res.setContentType("application/json");
+    res.setCharacterEncoding("UTF-8");
+    try {
+      ObjectMapper mapper = new ObjectMapper();
+      User u = ((UserDetails) auth.getPrincipal()).getUser();
+      mapper.disable(MapperFeature.DEFAULT_VIEW_INCLUSION);
+      String result = mapper.writerWithView(Views.Public.class).writeValueAsString(u);
+      res.getWriter().print(result);
+      res.getWriter().flush();
+    } catch (Exception e) {
+      e.printStackTrace();
     }
-
-    @Override
-    protected void successfulAuthentication(HttpServletRequest req,
-                                            HttpServletResponse res,
-                                            FilterChain chain,
-                                            Authentication auth) {
-        String token = JWT.create()
-                .withSubject(((UserDetails) auth.getPrincipal()).getUsername())
-                .withExpiresAt(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
-                .sign(HMAC512(SECRET.getBytes()));
-        res.addHeader("Access-Control-Expose-Headers", "Authorization");
-        res.addHeader(HEADER_STRING, TOKEN_PREFIX + token);
-        res.setContentType("application/json");
-        res.setCharacterEncoding("UTF-8");
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            User u = ((UserDetails) auth.getPrincipal()).getUser();
-            mapper.disable(MapperFeature.DEFAULT_VIEW_INCLUSION);
-            String result = mapper
-                    .writerWithView(Views.Private.class)
-                    .writeValueAsString(u);
-            res.getWriter().print(result);
-            res.getWriter().flush();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+  }
 }

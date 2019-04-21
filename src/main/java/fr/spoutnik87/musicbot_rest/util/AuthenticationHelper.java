@@ -7,17 +7,18 @@ import java.util.Collection;
 
 public class AuthenticationHelper {
 
-    public static boolean isAuthenticatedUserInRole(String role) {
-        Collection<? extends GrantedAuthority> l = SecurityContextHolder.getContext().getAuthentication().getAuthorities();
-        for (GrantedAuthority ga : l) {
-            if (ga.getAuthority().equals(role)) {
-                return true;
-            }
-        }
-        return false;
+  public static boolean isAuthenticatedUserInRole(String role) {
+    Collection<? extends GrantedAuthority> l =
+        SecurityContextHolder.getContext().getAuthentication().getAuthorities();
+    for (GrantedAuthority ga : l) {
+      if (ga.getAuthority().equals(role)) {
+        return true;
+      }
     }
+    return false;
+  }
 
-    public static String getAuthenticatedUserLogin() {
-        return SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString();
-    }
+  public static String getAuthenticatedUserLogin() {
+    return SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString();
+  }
 }

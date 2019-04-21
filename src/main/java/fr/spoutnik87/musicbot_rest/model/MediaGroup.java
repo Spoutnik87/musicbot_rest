@@ -20,17 +20,17 @@ import java.io.Serializable;
 @Table(name = "MediaGroup")
 public class MediaGroup extends AuditModel implements Serializable {
 
-    @JsonView(Views.Public.class)
-    @NonNull
-    @ManyToOne
-    @JoinColumn(name = "media_id")
-    @JsonManagedReference
-    private Media media;
+  @JsonView(Views.Public.class)
+  @NonNull
+  @ManyToOne
+  @JoinColumn(name = "media_id")
+  @JsonManagedReference
+  private Media media;
 
-    @JsonView(Views.Public.class)
-    @NonNull
-    @ManyToOne
-    @JoinColumn(name = "group_id")
-    @JsonManagedReference
-    private Group group;
+  @JsonView(Views.Public.class)
+  @NonNull
+  @ManyToOne
+  @JoinColumn(name = "group_id")
+  @JsonManagedReference
+  private Group group;
 }

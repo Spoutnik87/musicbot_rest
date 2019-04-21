@@ -8,10 +8,10 @@ import java.util.Collection;
 
 @Data
 public class UserDetails extends org.springframework.security.core.userdetails.User {
-    private User user;
+  private User user;
 
-    public UserDetails(User user, Collection<? extends GrantedAuthority> grantedAuthorities) {
-        super(user.getEmail(), user.getPassword(), grantedAuthorities);
-        this.user = user;
-    }
+  public UserDetails(User user, Collection<? extends GrantedAuthority> grantedAuthorities) {
+    super(user.getEmail(), user.getPassword(), grantedAuthorities);
+    this.user = user;
+  }
 }

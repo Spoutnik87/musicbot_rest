@@ -18,20 +18,20 @@ import java.util.Set;
 @Table(name = "Role")
 public class Role extends AuditModel implements Serializable {
 
-    public static final Role ADMIN = new Role("ADMIN", 1);
-    public static final Role USER = new Role("USER", 2);
+  public static final Role ADMIN = new Role("ADMIN", 1);
+  public static final Role USER = new Role("USER", 2);
 
-    @JsonView(Views.Public.class)
-    @NonNull
-    @Column(nullable = false)
-    private String name;
+  @JsonView(Views.Public.class)
+  @NonNull
+  @Column(nullable = false)
+  private String name;
 
-    @JsonView(Views.Public.class)
-    @NonNull
-    private int lvl;
+  @JsonView(Views.Public.class)
+  @NonNull
+  private int lvl;
 
-    @JsonView(Views.Public.class)
-    @OneToMany(mappedBy = "role", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonBackReference
-    private Set<User> userSet;
+  @JsonView(Views.Public.class)
+  @OneToMany(mappedBy = "role", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+  @JsonBackReference
+  private Set<User> userSet;
 }

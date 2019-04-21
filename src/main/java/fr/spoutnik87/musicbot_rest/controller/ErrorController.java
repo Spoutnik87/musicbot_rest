@@ -9,14 +9,14 @@ import javax.servlet.http.HttpServletRequest;
 @RestController
 public class ErrorController implements org.springframework.boot.web.servlet.error.ErrorController {
 
-    @RequestMapping("/error")
-    @ResponseBody
-    public String handleError(HttpServletRequest request) {
-        return String.format("<html><body><h2>Something went wrong!</h2><body></html>");
-    }
+  @RequestMapping("/error")
+  @ResponseBody
+  public String handleError(HttpServletRequest request) {
+    return String.format("<html><body><h2>Something went wrong!</h2><body></html>");
+  }
 
-    @Override
-    public String getErrorPath() {
-        return "/error";
-    }
+  @Override
+  public String getErrorPath() {
+    return "/error";
+  }
 }

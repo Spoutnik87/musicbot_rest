@@ -9,8 +9,6 @@ import org.springframework.stereotype.Component;
 @Order(3)
 public class UserLoader implements ApplicationListener<ContextRefreshedEvent> {
 
-    @Override
-    public void onApplicationEvent(ContextRefreshedEvent contextRefreshedEvent) {
-
-    }
+  @Override
+  public void onApplicationEvent(ContextRefreshedEvent contextRefreshedEvent) {}
 }

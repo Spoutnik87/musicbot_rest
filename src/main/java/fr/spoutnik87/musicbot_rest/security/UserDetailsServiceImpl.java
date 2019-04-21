@@ -17,28 +17,28 @@ import java.util.Collection;
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
 
-    @Autowired
-    private UserRepository userRepository;
+  @Autowired private UserRepository userRepository;
 
-    @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = userRepository.findByEmail(email);
-        if (user == null) {
-            throw new UsernameNotFoundException(email);
-        }
-
-        return new fr.spoutnik87.musicbot_rest.security.UserDetails(user, getAuthorities(user.getRole().getLvl()));
+  @Override
+  public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+    User user = userRepository.findByEmail(email);
+    if (user == null) {
+      throw new UsernameNotFoundException(email);
     }
 
-    private Collection<? extends GrantedAuthority> getAuthorities(int lvl) {
-        ArrayList<GrantedAuthority> authorities = new ArrayList<>();
-        switch (lvl) {
-            case 1:
-                authorities.add(new SimpleGrantedAuthority(Role.ADMIN.getName()));
-                break;
-            default:
-                authorities.add(new SimpleGrantedAuthority(Role.USER.getName()));
-        }
-        return authorities;
+    return new fr.spoutnik87.musicbot_rest.security.UserDetails(
+        user, getAuthorities(user.getRole().getLvl()));
+  }
+
+  private Collection<? extends GrantedAuthority> getAuthorities(int lvl) {
+    ArrayList<GrantedAuthority> authorities = new ArrayList<>();
+    switch (lvl) {
+      case 1:
+        authorities.add(new SimpleGrantedAuthority(Role.ADMIN.getName()));
+        break;
+      default:
+        authorities.add(new SimpleGrantedAuthority(Role.USER.getName()));
     }
+    return authorities;
+  }
 }

@@ -12,16 +12,15 @@ import org.springframework.stereotype.Component;
 @Order(1)
 public class PermissionLoader implements ApplicationListener<ContextRefreshedEvent> {
 
-    @Autowired
-    private PermissionRepository permissionRepository;
+  @Autowired private PermissionRepository permissionRepository;
 
-    @Override
-    public void onApplicationEvent(ContextRefreshedEvent contextRefreshedEvent) {
-        permissionRepository.save(Permission.CREATE_MEDIA);
-        permissionRepository.save(Permission.DELETE_MEDIA);
-        permissionRepository.save(Permission.READ_MEDIA);
-        permissionRepository.save(Permission.CHANGE_MODE);
-        permissionRepository.save(Permission.PLAY_MEDIA);
-        permissionRepository.save(Permission.STOP_MEDIA);
-    }
+  @Override
+  public void onApplicationEvent(ContextRefreshedEvent contextRefreshedEvent) {
+    permissionRepository.save(Permission.CREATE_MEDIA);
+    permissionRepository.save(Permission.DELETE_MEDIA);
+    permissionRepository.save(Permission.READ_MEDIA);
+    permissionRepository.save(Permission.CHANGE_MODE);
+    permissionRepository.save(Permission.PLAY_MEDIA);
+    permissionRepository.save(Permission.STOP_MEDIA);
+  }
 }

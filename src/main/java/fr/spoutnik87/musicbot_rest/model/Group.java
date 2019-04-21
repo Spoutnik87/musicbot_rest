@@ -19,24 +19,24 @@ import java.util.Set;
 @Table(name = "GroupTable")
 public class Group extends AuditModel implements Serializable {
 
-    @JsonView(Views.Public.class)
-    @NonNull
-    @Column(nullable = false)
-    private String name;
+  @JsonView(Views.Public.class)
+  @NonNull
+  @Column(nullable = false)
+  private String name;
 
-    @JsonView(Views.Public.class)
-    @ManyToOne
-    @JoinColumn(name = "server_id")
-    @JsonManagedReference
-    private Server server;
+  @JsonView(Views.Public.class)
+  @ManyToOne
+  @JoinColumn(name = "server_id")
+  @JsonManagedReference
+  private Server server;
 
-    @JsonView(Views.Public.class)
-    @OneToMany(mappedBy = "group", cascade = CascadeType.ALL)
-    @JsonBackReference
-    private Set<UserGroup> userGroupSet;
+  @JsonView(Views.Public.class)
+  @OneToMany(mappedBy = "group", cascade = CascadeType.ALL)
+  @JsonBackReference
+  private Set<UserGroup> userGroupSet;
 
-    @JsonView(Views.Public.class)
-    @OneToMany(mappedBy = "group", cascade = CascadeType.ALL)
-    @JsonBackReference
-    private Set<MediaGroup> mediaGroupSet;
+  @JsonView(Views.Public.class)
+  @OneToMany(mappedBy = "group", cascade = CascadeType.ALL)
+  @JsonBackReference
+  private Set<MediaGroup> mediaGroupSet;
 }

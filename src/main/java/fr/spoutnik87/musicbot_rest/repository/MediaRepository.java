@@ -11,7 +11,7 @@ import java.util.List;
 @Repository
 public interface MediaRepository extends JpaRepository<Media, Long> {
 
-    List<Media> findByMediaType(MediaType mediaType);
+  List<Media> findByMediaType(MediaType mediaType);
 
-    List<Media> findByCategory(Category category);
+  List<Media> findByCategory(Category category);
 }

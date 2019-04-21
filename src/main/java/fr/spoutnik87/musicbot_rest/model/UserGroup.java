@@ -19,24 +19,27 @@ import java.util.Set;
 @Table(name = "UserGroup")
 public class UserGroup extends AuditModel implements Serializable {
 
-    @JsonView(Views.Public.class)
-    @NonNull
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    @JsonManagedReference
-    private User user;
+  @JsonView(Views.Public.class)
+  @NonNull
+  @ManyToOne
+  @JoinColumn(name = "user_id")
+  @JsonManagedReference
+  private User user;
 
-    @JsonView(Views.Public.class)
-    @NonNull
-    @ManyToOne
-    @JoinColumn(name = "group_id")
-    @JsonManagedReference
-    private Group group;
+  @JsonView(Views.Public.class)
+  @NonNull
+  @ManyToOne
+  @JoinColumn(name = "group_id")
+  @JsonManagedReference
+  private Group group;
 
-    @JsonView(Views.Public.class)
-    @NonNull
-    @ManyToMany(cascade = CascadeType.ALL)
-    @JoinTable(name = "usergrouppermission", joinColumns = @JoinColumn(name = "usergroup_id", referencedColumnName = "id"), inverseJoinColumns = @JoinColumn(name = "permission_id", referencedColumnName = "id"))
-    @JsonBackReference
-    private Set<Permission> permissionSet;
+  @JsonView(Views.Public.class)
+  @NonNull
+  @ManyToMany(cascade = CascadeType.ALL)
+  @JoinTable(
+      name = "usergrouppermission",
+      joinColumns = @JoinColumn(name = "usergroup_id", referencedColumnName = "id"),
+      inverseJoinColumns = @JoinColumn(name = "permission_id", referencedColumnName = "id"))
+  @JsonBackReference
+  private Set<Permission> permissionSet;
 }

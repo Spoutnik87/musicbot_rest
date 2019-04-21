@@ -17,14 +17,14 @@ import java.io.Serializable;
 @Table(name = "Bot")
 public class Bot extends AuditModel implements Serializable {
 
-    @JsonView(Views.Public.class)
-    @NonNull
-    @Column(nullable = false)
-    private String name;
+  @JsonView(Views.Public.class)
+  @NonNull
+  @Column(nullable = false)
+  private String name;
 
-    @JsonView(Views.Public.class)
-    @OneToOne()
-    @JoinColumn(name = "server_id")
-    @JsonManagedReference
-    private Server server;
+  @JsonView(Views.Public.class)
+  @OneToOne()
+  @JoinColumn(name = "server_id")
+  @JsonManagedReference
+  private Server server;
 }

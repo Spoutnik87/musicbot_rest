@@ -8,5 +8,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ServerRepository extends JpaRepository<Server, Long> {
 
-    Server findByBot(Bot bot);
+  Server findByBot(Bot bot);
 }

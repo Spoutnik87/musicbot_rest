@@ -19,40 +19,40 @@ import java.util.Set;
 @Table(name = "UserTable")
 public class User extends AuditModel implements Serializable {
 
-    @JsonView(Views.Public.class)
-    @NonNull
-    @Column(nullable = false, unique = true)
-    private String email;
+  @JsonView(Views.Public.class)
+  @NonNull
+  @Column(nullable = false, unique = true)
+  private String email;
 
-    @JsonView(Views.Public.class)
-    @NonNull
-    @Column(nullable = false, unique = true)
-    private String nickname;
+  @JsonView(Views.Public.class)
+  @NonNull
+  @Column(nullable = false, unique = true)
+  private String nickname;
 
-    @JsonView(Views.Public.class)
-    @NonNull
-    @Column(nullable = false)
-    private String firstname;
+  @JsonView(Views.Public.class)
+  @NonNull
+  @Column(nullable = false)
+  private String firstname;
 
-    @JsonView(Views.Public.class)
-    @NonNull
-    @Column(nullable = false)
-    private String lastname;
+  @JsonView(Views.Public.class)
+  @NonNull
+  @Column(nullable = false)
+  private String lastname;
 
-    @JsonView(Views.Private.class)
-    @NonNull
-    @Column(nullable = false)
-    private String password;
+  @JsonView(Views.Private.class)
+  @NonNull
+  @Column(nullable = false)
+  private String password;
 
-    @JsonView(Views.Public.class)
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    @JsonBackReference
-    private Set<UserGroup> userGroupSet;
+  @JsonView(Views.Public.class)
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+  @JsonBackReference
+  private Set<UserGroup> userGroupSet;
 
-    @JsonView(Views.Public.class)
-    @NonNull
-    @ManyToOne
-    @JoinColumn(name = "role_id")
-    @JsonManagedReference
-    private Role role;
+  @JsonView(Views.Public.class)
+  @NonNull
+  @ManyToOne
+  @JoinColumn(name = "role_id")
+  @JsonManagedReference
+  private Role role;
 }
