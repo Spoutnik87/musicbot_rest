@@ -28,6 +28,10 @@ public class Permission extends AuditModel implements Serializable {
   public static final Permission CHANGE_MODE = new Permission("Changer le mode", "CHANGE_MODE");
   public static final Permission PLAY_MEDIA = new Permission("Jouer un media", "PLAY_MEDIA");
   public static final Permission STOP_MEDIA = new Permission("Arreter un media", "STOP_MEDIA");
+  public static final Permission CREATE_CATEGORY =
+      new Permission("Créer une catégorie", "CREATE_CATEGORY");
+  public static final Permission DELETE_CATEGORY =
+      new Permission("Supprimer une catégorie", "DELETE_CATEGORY");
 
   @JsonView(Views.Public.class)
   @NonNull

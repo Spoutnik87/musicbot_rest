@@ -1,6 +1,7 @@
 package fr.spoutnik87.musicbot_rest.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonView;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -27,4 +28,10 @@ public class Category extends AuditModel implements Serializable {
   @OneToMany(mappedBy = "category", cascade = CascadeType.ALL)
   @JsonBackReference
   private Set<Media> mediaSet;
+
+  @JsonView(Views.Public.class)
+  @ManyToOne
+  @JoinColumn(name = "server_id")
+  @JsonManagedReference
+  private Server server;
 }

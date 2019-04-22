@@ -22,5 +22,7 @@ public class PermissionLoader implements ApplicationListener<ContextRefreshedEve
     permissionRepository.save(Permission.CHANGE_MODE);
     permissionRepository.save(Permission.PLAY_MEDIA);
     permissionRepository.save(Permission.STOP_MEDIA);
+    permissionRepository.save(Permission.CREATE_CATEGORY);
+    permissionRepository.save(Permission.DELETE_CATEGORY);
   }
 }

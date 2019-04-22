@@ -39,4 +39,13 @@ public class Group extends AuditModel implements Serializable {
   @OneToMany(mappedBy = "group", cascade = CascadeType.ALL)
   @JsonBackReference
   private Set<MediaGroup> mediaGroupSet;
+
+  public boolean hasUser(User user) {
+    for (UserGroup userGroup : this.userGroupSet) {
+      if (userGroup.getUser().getId() == user.getId()) {
+        return true;
+      }
+    }
+    return false;
+  }
 }

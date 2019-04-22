@@ -18,7 +18,7 @@ public class AuthenticationHelper {
     return false;
   }
 
-  public static String getAuthenticatedUserLogin() {
+  public static String getAuthenticatedUserEmail() {
     return SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString();
   }
 }

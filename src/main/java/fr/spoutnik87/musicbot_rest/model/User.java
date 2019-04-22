@@ -55,4 +55,24 @@ public class User extends AuditModel implements Serializable {
   @JoinColumn(name = "role_id")
   @JsonManagedReference
   private Role role;
+
+  @JsonView(Views.Public.class)
+  @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
+  @JsonBackReference
+  private Set<Server> serverSet;
+
+  /**
+   * Check if an user own a server.
+   *
+   * @param server
+   * @return
+   */
+  public boolean isOwner(Server server) {
+    for (Server s : serverSet) {
+      if (s.getId() == server.getId()) {
+        return true;
+      }
+    }
+    return false;
+  }
 }

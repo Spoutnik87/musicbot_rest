@@ -23,7 +23,12 @@ public class Bot extends AuditModel implements Serializable {
   private String name;
 
   @JsonView(Views.Public.class)
-  @OneToOne()
+  @NonNull
+  @Column(nullable = false)
+  private String token;
+
+  @JsonView(Views.Public.class)
+  @OneToOne(cascade = CascadeType.ALL)
   @JoinColumn(name = "server_id")
   @JsonManagedReference
   private Server server;

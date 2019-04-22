@@ -37,8 +37,8 @@ public class UserGroup extends AuditModel implements Serializable {
   @NonNull
   @ManyToMany(cascade = CascadeType.ALL)
   @JoinTable(
-      name = "usergrouppermission",
-      joinColumns = @JoinColumn(name = "usergroup_id", referencedColumnName = "id"),
+      name = "user_group_permission",
+      joinColumns = @JoinColumn(name = "user_group_id", referencedColumnName = "id"),
       inverseJoinColumns = @JoinColumn(name = "permission_id", referencedColumnName = "id"))
   @JsonBackReference
   private Set<Permission> permissionSet;

@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 public class SecurityConfiguration {
   @Value("${security.secret}")
   private String secret;
+
   private final long expirationTime = 864_000_000;
   private final String tokenPrefix = "Bearer ";
   private final String headerString = "Authorization";
