@@ -12,8 +12,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
 
 @EnableWebSecurity
 public class WebSecurity extends WebSecurityConfigurerAdapter {
@@ -70,29 +69,17 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
   CorsConfigurationSource corsConfigurationSource() {
     final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
     final CorsConfiguration configuration = new CorsConfiguration();
-    List<String> allowedOrigins = new ArrayList<>();
-    allowedOrigins.add("*");
-    List<String> allowedMethods = new ArrayList<>();
-    allowedMethods.add("HEAD");
-    allowedMethods.add("GET");
-    allowedMethods.add("POST");
-    allowedMethods.add("PUT");
-    allowedMethods.add("DELETE");
-    allowedMethods.add("PATCH");
-    allowedMethods.add("OPTIONS");
-    List<String> allowedHeaders = new ArrayList<>();
-    allowedHeaders.add("*");
-    List<String> exposedHeaders = new ArrayList<>();
-    exposedHeaders.add("X-Auth-Token");
-    exposedHeaders.add("Authorization");
-    exposedHeaders.add("Access-Control-Allow-Origin");
-    exposedHeaders.add("Access-Control-Allow-Credentials");
-
-    configuration.setAllowedOrigins(allowedOrigins);
-    configuration.setAllowedMethods(allowedMethods);
+    configuration.setAllowedOrigins(Arrays.asList("*"));
+    configuration.setAllowedMethods(
+        Arrays.asList("HEAD", "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
     configuration.setAllowCredentials(true);
-    configuration.setAllowedHeaders(allowedHeaders);
-    configuration.setExposedHeaders(exposedHeaders);
+    configuration.setAllowedHeaders(Arrays.asList("*"));
+    configuration.setExposedHeaders(
+        Arrays.asList(
+            "X-Auth-Token",
+            "Authorization",
+            "Access-Control-Allow-Origin",
+            "Access-Control-Allow-Credentials"));
     source.registerCorsConfiguration("/**", configuration);
     return source;
   }

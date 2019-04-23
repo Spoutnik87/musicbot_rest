@@ -1,9 +1,12 @@
 package fr.spoutnik87.musicbot_rest.security;
 
 import lombok.Data;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 @Data
 public class User {
-  private String email;
-  private String password;
+  @NonNull private String email;
+  @NonNull private String password;
 }

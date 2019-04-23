@@ -10,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 @NoArgsConstructor
@@ -47,5 +49,13 @@ public class Group extends AuditModel implements Serializable {
       }
     }
     return false;
+  }
+
+  public List<User> getUserList() {
+    List<User> userList = new ArrayList<>();
+    for (UserGroup userGroup : this.userGroupSet) {
+      userList.add(userGroup.getUser());
+    }
+    return userList;
   }
 }
