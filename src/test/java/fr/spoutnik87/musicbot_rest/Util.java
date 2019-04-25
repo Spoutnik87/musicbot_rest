@@ -103,7 +103,7 @@ public class Util {
     return requestBuilder;
   }
 
-  private static String mapToJSON(Map<String, Object> params) throws Exception {
+  public static String mapToJSON(Map<String, Object> params) throws Exception {
     ObjectMapper objectMapper = new ObjectMapper();
     return objectMapper.writeValueAsString(params);
   }

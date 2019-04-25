@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping(path = "/category")
+@RequestMapping("category")
 public class CategoryController {
 
   @JsonView(Views.Public.class)

@@ -16,7 +16,7 @@ import java.util.Optional;
 import java.util.Set;
 
 @RestController
-@RequestMapping(path = "/server")
+@RequestMapping("server")
 public class ServerController {
 
   @Autowired private UserRepository userRepository;

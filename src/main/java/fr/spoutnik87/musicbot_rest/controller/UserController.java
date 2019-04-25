@@ -9,6 +9,7 @@ import fr.spoutnik87.musicbot_rest.repository.ServerRepository;
 import fr.spoutnik87.musicbot_rest.repository.UserRepository;
 import fr.spoutnik87.musicbot_rest.util.AuthenticationHelper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -17,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Optional;
 
 @RestController
-@RequestMapping(path = "/user")
+@RequestMapping("user")
 public class UserController {
 
   @Autowired private UserRepository userRepository;
@@ -81,8 +82,10 @@ public class UserController {
   }
 
   @JsonView(Views.Public.class)
-  @PostMapping("")
+  @PostMapping()
   public ResponseEntity<Object> signup(@RequestBody UserSignupReader userSignupReader) {
+
+    Role r = Role.USER;
     User user =
         new User(
             userSignupReader.getEmail(),
@@ -91,7 +94,7 @@ public class UserController {
             userSignupReader.getLastname(),
             bCryptPasswordEncoder.encode(userSignupReader.getPassword()),
             Role.USER);
-    this.userRepository.save(user);
+    // this.userRepository.save(user);
     return new ResponseEntity<>(user, HttpStatus.CREATED);
   }
 

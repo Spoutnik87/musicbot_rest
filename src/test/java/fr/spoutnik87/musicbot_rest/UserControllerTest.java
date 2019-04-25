@@ -1,39 +1,45 @@
 package fr.spoutnik87.musicbot_rest;
 
+import fr.spoutnik87.musicbot_rest.controller.UserController;
 import fr.spoutnik87.musicbot_rest.repository.*;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.web.context.WebApplicationContext;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
-
 @ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = SpringSecurityTestConfig.class)
-@SpringBootTest
+@ContextConfiguration(classes = { UserController.class, BCryptTestConfig.class, WebSecurityTestConfig.class})
+@WebMvcTest(value = UserController.class)
 public class UserControllerTest {
 
+  @Autowired
   protected MockMvc mockMvc;
 
-  @Autowired protected WebApplicationContext webApplicationContext;
+  // @Autowired protected WebApplicationContext webApplicationContext;
 
   @MockBean protected UserRepository userRepository;
+
   @MockBean protected ServerRepository serverRepository;
   @MockBean protected GroupRepository groupRepository;
   @MockBean protected BotRepository botRepository;
   @MockBean protected UserGroupRepository userGroupRepository;
   @MockBean protected PermissionRepository permissionRepository;
+
+  @Autowired private BCryptPasswordEncoder bCryptPasswordEncoder;
+
   /*@MockBean
   protected UserDetailsServiceImpl userDetailsService;
   @MockBean
@@ -45,11 +51,11 @@ public class UserControllerTest {
   @MockBean
   protected ErrorMvcAutoConfiguration errorMvcAutoConfiguration;*/
 
-  @BeforeEach
+  /*@BeforeEach
   public void setup() {
-    // this.mockMvc = MockMvcBuilders.standaloneSetup(new UserController()).build();
-    this.mockMvc = webAppContextSetup(webApplicationContext).build();
-  }
+    this.mockMvc = MockMvcBuilders.standaloneSetup(new UserController()).build();
+    // this.mockMvc = webAppContextSetup(webApplicationContext).build();
+  }*/
 
   @AfterEach
   public void stop() {}
@@ -62,7 +68,9 @@ public class UserControllerTest {
     params.put("nickname", "Nickname");
     params.put("firstname", "Firstname");
     params.put("lastname", "Lastname");
-    Util.basicPrintWithBody(mockMvc, HttpMethod.POST, "/user", new HashMap<>(), params);
+    //when(userRepository.);
+    mockMvc.perform(post("/user").contentType(MediaType.APPLICATION_JSON).content(Util.mapToJSON(params)).characterEncoding("UTF-8").accept(MediaType.APPLICATION_JSON)).andExpect(status().isCreated());
+    // Util.basicPrintWithBody(mockMvc, HttpMethod.POST, "/user", new HashMap<>(), params);
   }
 
   /*@Test

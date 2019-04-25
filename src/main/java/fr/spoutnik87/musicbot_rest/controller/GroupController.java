@@ -21,7 +21,7 @@ import java.util.Optional;
 import java.util.Set;
 
 @RestController
-@RequestMapping(path = "/group")
+@RequestMapping("group")
 public class GroupController {
 
   @Autowired private UserRepository userRepository;

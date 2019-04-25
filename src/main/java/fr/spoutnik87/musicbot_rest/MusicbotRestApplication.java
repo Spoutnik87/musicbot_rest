@@ -13,6 +13,16 @@ public class MusicbotRestApplication {
     return new BCryptPasswordEncoder();
   }
 
+  @Bean
+  public SpringApplicationContext springApplicationContext() {
+    return new SpringApplicationContext();
+  }
+
+  @Bean(name = "AppConfig")
+  public AppConfig appConfig() {
+    return new AppConfig();
+  }
+
   public static void main(String[] args) {
     SpringApplication.run(MusicbotRestApplication.class, args);
   }
