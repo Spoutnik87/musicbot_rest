@@ -1,6 +1,6 @@
 package fr.spoutnik87.musicbot_rest.security;
 
-import fr.spoutnik87.musicbot_rest.model.Role;
+import fr.spoutnik87.musicbot_rest.constant.RoleEnum;
 import fr.spoutnik87.musicbot_rest.model.User;
 import fr.spoutnik87.musicbot_rest.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,10 +34,10 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     ArrayList<GrantedAuthority> authorities = new ArrayList<>();
     switch (lvl) {
       case 1:
-        authorities.add(new SimpleGrantedAuthority(Role.ADMIN.getName()));
+        authorities.add(new SimpleGrantedAuthority(RoleEnum.ADMIN.getName()));
         break;
       default:
-        authorities.add(new SimpleGrantedAuthority(Role.USER.getName()));
+        authorities.add(new SimpleGrantedAuthority(RoleEnum.USER.getName()));
     }
     return authorities;
   }

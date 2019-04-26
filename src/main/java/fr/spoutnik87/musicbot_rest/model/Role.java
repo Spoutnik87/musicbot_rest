@@ -3,8 +3,6 @@ package fr.spoutnik87.musicbot_rest.model;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
-import fr.spoutnik87.musicbot_rest.SpringApplicationContext;
-import fr.spoutnik87.musicbot_rest.UUID;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -18,13 +16,8 @@ import java.util.Set;
 @RequiredArgsConstructor
 @Data
 @Entity
-@Table(name = "Role")
+@Table(name = "RoleEnum")
 public class Role extends AuditModel implements Serializable {
-
-  private static UUID UUID = SpringApplicationContext.getUUIDBean();
-
-  public static final Role ADMIN = new Role(UUID.v4(), "ADMIN", 1);
-  public static final Role USER = new Role(UUID.v4(), "USER", 2);
 
   @JsonView(Views.Public.class)
   @NonNull

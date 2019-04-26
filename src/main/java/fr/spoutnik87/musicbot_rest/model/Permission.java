@@ -21,7 +21,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 @Data
 @Entity
-@Table(name = "Permission")
+@Table(name = "PermissionEnum")
 public class Permission extends AuditModel implements Serializable {
 
   private static UUID UUID = SpringApplicationContext.getUUIDBean();

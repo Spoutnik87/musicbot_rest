@@ -1,5 +1,6 @@
 package fr.spoutnik87.musicbot_rest.util;
 
+import fr.spoutnik87.musicbot_rest.constant.RoleEnum;
 import fr.spoutnik87.musicbot_rest.model.Role;
 import fr.spoutnik87.musicbot_rest.model.User;
 import fr.spoutnik87.musicbot_rest.security.UserDetails;
@@ -20,15 +21,19 @@ public class SpringSecurityTestConfig {
   @Bean
   @Primary
   public UserDetailsService userDetailsService() {
+    Role role = new Role();
+    role.setUuid("token");
+    role.setName("USER");
+    role.setLvl(2);
     User user = new User();
     user.setEmail("user@test.com");
     user.setFirstname("Firstname");
     user.setLastname("Lastname");
     user.setNickname("Nickname");
     user.setPassword(bCryptPasswordEncoder.encode("password"));
-    user.setRole(Role.USER);
+    user.setRole(role);
     UserDetails basicUser =
-        new UserDetails(user, Arrays.asList(new SimpleGrantedAuthority(Role.USER.getName())));
+            new UserDetails(user, Arrays.asList(new SimpleGrantedAuthority(RoleEnum.USER.getName())));
 
     return new InMemoryUserDetailsManager(Arrays.asList(basicUser));
   }

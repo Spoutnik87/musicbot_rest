@@ -2,10 +2,12 @@ package fr.spoutnik87.musicbot_rest.controller;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import fr.spoutnik87.musicbot_rest.UUID;
+import fr.spoutnik87.musicbot_rest.constant.RoleEnum;
 import fr.spoutnik87.musicbot_rest.model.*;
 import fr.spoutnik87.musicbot_rest.reader.UserSignupReader;
 import fr.spoutnik87.musicbot_rest.reader.UserUpdateReader;
 import fr.spoutnik87.musicbot_rest.repository.GroupRepository;
+import fr.spoutnik87.musicbot_rest.repository.RoleRepository;
 import fr.spoutnik87.musicbot_rest.repository.ServerRepository;
 import fr.spoutnik87.musicbot_rest.repository.UserRepository;
 import fr.spoutnik87.musicbot_rest.util.AuthenticationHelper;
@@ -27,6 +29,9 @@ public class UserController {
 
   @Autowired private GroupRepository groupRepository;
 
+    @Autowired
+    private RoleRepository roleRepository;
+
   @Autowired private UUID uuid;
 
   @Autowired private BCryptPasswordEncoder bCryptPasswordEncoder;
@@ -42,7 +47,7 @@ public class UserController {
   @GetMapping("/{id}")
   public ResponseEntity<Object> getById(@PathVariable("id") long id) {
     User user = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail());
-    if (user.getRole().getName() != Role.ADMIN.getName()) {
+      if (user.getRole().getName() != RoleEnum.ADMIN.getName()) {
       return new ResponseEntity<>(HttpStatus.FORBIDDEN);
     }
     Optional<User> optionalUser = userRepository.findById(id);
@@ -86,8 +91,7 @@ public class UserController {
   @JsonView(Views.Public.class)
   @PostMapping()
   public ResponseEntity<Object> signup(@RequestBody UserSignupReader userSignupReader) {
-
-    Role r = Role.USER;
+      Role r = roleRepository.findByName(RoleEnum.USER.getName());
     User user =
         new User(
             uuid.v4(),
@@ -96,8 +100,8 @@ public class UserController {
             userSignupReader.getFirstname(),
             userSignupReader.getLastname(),
             bCryptPasswordEncoder.encode(userSignupReader.getPassword()),
-            Role.USER);
-    // this.userRepository.save(user);
+                r);
+      this.userRepository.save(user);
     return new ResponseEntity<>(user, HttpStatus.CREATED);
   }
 

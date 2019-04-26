@@ -1,5 +1,6 @@
 package fr.spoutnik87.musicbot_rest.loader;
 
+import fr.spoutnik87.musicbot_rest.UUID;
 import fr.spoutnik87.musicbot_rest.model.Role;
 import fr.spoutnik87.musicbot_rest.repository.RoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,9 +15,12 @@ public class RoleLoader implements ApplicationListener<ContextRefreshedEvent> {
 
   @Autowired private RoleRepository roleRepository;
 
+    @Autowired
+    private UUID uuid;
+
   @Override
   public void onApplicationEvent(ContextRefreshedEvent contextRefreshedEvent) {
-    this.roleRepository.save(Role.ADMIN);
-    this.roleRepository.save(Role.USER);
+      this.roleRepository.save(new Role(uuid.v4(), "ADMIN", 1));
+      this.roleRepository.save(new Role(uuid.v4(), "USER", 2));
   }
 }

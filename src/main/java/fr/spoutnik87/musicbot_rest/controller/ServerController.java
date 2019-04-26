@@ -1,6 +1,7 @@
 package fr.spoutnik87.musicbot_rest.controller;
 
 import com.fasterxml.jackson.annotation.JsonView;
+import fr.spoutnik87.musicbot_rest.constant.RoleEnum;
 import fr.spoutnik87.musicbot_rest.model.*;
 import fr.spoutnik87.musicbot_rest.reader.ServerCreateReader;
 import fr.spoutnik87.musicbot_rest.reader.ServerUpdateReader;
@@ -46,7 +47,7 @@ public class ServerController {
     if (user.getId() == userId) {
       return new ResponseEntity<>(user.getServerSet().toArray(), HttpStatus.OK);
     }
-    if (user.getRole().getName() != Role.ADMIN.getName()) {
+      if (user.getRole().getName() != RoleEnum.ADMIN.getName()) {
       return new ResponseEntity<>(HttpStatus.FORBIDDEN);
     }
     Optional<User> optionalUser = userRepository.findById(userId);

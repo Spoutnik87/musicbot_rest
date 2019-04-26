@@ -17,31 +17,54 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 public abstract class Util {
   public static void basicTest(
-      MockMvc mockMvc,
-      HttpMethod httpMethod,
-      String endpoint,
-      HashMap<String, String> params,
-      HttpStatus expectedStatus,
-      String expectedValue)
+          MockMvc mockMvc,
+          HttpMethod httpMethod,
+          String endpoint,
+          HashMap<String, String> params,
+          HttpStatus expectedStatus)
       throws Exception {
+    basicTestWithBody(mockMvc, httpMethod, endpoint, params, null, expectedStatus, null);
+  }
+
+  public static void basicTest(
+          MockMvc mockMvc,
+          HttpMethod httpMethod,
+          String endpoint,
+          HashMap<String, String> params,
+          HttpStatus expectedStatus,
+          String expectedValue)
+          throws Exception {
     basicTestWithBody(mockMvc, httpMethod, endpoint, params, null, expectedStatus, expectedValue);
   }
 
   public static void basicTestWithBody(
-      MockMvc mockMvc,
-      HttpMethod httpMethod,
-      String endpoint,
-      HashMap<String, String> params,
-      Map<String, Object> body,
-      HttpStatus expectedStatus,
-      String expectedValue)
-      throws Exception {
+          MockMvc mockMvc,
+          HttpMethod httpMethod,
+          String endpoint,
+          HashMap<String, String> params,
+          Map<String, Object> body,
+          HttpStatus expectedStatus)
+          throws Exception {
+    basicTestWithBody(mockMvc, httpMethod, endpoint, params, body, expectedStatus, null);
+  }
+
+  public static void basicTestWithBody(
+          MockMvc mockMvc,
+          HttpMethod httpMethod,
+          String endpoint,
+          HashMap<String, String> params,
+          Map<String, Object> body,
+          HttpStatus expectedStatus,
+          String expectedValue)
+          throws Exception {
     MvcResult result =
-        mockMvc
-            .perform(buildRequest(httpMethod, endpoint, params, body))
-            .andExpect(status().is(expectedStatus.value()))
-            .andReturn();
-    JSONAssert.assertEquals(expectedValue, result.getResponse().getContentAsString(), true);
+            mockMvc
+                    .perform(buildRequest(httpMethod, endpoint, params, body))
+                    .andExpect(status().is(expectedStatus.value()))
+                    .andReturn();
+    if (expectedValue != null) {
+      JSONAssert.assertEquals(expectedValue, result.getResponse().getContentAsString(), true);
+    }
   }
 
   public static void basicPrint(
