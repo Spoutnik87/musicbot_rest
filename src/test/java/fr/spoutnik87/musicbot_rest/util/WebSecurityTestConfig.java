@@ -1,6 +1,9 @@
 package fr.spoutnik87.musicbot_rest.util;
 
-import fr.spoutnik87.musicbot_rest.security.*;
+import fr.spoutnik87.musicbot_rest.security.JWTAuthenticationFilter;
+import fr.spoutnik87.musicbot_rest.security.JWTAuthorizationFilter;
+import fr.spoutnik87.musicbot_rest.security.SecurityConfiguration;
+import fr.spoutnik87.musicbot_rest.security.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

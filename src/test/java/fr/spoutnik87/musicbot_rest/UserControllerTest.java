@@ -1,7 +1,9 @@
 package fr.spoutnik87.musicbot_rest;
 
 import fr.spoutnik87.musicbot_rest.controller.UserController;
-import fr.spoutnik87.musicbot_rest.repository.*;
+import fr.spoutnik87.musicbot_rest.repository.GroupRepository;
+import fr.spoutnik87.musicbot_rest.repository.ServerRepository;
+import fr.spoutnik87.musicbot_rest.repository.UserRepository;
 import fr.spoutnik87.musicbot_rest.util.BCryptTestConfig;
 import fr.spoutnik87.musicbot_rest.util.SpringApplicationContextTestConfig;
 import fr.spoutnik87.musicbot_rest.util.Util;
@@ -24,7 +26,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 @ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = { SpringApplicationContextTestConfig.class, UserController.class, BCryptTestConfig.class, WebSecurityTestConfig.class})
+@ContextConfiguration(
+        classes = {
+                SpringApplicationContextTestConfig.class,
+                UserController.class,
+                BCryptTestConfig.class,
+                WebSecurityTestConfig.class
+        })
 @WebMvcTest(UserController.class)
 public class UserControllerTest {
 
@@ -36,7 +44,9 @@ public class UserControllerTest {
   @MockBean protected UserRepository userRepository;
   @MockBean protected ServerRepository serverRepository;
   @MockBean protected GroupRepository groupRepository;
-  @MockBean(name = "UUID") protected UUID uuid;
+
+  @MockBean(name = "UUID")
+  protected UUID uuid;
 
   @BeforeEach
   public void setup() {

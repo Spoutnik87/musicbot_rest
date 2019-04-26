@@ -17,10 +17,10 @@ public class SpringApplicationContext implements ApplicationContextAware {
     }
 
     public static UUID getUUIDBean() {
-        return (UUID)getBean("UUID");
+        return (UUID) getBean("UUID");
     }
 
     public static AppConfig getAppConfigBean() {
-        return (AppConfig)getBean("AppConfig");
+        return (AppConfig) getBean("AppConfig");
     }
 }
