@@ -1,6 +1,8 @@
 package fr.spoutnik87.musicbot_rest;
 
 import fr.spoutnik87.musicbot_rest.util.AuthenticationHelper;
+import fr.spoutnik87.musicbot_rest.util.BCryptTestConfig;
+import fr.spoutnik87.musicbot_rest.util.SpringSecurityTestConfig;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;

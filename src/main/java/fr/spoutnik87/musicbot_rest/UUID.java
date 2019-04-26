@@ -1,8 +1,11 @@
 package fr.spoutnik87.musicbot_rest;
 
-public abstract class UUID {
+import org.springframework.stereotype.Component;
 
-    public static String v4() {
+@Component
+public class UUID {
+
+    public String v4() {
         return java.util.UUID.randomUUID().toString();
     }
 }

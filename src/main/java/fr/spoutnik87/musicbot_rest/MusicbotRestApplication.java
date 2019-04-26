@@ -23,6 +23,11 @@ public class MusicbotRestApplication {
     return new AppConfig();
   }
 
+  @Bean(name = "UUID")
+  public UUID uuid() {
+    return new UUID();
+  }
+
   public static void main(String[] args) {
     SpringApplication.run(MusicbotRestApplication.class, args);
   }

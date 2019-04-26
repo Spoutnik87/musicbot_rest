@@ -3,6 +3,7 @@ package fr.spoutnik87.musicbot_rest.model;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
+import fr.spoutnik87.musicbot_rest.SpringApplicationContext;
 import fr.spoutnik87.musicbot_rest.UUID;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -22,6 +23,8 @@ import java.util.Set;
 @Entity
 @Table(name = "Permission")
 public class Permission extends AuditModel implements Serializable {
+
+  private static UUID UUID = SpringApplicationContext.getUUIDBean();
 
   public static final Permission CREATE_MEDIA = new Permission(UUID.v4(), "Créer un media", "CREATE_MEDIA");
   public static final Permission DELETE_MEDIA =

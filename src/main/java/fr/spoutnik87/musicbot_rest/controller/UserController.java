@@ -27,6 +27,8 @@ public class UserController {
 
   @Autowired private GroupRepository groupRepository;
 
+  @Autowired private UUID uuid;
+
   @Autowired private BCryptPasswordEncoder bCryptPasswordEncoder;
 
   @JsonView(Views.Public.class)
@@ -88,7 +90,7 @@ public class UserController {
     Role r = Role.USER;
     User user =
         new User(
-            UUID.v4(),
+            uuid.v4(),
             userSignupReader.getEmail(),
             userSignupReader.getNickname(),
             userSignupReader.getFirstname(),

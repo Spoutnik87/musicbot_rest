@@ -1,4 +1,4 @@
-package fr.spoutnik87.musicbot_rest;
+package fr.spoutnik87.musicbot_rest.util;
 
 import fr.spoutnik87.musicbot_rest.security.*;
 import org.springframework.beans.factory.annotation.Autowired;

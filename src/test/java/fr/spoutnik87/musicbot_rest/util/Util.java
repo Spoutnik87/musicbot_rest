@@ -1,4 +1,4 @@
-package fr.spoutnik87.musicbot_rest;
+package fr.spoutnik87.musicbot_rest.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.skyscreamer.jsonassert.JSONAssert;
@@ -15,7 +15,7 @@ import java.util.Map;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-public class Util {
+public abstract class Util {
   public static void basicTest(
       MockMvc mockMvc,
       HttpMethod httpMethod,

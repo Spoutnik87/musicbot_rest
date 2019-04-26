@@ -1,4 +1,4 @@
-package fr.spoutnik87.musicbot_rest;
+package fr.spoutnik87.musicbot_rest.util;
 
 import fr.spoutnik87.musicbot_rest.model.Role;
 import fr.spoutnik87.musicbot_rest.model.User;
