@@ -1,6 +1,7 @@
 package fr.spoutnik87.musicbot_rest.controller;
 
 import com.fasterxml.jackson.annotation.JsonView;
+import fr.spoutnik87.musicbot_rest.UUID;
 import fr.spoutnik87.musicbot_rest.model.*;
 import fr.spoutnik87.musicbot_rest.reader.UserSignupReader;
 import fr.spoutnik87.musicbot_rest.reader.UserUpdateReader;
@@ -9,7 +10,6 @@ import fr.spoutnik87.musicbot_rest.repository.ServerRepository;
 import fr.spoutnik87.musicbot_rest.repository.UserRepository;
 import fr.spoutnik87.musicbot_rest.util.AuthenticationHelper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -88,6 +88,7 @@ public class UserController {
     Role r = Role.USER;
     User user =
         new User(
+            UUID.v4(),
             userSignupReader.getEmail(),
             userSignupReader.getNickname(),
             userSignupReader.getFirstname(),

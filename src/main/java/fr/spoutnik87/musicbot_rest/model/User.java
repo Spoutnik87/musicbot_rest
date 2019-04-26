@@ -2,6 +2,7 @@ package fr.spoutnik87.musicbot_rest.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,6 +19,12 @@ import java.util.Set;
 @Entity
 @Table(name = "UserTable")
 public class User extends AuditModel implements Serializable {
+
+  @JsonView(Views.Public.class)
+  @NonNull
+  @JsonProperty("id")
+  @Column(nullable = false, unique = true)
+  private String uuid;
 
   @JsonView(Views.Public.class)
   @NonNull
@@ -39,7 +46,7 @@ public class User extends AuditModel implements Serializable {
   @Column(nullable = false)
   private String lastname;
 
-  @JsonView(Views.Private.class)
+  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
   @NonNull
   @Column(nullable = false)
   private String password;

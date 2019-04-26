@@ -1,7 +1,9 @@
 package fr.spoutnik87.musicbot_rest.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
+import fr.spoutnik87.musicbot_rest.UUID;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -18,8 +20,14 @@ import java.util.Set;
 @Table(name = "Role")
 public class Role extends AuditModel implements Serializable {
 
-  public static final Role ADMIN = new Role("ADMIN", 1);
-  public static final Role USER = new Role("USER", 2);
+  public static final Role ADMIN = new Role(UUID.v4(), "ADMIN", 1);
+  public static final Role USER = new Role(UUID.v4(), "USER", 2);
+
+  @JsonView(Views.Public.class)
+  @NonNull
+  @JsonProperty("id")
+  @Column(nullable = false, unique = true)
+  private String uuid;
 
   @JsonView(Views.Public.class)
   @NonNull
