@@ -1,6 +1,7 @@
 package fr.spoutnik87.musicbot_rest.controller;
 
 import com.fasterxml.jackson.annotation.JsonView;
+import fr.spoutnik87.musicbot_rest.constant.PermissionEnum;
 import fr.spoutnik87.musicbot_rest.constant.RoleEnum;
 import fr.spoutnik87.musicbot_rest.model.*;
 import fr.spoutnik87.musicbot_rest.reader.ServerCreateReader;
@@ -29,6 +30,9 @@ public class ServerController {
   @Autowired private GroupRepository groupRepository;
 
   @Autowired private UserGroupRepository userGroupRepository;
+
+  @Autowired
+  private PermissionRepository permissionRepository;
 
   @JsonView(Views.Public.class)
   @GetMapping("/{id}")
@@ -78,14 +82,14 @@ public class ServerController {
     userGroup.setGroup(group);
     userGroup.setUser(user);
     Set<Permission> permissionSet = new HashSet<>();
-    permissionSet.add(Permission.CREATE_MEDIA);
-    permissionSet.add(Permission.DELETE_MEDIA);
-    permissionSet.add(Permission.READ_MEDIA);
-    permissionSet.add(Permission.CHANGE_MODE);
-    permissionSet.add(Permission.PLAY_MEDIA);
-    permissionSet.add(Permission.STOP_MEDIA);
-    permissionSet.add(Permission.CREATE_CATEGORY);
-    permissionSet.add(Permission.DELETE_CATEGORY);
+    permissionSet.add(permissionRepository.findByValue(PermissionEnum.CREATE_MEDIA.getValue()));
+    permissionSet.add(permissionRepository.findByValue(PermissionEnum.DELETE_MEDIA.getValue()));
+    permissionSet.add(permissionRepository.findByValue(PermissionEnum.READ_MEDIA.getValue()));
+    permissionSet.add(permissionRepository.findByValue(PermissionEnum.CHANGE_MODE.getValue()));
+    permissionSet.add(permissionRepository.findByValue(PermissionEnum.PLAY_MEDIA.getValue()));
+    permissionSet.add(permissionRepository.findByValue(PermissionEnum.STOP_MEDIA.getValue()));
+    permissionSet.add(permissionRepository.findByValue(PermissionEnum.CREATE_CATEGORY.getValue()));
+    permissionSet.add(permissionRepository.findByValue(PermissionEnum.DELETE_CATEGORY.getValue()));
     userGroup.setPermissionSet(permissionSet);
     user.getUserGroupSet().add(userGroup);
     group.getUserGroupSet().add(userGroup);

@@ -3,8 +3,6 @@ package fr.spoutnik87.musicbot_rest.model;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
-import fr.spoutnik87.musicbot_rest.SpringApplicationContext;
-import fr.spoutnik87.musicbot_rest.UUID;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -23,25 +21,6 @@ import java.util.Set;
 @Entity
 @Table(name = "PermissionEnum")
 public class Permission extends AuditModel implements Serializable {
-
-  private static UUID UUID = SpringApplicationContext.getUUIDBean();
-
-  public static final Permission CREATE_MEDIA =
-          new Permission(UUID.v4(), "Créer un media", "CREATE_MEDIA");
-  public static final Permission DELETE_MEDIA =
-      new Permission(UUID.v4(), "Supprimer un media", "DELETE_MEDIA");
-  public static final Permission READ_MEDIA =
-          new Permission(UUID.v4(), "Voir un media", "READ_MEDIA");
-  public static final Permission CHANGE_MODE =
-          new Permission(UUID.v4(), "Changer le mode", "CHANGE_MODE");
-  public static final Permission PLAY_MEDIA =
-          new Permission(UUID.v4(), "Jouer un media", "PLAY_MEDIA");
-  public static final Permission STOP_MEDIA =
-          new Permission(UUID.v4(), "Arreter un media", "STOP_MEDIA");
-  public static final Permission CREATE_CATEGORY =
-      new Permission(UUID.v4(), "Créer une catégorie", "CREATE_CATEGORY");
-  public static final Permission DELETE_CATEGORY =
-      new Permission(UUID.v4(), "Supprimer une catégorie", "DELETE_CATEGORY");
 
   @JsonView(Views.Public.class)
   @NonNull
