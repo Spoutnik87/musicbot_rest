@@ -68,33 +68,8 @@ public class WebSecurityTestConfig extends WebSecurityConfigurerAdapter {
         .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
   }
 
-  /*@Autowired
-  public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
-    auth.inMemoryAuthentication()
-        .withUser("usertest@test.com")
-        .password(bCryptPasswordEncoder.encode("usertest"))
-        .roles("USER")
-        .and()
-        .withUser("admintest@test.com")
-        .password(bCryptPasswordEncoder.encode("admintest"))
-        .roles("ADMIN");
-  }*/
-
   @Override
   public void configure(AuthenticationManagerBuilder auth) throws Exception {
-    /*User user =
-        new User(
-            "token",
-            "user@test.com",
-            "Nickname",
-            "Firstnamee",
-            "Lastname",
-            bCryptPasswordEncoder.encode("password"),
-            new Role("token", RoleEnum.USER.getName(), 2));
-    ArrayList<GrantedAuthority> authorities = new ArrayList<>();
-    authorities.add(new SimpleGrantedAuthority(RoleEnum.USER.getName()));
-    Mockito.when(userDetailsService.loadUserByUsername("user@test.com"))
-        .thenReturn(new UserDetails(user, authorities));*/
     auth.userDetailsService(userDetailsService).passwordEncoder(bCryptPasswordEncoder);
   }
 
