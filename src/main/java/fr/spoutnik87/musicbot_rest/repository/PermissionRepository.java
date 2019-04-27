@@ -9,7 +9,7 @@ import java.util.Optional;
 @Repository
 public interface PermissionRepository extends JpaRepository<Permission, Long> {
 
-    Optional<Permission> findByValue(String value);
+  Optional<Permission> findByValue(String value);
 
-    Optional<Permission> findByUuid(String uuid);
+  Optional<Permission> findByUuid(String uuid);
 }

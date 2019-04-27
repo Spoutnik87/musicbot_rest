@@ -57,7 +57,8 @@ public class WebSecurityTestConfig extends WebSecurityConfigurerAdapter {
                     bCryptPasswordEncoder.encode("password"),
                     roleAdmin);
     UserDetails adminUser =
-            new UserDetails(userAdmin, Arrays.asList(new SimpleGrantedAuthority(RoleEnum.ADMIN.getName())));
+            new UserDetails(
+                    userAdmin, Arrays.asList(new SimpleGrantedAuthority(RoleEnum.ADMIN.getName())));
     return new InMemoryUserDetailsManager(Arrays.asList(basicUser, adminUser));
   }
 

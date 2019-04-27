@@ -49,6 +49,7 @@ public class UserControllerTest {
   @MockBean protected RoleRepository roleRepository;
   @MockBean protected ServerRepository serverRepository;
   @MockBean protected GroupRepository groupRepository;
+
   @MockBean(name = "UUID")
   protected UUID uuid;
 
@@ -57,24 +58,26 @@ public class UserControllerTest {
     Mockito.when(uuid.v4()).thenReturn("token");
     Mockito.when(userRepository.findByEmail("user@test.com"))
         .thenReturn(
-            Optional.of(new User(
-                "token",
-                "user@test.com",
-                "Nickname",
-                "Firstname",
-                "Lastname",
-                bCryptPasswordEncoder.encode("password"),
-                new Role("token", "USER", 2))));
+                Optional.of(
+                        new User(
+                                "token",
+                                "user@test.com",
+                                "Nickname",
+                                "Firstname",
+                                "Lastname",
+                                bCryptPasswordEncoder.encode("password"),
+                                new Role("token", "USER", 2))));
     Mockito.when(userRepository.findByEmail("admin@test.com"))
             .thenReturn(
-                    Optional.of(new User(
-                            "token2",
-                            "admin@test.com",
-                            "Nickname",
-                            "Firstname",
-                            "Lastname",
-                            bCryptPasswordEncoder.encode("password"),
-                            new Role("token2", "ADMIN", 1))));
+                    Optional.of(
+                            new User(
+                                    "token2",
+                                    "admin@test.com",
+                                    "Nickname",
+                                    "Firstname",
+                                    "Lastname",
+                                    bCryptPasswordEncoder.encode("password"),
+                                    new Role("token2", "ADMIN", 1))));
   }
 
   @Test
@@ -140,35 +143,33 @@ public class UserControllerTest {
 
   @Test
   public void getById_NotAuthenticated_ReturnForbiddenStatus() throws Exception {
-    Util.basicTest(
-            mockMvc, HttpMethod.GET, "/user/1", new HashMap<>(), HttpStatus.FORBIDDEN);
+    Util.basicTest(mockMvc, HttpMethod.GET, "/user/1", new HashMap<>(), HttpStatus.FORBIDDEN);
   }
 
   @Test
   @WithUserDetails("user@test.com")
   public void getById_NotAdmin_ReturnForbiddenStatus() throws Exception {
-    Util.basicTest(
-            mockMvc, HttpMethod.GET, "/user/1", new HashMap<>(), HttpStatus.FORBIDDEN);
+    Util.basicTest(mockMvc, HttpMethod.GET, "/user/1", new HashMap<>(), HttpStatus.FORBIDDEN);
   }
 
   @Test
   @WithUserDetails("admin@test.com")
   public void getById_AdminAndUserNotFound_ReturnNotFoundStatus() throws Exception {
-    Util.basicTest(
-            mockMvc, HttpMethod.GET, "/user/1", new HashMap<>(), HttpStatus.BAD_REQUEST);
+    Util.basicTest(mockMvc, HttpMethod.GET, "/user/1", new HashMap<>(), HttpStatus.BAD_REQUEST);
   }
 
   @Test
   public void getById_AdminAndUserFound_ReturnUser() throws Exception {
     Mockito.when(userRepository.findByUuid("1"))
             .thenReturn(
-                    Optional.of(new User(
-                            "1",
-                            "test@test.com",
-                            "Nickname",
-                            "Firstname",
-                            "Lastname",
-                            bCryptPasswordEncoder.encode("password"),
-                            new Role("token", "USER", 2))));
+                    Optional.of(
+                            new User(
+                                    "1",
+                                    "test@test.com",
+                                    "Nickname",
+                                    "Firstname",
+                                    "Lastname",
+                                    bCryptPasswordEncoder.encode("password"),
+                                    new Role("token", "USER", 2))));
   }
 }

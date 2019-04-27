@@ -42,13 +42,12 @@ public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilte
       fr.spoutnik87.musicbot_rest.security.User creds =
           new ObjectMapper()
               .readValue(req.getInputStream(), fr.spoutnik87.musicbot_rest.security.User.class);
-      org.springframework.security.core.userdetails.UserDetails userDetails = userDetailsService.loadUserByUsername(creds.getEmail());
+        org.springframework.security.core.userdetails.UserDetails userDetails =
+                userDetailsService.loadUserByUsername(creds.getEmail());
 
       return authenticationManager.authenticate(
           new UsernamePasswordAuthenticationToken(
-              creds.getEmail(),
-              creds.getPassword(),
-                  userDetails.getAuthorities()));
+                  creds.getEmail(), creds.getPassword(), userDetails.getAuthorities()));
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

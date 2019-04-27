@@ -31,8 +31,8 @@ public class ServerController {
 
   @Autowired private UserGroupRepository userGroupRepository;
 
-  @Autowired
-  private PermissionRepository permissionRepository;
+    @Autowired
+    private PermissionRepository permissionRepository;
 
   @JsonView(Views.Public.class)
   @GetMapping("/{id}")
@@ -47,7 +47,8 @@ public class ServerController {
   @JsonView(Views.Public.class)
   @GetMapping("/list/{userId}")
   public ResponseEntity<Object> getByUserId(@PathVariable("userId") long userId) {
-    Optional<User> optionalAuthenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail());
+      Optional<User> optionalAuthenticatedUser =
+              userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail());
     if (!optionalAuthenticatedUser.isPresent()) {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
@@ -69,7 +70,8 @@ public class ServerController {
   @JsonView(Views.Public.class)
   @PostMapping("")
   public ResponseEntity<Object> create(@RequestBody ServerCreateReader serverCreateReader) {
-    Optional<User> optionalAuthenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail());
+      Optional<User> optionalAuthenticatedUser =
+              userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail());
     if (!optionalAuthenticatedUser.isPresent()) {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
@@ -90,14 +92,19 @@ public class ServerController {
     userGroup.setGroup(group);
     userGroup.setUser(user);
     Set<Permission> permissionSet = new HashSet<>();
-    permissionSet.add(permissionRepository.findByValue(PermissionEnum.CREATE_MEDIA.getValue()).get());
-    permissionSet.add(permissionRepository.findByValue(PermissionEnum.DELETE_MEDIA.getValue()).get());
+      permissionSet.add(
+              permissionRepository.findByValue(PermissionEnum.CREATE_MEDIA.getValue()).get());
+      permissionSet.add(
+              permissionRepository.findByValue(PermissionEnum.DELETE_MEDIA.getValue()).get());
     permissionSet.add(permissionRepository.findByValue(PermissionEnum.READ_MEDIA.getValue()).get());
-    permissionSet.add(permissionRepository.findByValue(PermissionEnum.CHANGE_MODE.getValue()).get());
+      permissionSet.add(
+              permissionRepository.findByValue(PermissionEnum.CHANGE_MODE.getValue()).get());
     permissionSet.add(permissionRepository.findByValue(PermissionEnum.PLAY_MEDIA.getValue()).get());
     permissionSet.add(permissionRepository.findByValue(PermissionEnum.STOP_MEDIA.getValue()).get());
-    permissionSet.add(permissionRepository.findByValue(PermissionEnum.CREATE_CATEGORY.getValue()).get());
-    permissionSet.add(permissionRepository.findByValue(PermissionEnum.DELETE_CATEGORY.getValue()).get());
+      permissionSet.add(
+              permissionRepository.findByValue(PermissionEnum.CREATE_CATEGORY.getValue()).get());
+      permissionSet.add(
+              permissionRepository.findByValue(PermissionEnum.DELETE_CATEGORY.getValue()).get());
     userGroup.setPermissionSet(permissionSet);
     user.getUserGroupSet().add(userGroup);
     group.getUserGroupSet().add(userGroup);
@@ -119,7 +126,8 @@ public class ServerController {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
     Server server = optionalServer.get();
-    Optional<User> optionalAuthenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail());
+      Optional<User> optionalAuthenticatedUser =
+              userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail());
     User user = optionalAuthenticatedUser.get();
     if (!user.isOwner(server)) {
       return new ResponseEntity<>(HttpStatus.FORBIDDEN);
@@ -137,7 +145,8 @@ public class ServerController {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
     Server server = optionalServer.get();
-    Optional<User> optionalAuthenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail());
+      Optional<User> optionalAuthenticatedUser =
+              userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail());
     User user = optionalAuthenticatedUser.get();
     if (!user.isOwner(server)) {
       return new ResponseEntity<>(HttpStatus.FORBIDDEN);

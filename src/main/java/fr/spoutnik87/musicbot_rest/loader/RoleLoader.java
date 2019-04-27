@@ -15,12 +15,12 @@ public class RoleLoader implements ApplicationListener<ContextRefreshedEvent> {
 
   @Autowired private RoleRepository roleRepository;
 
-    @Autowired
-    private UUID uuid;
+  @Autowired
+  private UUID uuid;
 
   @Override
   public void onApplicationEvent(ContextRefreshedEvent contextRefreshedEvent) {
-      this.roleRepository.save(new Role(uuid.v4(), "ADMIN", 1));
-      this.roleRepository.save(new Role(uuid.v4(), "USER", 2));
+    this.roleRepository.save(new Role(uuid.v4(), "ADMIN", 1));
+    this.roleRepository.save(new Role(uuid.v4(), "USER", 2));
   }
 }

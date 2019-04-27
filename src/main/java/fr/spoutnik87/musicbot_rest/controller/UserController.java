@@ -14,7 +14,6 @@ import fr.spoutnik87.musicbot_rest.util.AuthenticationHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -72,7 +71,8 @@ public class UserController {
     if (!optionalServer.isPresent()) {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
-    Optional<User> optionalAuthenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail());
+    Optional<User> optionalAuthenticatedUser =
+            userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail());
     if (!optionalAuthenticatedUser.isPresent()) {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
@@ -90,7 +90,8 @@ public class UserController {
     if (!optionalGroup.isPresent()) {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
-    Optional<User> optionalAuthenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail());
+    Optional<User> optionalAuthenticatedUser =
+            userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail());
     if (!optionalAuthenticatedUser.isPresent()) {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
@@ -126,7 +127,8 @@ public class UserController {
   @PutMapping("/{id}")
   public ResponseEntity<Object> update(
       @PathVariable("id") long id, @RequestBody UserUpdateReader userUpdateReader) {
-    Optional<User> optionalAuthenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail());
+    Optional<User> optionalAuthenticatedUser =
+            userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail());
     if (!optionalAuthenticatedUser.isPresent()) {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }

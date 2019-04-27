@@ -39,7 +39,8 @@ public class GroupController {
     }
     Group group = optionalGroup.get();
     Server server = group.getServer();
-    Optional<User> optionalAuthenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail());
+    Optional<User> optionalAuthenticatedUser =
+            userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail());
     if (!optionalAuthenticatedUser.isPresent()) {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
@@ -58,7 +59,8 @@ public class GroupController {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
     Server server = optionalServer.get();
-    Optional<User> optionalAuthenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail());
+    Optional<User> optionalAuthenticatedUser =
+            userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail());
     if (!optionalAuthenticatedUser.isPresent()) {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
@@ -77,7 +79,8 @@ public class GroupController {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
     Server server = optionalServer.get();
-    Optional<User> optionalAuthenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail());
+    Optional<User> optionalAuthenticatedUser =
+            userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail());
     if (!optionalAuthenticatedUser.isPresent()) {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
@@ -104,7 +107,8 @@ public class GroupController {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
     Group group = optionalGroup.get();
-    Optional<User> optionalAuthenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail());
+    Optional<User> optionalAuthenticatedUser =
+            userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail());
     if (!optionalAuthenticatedUser.isPresent()) {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }

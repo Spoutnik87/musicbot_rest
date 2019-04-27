@@ -15,8 +15,8 @@ public class PermissionLoader implements ApplicationListener<ContextRefreshedEve
 
   @Autowired private PermissionRepository permissionRepository;
 
-  @Autowired
-  private UUID uuid;
+    @Autowired
+    private UUID uuid;
 
   @Override
   public void onApplicationEvent(ContextRefreshedEvent contextRefreshedEvent) {
