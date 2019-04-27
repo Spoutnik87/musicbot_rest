@@ -39,7 +39,11 @@ public class GroupController {
     }
     Group group = optionalGroup.get();
     Server server = group.getServer();
-    User user = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail());
+    Optional<User> optionalAuthenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail());
+    if (!optionalAuthenticatedUser.isPresent()) {
+      return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+    }
+    User user = optionalAuthenticatedUser.get();
     if (!server.hasUser(user)) {
       return new ResponseEntity<>(HttpStatus.FORBIDDEN);
     }
@@ -54,7 +58,11 @@ public class GroupController {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
     Server server = optionalServer.get();
-    User user = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail());
+    Optional<User> optionalAuthenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail());
+    if (!optionalAuthenticatedUser.isPresent()) {
+      return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+    }
+    User user = optionalAuthenticatedUser.get();
     if (!server.hasUser(user)) {
       return new ResponseEntity<>(HttpStatus.FORBIDDEN);
     }
@@ -69,7 +77,11 @@ public class GroupController {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
     Server server = optionalServer.get();
-    User user = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail());
+    Optional<User> optionalAuthenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail());
+    if (!optionalAuthenticatedUser.isPresent()) {
+      return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+    }
+    User user = optionalAuthenticatedUser.get();
     if (!user.isOwner(server)) {
       return new ResponseEntity<>(HttpStatus.FORBIDDEN);
     }
@@ -87,13 +99,16 @@ public class GroupController {
   @PutMapping("/{id}")
   public ResponseEntity<Object> update(
       @PathVariable("id") long id, @RequestBody GroupUpdateReader groupUpdateReader) {
-    User user = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail());
     Optional<Group> optionalGroup = groupRepository.findById(id);
     if (!optionalGroup.isPresent()) {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
     Group group = optionalGroup.get();
-    if (!user.isOwner(group.getServer())) {
+    Optional<User> optionalAuthenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail());
+    if (!optionalAuthenticatedUser.isPresent()) {
+      return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+    }
+    if (!optionalAuthenticatedUser.get().isOwner(group.getServer())) {
       return new ResponseEntity<>(HttpStatus.FORBIDDEN);
     }
     group.setName(groupUpdateReader.getName());

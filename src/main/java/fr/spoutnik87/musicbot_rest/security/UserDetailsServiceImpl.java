@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Optional;
 
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
@@ -21,11 +22,11 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
   @Override
   public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-    User user = userRepository.findByEmail(email);
-    if (user == null) {
+    Optional<User> optionalUser = userRepository.findByEmail(email);
+    if (!optionalUser.isPresent()) {
       throw new UsernameNotFoundException(email);
     }
-
+    User user = optionalUser.get();
     return new fr.spoutnik87.musicbot_rest.security.UserDetails(
         user, getAuthorities(user.getRole().getLvl()));
   }

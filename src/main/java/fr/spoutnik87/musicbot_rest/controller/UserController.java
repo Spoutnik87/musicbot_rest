@@ -14,6 +14,7 @@ import fr.spoutnik87.musicbot_rest.util.AuthenticationHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,8 +30,7 @@ public class UserController {
 
   @Autowired private GroupRepository groupRepository;
 
-    @Autowired
-    private RoleRepository roleRepository;
+  @Autowired private RoleRepository roleRepository;
 
   @Autowired private UUID uuid;
 
@@ -39,15 +39,23 @@ public class UserController {
   @JsonView(Views.Public.class)
   @GetMapping("")
   public ResponseEntity<Object> getLogged() {
-    User user = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail());
-    return new ResponseEntity<>(user, HttpStatus.OK);
+    Optional<User> optionalUser =
+        userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail());
+    if (!optionalUser.isPresent()) {
+      return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+    }
+    return new ResponseEntity<>(optionalUser.get(), HttpStatus.OK);
   }
 
   @JsonView(Views.Public.class)
   @GetMapping("/{id}")
   public ResponseEntity<Object> getById(@PathVariable("id") long id) {
-    User user = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail());
-      if (user.getRole().getName() != RoleEnum.ADMIN.getName()) {
+    Optional<User> optionalAuthenticatedUser =
+        userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail());
+    if (!optionalAuthenticatedUser.isPresent()) {
+      return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+    }
+    if (optionalAuthenticatedUser.get().getRole().getName() != RoleEnum.ADMIN.getName()) {
       return new ResponseEntity<>(HttpStatus.FORBIDDEN);
     }
     Optional<User> optionalUser = userRepository.findById(id);
@@ -64,9 +72,12 @@ public class UserController {
     if (!optionalServer.isPresent()) {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
-    User user = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail());
+    Optional<User> optionalAuthenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail());
+    if (!optionalAuthenticatedUser.isPresent()) {
+      return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+    }
     Server server = optionalServer.get();
-    if (!server.hasUser(user)) {
+    if (!server.hasUser(optionalAuthenticatedUser.get())) {
       return new ResponseEntity<>(HttpStatus.FORBIDDEN);
     }
     return new ResponseEntity<>(server.getUserList(), HttpStatus.OK);
@@ -79,10 +90,13 @@ public class UserController {
     if (!optionalGroup.isPresent()) {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
-    User user = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail());
+    Optional<User> optionalAuthenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail());
+    if (!optionalAuthenticatedUser.isPresent()) {
+      return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+    }
     Group group = optionalGroup.get();
     Server server = group.getServer();
-    if (!server.hasUser(user)) {
+    if (!server.hasUser(optionalAuthenticatedUser.get())) {
       return new ResponseEntity<>(HttpStatus.FORBIDDEN);
     }
     return new ResponseEntity<>(group.getUserList(), HttpStatus.OK);
@@ -91,7 +105,10 @@ public class UserController {
   @JsonView(Views.Public.class)
   @PostMapping()
   public ResponseEntity<Object> signup(@RequestBody UserSignupReader userSignupReader) {
-      Role r = roleRepository.findByName(RoleEnum.USER.getName());
+    Optional<Role> optionalUserRole = roleRepository.findByName(RoleEnum.USER.getName());
+    if (!optionalUserRole.isPresent()) {
+      return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+    }
     User user =
         new User(
             uuid.v4(),
@@ -100,8 +117,8 @@ public class UserController {
             userSignupReader.getFirstname(),
             userSignupReader.getLastname(),
             bCryptPasswordEncoder.encode(userSignupReader.getPassword()),
-                r);
-      this.userRepository.save(user);
+            optionalUserRole.get());
+    this.userRepository.save(user);
     return new ResponseEntity<>(user, HttpStatus.CREATED);
   }
 
@@ -109,7 +126,11 @@ public class UserController {
   @PutMapping("/{id}")
   public ResponseEntity<Object> update(
       @PathVariable("id") long id, @RequestBody UserUpdateReader userUpdateReader) {
-    User user = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail());
+    Optional<User> optionalAuthenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail());
+    if (!optionalAuthenticatedUser.isPresent()) {
+      return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+    }
+    User user = optionalAuthenticatedUser.get();
     if (user.getId() != id) {
       return new ResponseEntity<>(HttpStatus.FORBIDDEN);
     }

@@ -22,12 +22,14 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(
@@ -40,30 +42,45 @@ import java.util.Map;
 @WebMvcTest(UserController.class)
 public class UserControllerTest {
 
-  @Autowired
-  protected MockMvc mockMvc;
-
-  @Autowired
-  protected BCryptPasswordEncoder bCryptPasswordEncoder;
+  @Autowired protected MockMvc mockMvc;
+  @Autowired protected BCryptPasswordEncoder bCryptPasswordEncoder;
 
   @MockBean protected UserRepository userRepository;
-  @MockBean
-  protected RoleRepository roleRepository;
+  @MockBean protected RoleRepository roleRepository;
   @MockBean protected ServerRepository serverRepository;
   @MockBean protected GroupRepository groupRepository;
-
   @MockBean(name = "UUID")
   protected UUID uuid;
 
   @BeforeEach
   public void setup() {
     Mockito.when(uuid.v4()).thenReturn("token");
+    Mockito.when(userRepository.findByEmail("user@test.com"))
+        .thenReturn(
+            Optional.of(new User(
+                "token",
+                "user@test.com",
+                "Nickname",
+                "Firstname",
+                "Lastname",
+                bCryptPasswordEncoder.encode("password"),
+                new Role("token", "USER", 2))));
+    Mockito.when(userRepository.findByEmail("admin@test.com"))
+            .thenReturn(
+                    Optional.of(new User(
+                            "token2",
+                            "admin@test.com",
+                            "Nickname",
+                            "Firstname",
+                            "Lastname",
+                            bCryptPasswordEncoder.encode("password"),
+                            new Role("token2", "ADMIN", 1))));
   }
 
   @Test
-  public void testSignup() throws Exception {
+  public void signUp_ValidParameters_UserCreated() throws Exception {
     Mockito.when(roleRepository.findByName(RoleEnum.USER.getName()))
-            .thenReturn(new Role("token", "USER", 2));
+        .thenReturn(Optional.of(new Role("token", "USER", 2)));
     Map<String, Object> params = new HashMap<>();
     params.put("email", "test@test.com");
     params.put("password", "password");
@@ -81,41 +98,77 @@ public class UserControllerTest {
   }
 
   @Test
-  public void testLoginSuccess() throws Exception {
-    Mockito.when(userRepository.findByEmail("user@test.com"))
-            .thenReturn(
-                    new User(
-                            "token",
-                            "user@test.com",
-                            "Nickname",
-                            "Firstname",
-                            "Lastname",
-                            bCryptPasswordEncoder.encode("password"),
-                            new Role("token", "USER", 2)));
+  public void login_ValidParameters_ReturnLoggedUser() throws Exception {
     Map<String, Object> params = new HashMap<>();
     params.put("email", "user@test.com");
     params.put("password", "password");
     Util.basicTestWithBody(
+        mockMvc,
+        HttpMethod.POST,
+        "/login",
+        new HashMap<>(),
+        params,
+        HttpStatus.OK,
+        "{\"id\":\"token\",\"email\":\"user@test.com\",\"nickname\":\"Nickname\",\"firstname\":\"Firstname\",\"lastname\":\"Lastname\",\"role\":{\"id\":\"token\",\"name\":\"USER\",\"lvl\":2}}");
+  }
+
+  @Test
+  public void login_InvalidParameters_ReturnUnauthorizedStatus() throws Exception {
+    Map<String, Object> params = new HashMap<>();
+    params.put("email", "usera@test.com");
+    params.put("password", "password");
+    Util.basicTestWithBody(
+        mockMvc, HttpMethod.POST, "/login", new HashMap<>(), params, HttpStatus.UNAUTHORIZED);
+  }
+
+  @Test
+  @WithUserDetails("user@test.com")
+  public void getLogged_Authenticated_ReturnLoggedUser() throws Exception {
+    Util.basicTest(
             mockMvc,
-            HttpMethod.POST,
-            "/login",
+            HttpMethod.GET,
+            "/user",
             new HashMap<>(),
-            params,
             HttpStatus.OK,
             "{\"id\":\"token\",\"email\":\"user@test.com\",\"nickname\":\"Nickname\",\"firstname\":\"Firstname\",\"lastname\":\"Lastname\",\"role\":{\"id\":\"token\",\"name\":\"USER\",\"lvl\":2}}");
   }
 
   @Test
-  public void testLoginFail() throws Exception {
-    Map<String, Object> params = new HashMap<>();
-    params.put("email", "user@test.com");
-    params.put("password", "password");
-    Util.basicTestWithBody(
-            mockMvc,
-            HttpMethod.POST,
-            "/login",
-            new HashMap<>(),
-            params,
-            HttpStatus.UNAUTHORIZED);
+  public void getLogged_NotAuthenticated_ReturnForbiddenStatus() throws Exception {
+    Util.basicTest(mockMvc, HttpMethod.GET, "/user", new HashMap<>(), HttpStatus.FORBIDDEN);
+  }
+
+  @Test
+  public void getById_NotAuthenticated_ReturnForbiddenStatus() throws Exception {
+    Util.basicTest(
+            mockMvc, HttpMethod.GET, "/user/1", new HashMap<>(), HttpStatus.FORBIDDEN);
+  }
+
+  @Test
+  @WithUserDetails("user@test.com")
+  public void getById_NotAdmin_ReturnForbiddenStatus() throws Exception {
+    Util.basicTest(
+            mockMvc, HttpMethod.GET, "/user/1", new HashMap<>(), HttpStatus.FORBIDDEN);
+  }
+
+  @Test
+  @WithUserDetails("admin@test.com")
+  public void getById_AdminAndUserNotFound_ReturnNotFoundStatus() throws Exception {
+    Util.basicTest(
+            mockMvc, HttpMethod.GET, "/user/1", new HashMap<>(), HttpStatus.BAD_REQUEST);
+  }
+
+  @Test
+  public void getById_AdminAndUserFound_ReturnUser() throws Exception {
+    Mockito.when(userRepository.findByUuid("1"))
+            .thenReturn(
+                    Optional.of(new User(
+                            "1",
+                            "test@test.com",
+                            "Nickname",
+                            "Firstname",
+                            "Lastname",
+                            bCryptPasswordEncoder.encode("password"),
+                            new Role("token", "USER", 2))));
   }
 }

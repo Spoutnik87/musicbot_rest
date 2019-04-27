@@ -19,7 +19,6 @@ public class SpringSecurityTestConfig {
   @Autowired private BCryptPasswordEncoder bCryptPasswordEncoder;
 
   @Bean
-  @Primary
   public UserDetailsService userDetailsService() {
     Role role = new Role();
     role.setUuid("token");

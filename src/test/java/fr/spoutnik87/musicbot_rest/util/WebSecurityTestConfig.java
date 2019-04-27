@@ -1,18 +1,18 @@
 package fr.spoutnik87.musicbot_rest.util;
 
-import fr.spoutnik87.musicbot_rest.security.JWTAuthenticationFilter;
-import fr.spoutnik87.musicbot_rest.security.JWTAuthorizationFilter;
-import fr.spoutnik87.musicbot_rest.security.SecurityConfiguration;
-import fr.spoutnik87.musicbot_rest.security.UserDetailsServiceImpl;
+import fr.spoutnik87.musicbot_rest.constant.RoleEnum;
+import fr.spoutnik87.musicbot_rest.model.Role;
+import fr.spoutnik87.musicbot_rest.model.User;
+import fr.spoutnik87.musicbot_rest.security.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -24,6 +24,8 @@ import java.util.Arrays;
 @EnableWebSecurity
 public class WebSecurityTestConfig extends WebSecurityConfigurerAdapter {
 
+  @Autowired private BCryptPasswordEncoder bCryptPasswordEncoder;
+
   @Bean
   public SecurityConfiguration securityConfiguration() {
     return new SecurityConfiguration();
@@ -31,11 +33,35 @@ public class WebSecurityTestConfig extends WebSecurityConfigurerAdapter {
 
   @Bean
   public UserDetailsServiceImpl userDetailsService() {
-    return new UserDetailsServiceImpl();
+    Role roleUser = new Role("token", "USER", 2);
+    User user =
+        new User(
+            "token",
+            "user@test.com",
+            "Nickname",
+            "Firstname",
+            "Lastname",
+            bCryptPasswordEncoder.encode("password"),
+            roleUser);
+    UserDetails basicUser =
+        new UserDetails(user, Arrays.asList(new SimpleGrantedAuthority(RoleEnum.USER.getName())));
+
+    Role roleAdmin = new Role("token2", "ADMIN", 1);
+    User userAdmin =
+            new User(
+                    "token2",
+                    "admin@test.com",
+                    "Nickname",
+                    "Firstname",
+                    "Lastname",
+                    bCryptPasswordEncoder.encode("password"),
+                    roleAdmin);
+    UserDetails adminUser =
+            new UserDetails(userAdmin, Arrays.asList(new SimpleGrantedAuthority(RoleEnum.ADMIN.getName())));
+    return new InMemoryUserDetailsManager(Arrays.asList(basicUser, adminUser));
   }
 
   @Autowired private UserDetailsServiceImpl userDetailsService;
-  @Autowired private BCryptPasswordEncoder bCryptPasswordEncoder;
   @Autowired private SecurityConfiguration securityConfiguration;
 
   private static final String[] AUTH_WHITELIST = {
@@ -68,26 +94,21 @@ public class WebSecurityTestConfig extends WebSecurityConfigurerAdapter {
         .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
   }
 
-  @Override
-  public void configure(AuthenticationManagerBuilder auth) throws Exception {
-    auth.userDetailsService(userDetailsService).passwordEncoder(bCryptPasswordEncoder);
-  }
-
   @Bean
   CorsConfigurationSource corsConfigurationSource() {
     final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
     final CorsConfiguration configuration = new CorsConfiguration();
     configuration.setAllowedOrigins(Arrays.asList("*"));
     configuration.setAllowedMethods(
-            Arrays.asList("HEAD", "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+        Arrays.asList("HEAD", "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
     configuration.setAllowCredentials(true);
     configuration.setAllowedHeaders(Arrays.asList("*"));
     configuration.setExposedHeaders(
-            Arrays.asList(
-                    "X-Auth-Token",
-                    "Authorization",
-                    "Access-Control-Allow-Origin",
-                    "Access-Control-Allow-Credentials"));
+        Arrays.asList(
+            "X-Auth-Token",
+            "Authorization",
+            "Access-Control-Allow-Origin",
+            "Access-Control-Allow-Credentials"));
     source.registerCorsConfiguration("/**", configuration);
     return source;
   }
