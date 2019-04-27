@@ -159,6 +159,7 @@ public class UserControllerTest {
   }
 
   @Test
+  @WithUserDetails("admin@test.com")
   public void getById_AdminAndUserFound_ReturnUser() throws Exception {
     Mockito.when(userRepository.findByUuid("1"))
             .thenReturn(
@@ -171,5 +172,28 @@ public class UserControllerTest {
                                     "Lastname",
                                     bCryptPasswordEncoder.encode("password"),
                                     new Role("token", "USER", 2))));
+    Util.basicTest(
+            mockMvc,
+            HttpMethod.GET,
+            "/user/1",
+            new HashMap<>(),
+            HttpStatus.OK,
+            "{\"id\":\"1\",\"email\":\"test@test.com\",\"nickname\":\"Nickname\",\"firstname\":\"Firstname\",\"lastname\":\"Lastname\",\"role\":{\"id\":\"token\",\"name\":\"USER\",\"lvl\":2}}");
+  }
+
+  @Test
+  @WithUserDetails("user@test.com")
+  public void update_ChangeUserValues_ReturnNewUser() throws Exception {
+    Map<String, Object> body = new HashMap<>();
+    body.put("firstname", "Newfirstname");
+    body.put("lastname", "Newlastname");
+    Util.basicTestWithBody(
+            mockMvc,
+            HttpMethod.PUT,
+            "/user/token",
+            new HashMap<>(),
+            body,
+            HttpStatus.OK,
+            "{\"id\":\"token\",\"email\":\"user@test.com\",\"nickname\":\"Nickname\",\"firstname\":\"Newfirstname\",\"lastname\":\"Newlastname\",\"role\":{\"id\":\"token\",\"name\":\"USER\",\"lvl\":2}}");
   }
 }

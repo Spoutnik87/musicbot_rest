@@ -1,9 +1,10 @@
 package fr.spoutnik87.musicbot_rest.reader;
 
 import lombok.Data;
-import lombok.NonNull;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
 public class GroupUpdateReader {
-  @NonNull private String name;
+  private String name;
 }

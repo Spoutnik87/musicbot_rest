@@ -48,7 +48,7 @@ public class UserController {
 
   @JsonView(Views.Public.class)
   @GetMapping("/{id}")
-  public ResponseEntity<Object> getById(@PathVariable("id") long id) {
+  public ResponseEntity<Object> getById(@PathVariable("id") String uuid) {
     Optional<User> optionalAuthenticatedUser =
         userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail());
     if (!optionalAuthenticatedUser.isPresent()) {
@@ -57,7 +57,7 @@ public class UserController {
     if (optionalAuthenticatedUser.get().getRole().getName() != RoleEnum.ADMIN.getName()) {
       return new ResponseEntity<>(HttpStatus.FORBIDDEN);
     }
-    Optional<User> optionalUser = userRepository.findById(id);
+    Optional<User> optionalUser = userRepository.findByUuid(uuid);
     if (!optionalUser.isPresent()) {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
@@ -66,8 +66,8 @@ public class UserController {
 
   @JsonView(Views.Public.class)
   @GetMapping("/list/server/{serverId}")
-  public ResponseEntity<Object> getByServerId(@PathVariable("serverId") long serverId) {
-    Optional<Server> optionalServer = serverRepository.findById(serverId);
+  public ResponseEntity<Object> getByServerId(@PathVariable("serverId") String serverUuId) {
+    Optional<Server> optionalServer = serverRepository.findByUuid(serverUuId);
     if (!optionalServer.isPresent()) {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
@@ -85,8 +85,8 @@ public class UserController {
 
   @JsonView(Views.Public.class)
   @GetMapping("/list/group/{groupId}")
-  public ResponseEntity<Object> getByGroupId(@PathVariable("groupId") long groupId) {
-    Optional<Group> optionalGroup = groupRepository.findById(groupId);
+  public ResponseEntity<Object> getByGroupId(@PathVariable("groupId") String groupUuid) {
+    Optional<Group> optionalGroup = groupRepository.findByUuid(groupUuid);
     if (!optionalGroup.isPresent()) {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
@@ -126,19 +126,25 @@ public class UserController {
   @JsonView(Views.Public.class)
   @PutMapping("/{id}")
   public ResponseEntity<Object> update(
-      @PathVariable("id") long id, @RequestBody UserUpdateReader userUpdateReader) {
+          @PathVariable("id") String uuid, @RequestBody UserUpdateReader userUpdateReader) {
     Optional<User> optionalAuthenticatedUser =
             userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail());
     if (!optionalAuthenticatedUser.isPresent()) {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
     User user = optionalAuthenticatedUser.get();
-    if (user.getId() != id) {
+    if (!user.getUuid().equals(uuid)) {
       return new ResponseEntity<>(HttpStatus.FORBIDDEN);
     }
-    user.setNickname(userUpdateReader.getNickname());
-    user.setFirstname(userUpdateReader.getFirstname());
-    user.setLastname(userUpdateReader.getLastname());
+    if (userUpdateReader.getNickname() != null) {
+      user.setNickname(userUpdateReader.getNickname());
+    }
+    if (userUpdateReader.getFirstname() != null) {
+      user.setFirstname(userUpdateReader.getFirstname());
+    }
+    if (userUpdateReader.getLastname() != null) {
+      user.setLastname(userUpdateReader.getLastname());
+    }
     userRepository.save(user);
     return new ResponseEntity<>(user, HttpStatus.OK);
   }

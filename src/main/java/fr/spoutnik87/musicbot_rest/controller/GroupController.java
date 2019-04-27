@@ -32,8 +32,8 @@ public class GroupController {
 
   @JsonView(Views.Public.class)
   @GetMapping("/{id}")
-  public ResponseEntity<Object> getById(@PathVariable("id") long id) {
-    Optional<Group> optionalGroup = groupRepository.findById(id);
+  public ResponseEntity<Object> getById(@PathVariable("id") String uuid) {
+    Optional<Group> optionalGroup = groupRepository.findByUuid(uuid);
     if (!optionalGroup.isPresent()) {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
@@ -53,8 +53,8 @@ public class GroupController {
 
   @JsonView(Views.Public.class)
   @GetMapping("/server/{id}")
-  public ResponseEntity<Object> getByServerId(@PathVariable("id") long serverId) {
-    Optional<Server> optionalServer = serverRepository.findById(serverId);
+  public ResponseEntity<Object> getByServerId(@PathVariable("id") String serverUuid) {
+    Optional<Server> optionalServer = serverRepository.findByUuid(serverUuid);
     if (!optionalServer.isPresent()) {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
@@ -101,8 +101,8 @@ public class GroupController {
   @JsonView(Views.Public.class)
   @PutMapping("/{id}")
   public ResponseEntity<Object> update(
-      @PathVariable("id") long id, @RequestBody GroupUpdateReader groupUpdateReader) {
-    Optional<Group> optionalGroup = groupRepository.findById(id);
+          @PathVariable("id") String uuid, @RequestBody GroupUpdateReader groupUpdateReader) {
+    Optional<Group> optionalGroup = groupRepository.findByUuid(uuid);
     if (!optionalGroup.isPresent()) {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
