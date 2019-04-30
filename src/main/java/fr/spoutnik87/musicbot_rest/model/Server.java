@@ -34,6 +34,13 @@ public class Server extends AuditModel implements Serializable {
   private String name;
 
   @JsonView(Views.Public.class)
+  @ManyToOne()
+  @NonNull
+  @JoinColumn(name = "user_id")
+  @JsonManagedReference
+  private User owner;
+
+  @JsonView(Views.Public.class)
   @OneToOne(mappedBy = "server")
   @JoinColumn(name = "bot_id")
   @JsonBackReference
@@ -43,13 +50,6 @@ public class Server extends AuditModel implements Serializable {
   @OneToMany(mappedBy = "server", cascade = CascadeType.ALL)
   @JsonBackReference
   private Set<Group> groupSet;
-
-  @JsonView(Views.Public.class)
-  @ManyToOne()
-  @NonNull
-  @JoinColumn(name = "user_id")
-  @JsonManagedReference
-  private User owner;
 
   @JsonView(Views.Public.class)
   @OneToMany(mappedBy = "server", cascade = CascadeType.ALL)

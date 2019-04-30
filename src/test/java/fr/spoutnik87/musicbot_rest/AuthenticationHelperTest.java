@@ -1,10 +1,12 @@
 package fr.spoutnik87.musicbot_rest;
 
+import fr.spoutnik87.musicbot_rest.repository.UserRepository;
 import fr.spoutnik87.musicbot_rest.util.AuthenticationHelper;
 import fr.spoutnik87.musicbot_rest.util.BCryptTestConfig;
-import fr.spoutnik87.musicbot_rest.util.SpringSecurityTestConfig;
+import fr.spoutnik87.musicbot_rest.util.WebSecurityTestConfig;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.test.context.support.WithUserDetails;
@@ -16,8 +18,11 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = {BCryptTestConfig.class, SpringSecurityTestConfig.class})
+@ContextConfiguration(classes = {BCryptTestConfig.class, WebSecurityTestConfig.class})
 public class AuthenticationHelperTest {
+
+  @MockBean
+  protected UserRepository userRepository;
 
   @Test
   public void isAuthenticatedWhenUserNotAuthenticated() {

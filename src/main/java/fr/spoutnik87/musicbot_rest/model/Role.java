@@ -16,7 +16,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 @Data
 @Entity
-@Table(name = "RoleEnum")
+@Table(name = "Role")
 public class Role extends AuditModel implements Serializable {
 
   @JsonView(Views.Public.class)
