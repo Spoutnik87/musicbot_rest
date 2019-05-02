@@ -1,23 +1,23 @@
 package fr.spoutnik87.musicbot_rest.util
 
-import fr.spoutnik87.musicbot_rest.constant.RoleEnum
-import fr.spoutnik87.musicbot_rest.model.Role
-import fr.spoutnik87.musicbot_rest.model.User
-import fr.spoutnik87.musicbot_rest.security.*
+import fr.spoutnik87.musicbot_rest.security.JWTAuthenticationFilter
+import fr.spoutnik87.musicbot_rest.security.JWTAuthorizationFilter
+import fr.spoutnik87.musicbot_rest.security.SecurityConfiguration
+import fr.spoutnik87.musicbot_rest.security.UserDetailsServiceImpl
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpMethod
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter
 import org.springframework.security.config.http.SessionCreationPolicy
-import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.CorsConfigurationSource
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
-import java.util.*
 
 @Configuration
 @EnableWebSecurity
@@ -26,8 +26,8 @@ class WebSecurityTestConfig : WebSecurityConfigurerAdapter() {
     @Autowired
     private lateinit var bCryptPasswordEncoder: BCryptPasswordEncoder
 
-    @Autowired
-    private lateinit var userDetailsService: UserDetailsServiceImpl
+    /*@Autowired
+    private lateinit var userDetailsService: UserDetailsServiceImpl*/
 
     @Autowired
     private lateinit var securityConfiguration: SecurityConfiguration
@@ -35,31 +35,11 @@ class WebSecurityTestConfig : WebSecurityConfigurerAdapter() {
     @Bean
     fun securityConfiguration() = SecurityConfiguration()
 
-    @Bean
-    public override fun userDetailsService(): UserDetailsServiceImpl {
-        val roleUser = Role("token", "USER", 2)
-        val user = User(
-                "token",
-                "user@test.com",
-                "Nickname",
-                "Firstname",
-                "Lastname",
-                bCryptPasswordEncoder.encode("password"),
-                roleUser)
-        val basicUser = UserDetails(user, Arrays.asList(SimpleGrantedAuthority(RoleEnum.USER.value)))
+    @MockBean
+    private lateinit var userDetailsService: UserDetailsServiceImpl
 
-        val roleAdmin = Role("token2", "ADMIN", 1)
-        val userAdmin = User(
-                "token2",
-                "admin@test.com",
-                "Nickname",
-                "Firstname",
-                "Lastname",
-                bCryptPasswordEncoder.encode("password"),
-                roleAdmin)
-        val adminUser = UserDetails(
-                userAdmin, Arrays.asList(SimpleGrantedAuthority(RoleEnum.ADMIN.value)))
-        return InMemoryUserDetailsManager(Arrays.asList(basicUser, adminUser))
+    override fun userDetailsService(): UserDetailsServiceImpl {
+        return userDetailsService
     }
 
     override fun configure(http: HttpSecurity) {
@@ -80,6 +60,10 @@ class WebSecurityTestConfig : WebSecurityConfigurerAdapter() {
                 // this disables session creation on Spring Security
                 .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+    }
+
+    override fun configure(auth: AuthenticationManagerBuilder) {
+        auth.userDetailsService(userDetailsService).passwordEncoder(bCryptPasswordEncoder)
     }
 
     @Bean

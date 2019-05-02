@@ -43,41 +43,31 @@ class UserController {
     @JsonView(Views.Companion.Public::class)
     @GetMapping("")
     fun getLogged(): ResponseEntity<Any> {
-        val optionalUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
-        return if (!optionalUser.isPresent) {
+        val user = AuthenticationHelper.getAuthenticatedUser()
+        return if (user == null) {
             ResponseEntity(HttpStatus.BAD_REQUEST)
-        } else ResponseEntity(optionalUser.get(), HttpStatus.OK)
+        } else ResponseEntity(user, HttpStatus.OK)
     }
 
     @JsonView(Views.Companion.Public::class)
     @GetMapping("/{id}")
     fun getById(@PathVariable("id") uuid: String): ResponseEntity<Any> {
-        val optionalAuthenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
-        if (!optionalAuthenticatedUser.isPresent) {
-            return ResponseEntity(HttpStatus.BAD_REQUEST)
-        }
-        if (optionalAuthenticatedUser.get().role.name !== RoleEnum.ADMIN.value) {
+        val authenticatedUser = AuthenticationHelper.getAuthenticatedUser()
+                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        if (authenticatedUser.role.name != RoleEnum.ADMIN.value) {
             return ResponseEntity(HttpStatus.FORBIDDEN)
         }
-        val optionalUser = userRepository.findByUuid(uuid)
-        return if (!optionalUser.isPresent) {
-            ResponseEntity(HttpStatus.BAD_REQUEST)
-        } else ResponseEntity(optionalUser.get(), HttpStatus.OK)
+        val user = userRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        return ResponseEntity(user, HttpStatus.OK)
     }
 
     @JsonView(Views.Companion.Public::class)
     @GetMapping("/list/server/{serverId}")
-    fun getByServerId(@PathVariable("serverId") serverUuId: String): ResponseEntity<Any> {
-        val optionalServer = serverRepository.findByUuid(serverUuId)
-        if (!optionalServer.isPresent) {
-            return ResponseEntity(HttpStatus.BAD_REQUEST)
-        }
-        val optionalAuthenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
-        if (!optionalAuthenticatedUser.isPresent) {
-            return ResponseEntity(HttpStatus.BAD_REQUEST)
-        }
-        val server = optionalServer.get()
-        return if (!server.hasUser(optionalAuthenticatedUser.get())) {
+    fun getByServerId(@PathVariable("serverId") serverUuid: String): ResponseEntity<Any> {
+        val server = serverRepository.findByUuid(serverUuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        val authenticatedUser = AuthenticationHelper.getAuthenticatedUser()
+                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        return if (!server.hasUser(authenticatedUser)) {
             ResponseEntity(HttpStatus.FORBIDDEN)
         } else ResponseEntity(server.userList, HttpStatus.OK)
     }
@@ -85,17 +75,10 @@ class UserController {
     @JsonView(Views.Companion.Public::class)
     @GetMapping("/list/group/{groupId}")
     fun getByGroupId(@PathVariable("groupId") groupUuid: String): ResponseEntity<Any> {
-        val optionalGroup = groupRepository.findByUuid(groupUuid)
-        if (!optionalGroup.isPresent) {
-            return ResponseEntity(HttpStatus.BAD_REQUEST)
-        }
-        val optionalAuthenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
-        if (!optionalAuthenticatedUser.isPresent) {
-            return ResponseEntity(HttpStatus.BAD_REQUEST)
-        }
-        val group = optionalGroup.get()
-        val server = group.server
-        return if (!server.hasUser(optionalAuthenticatedUser.get())) {
+        val group = groupRepository.findByUuid(groupUuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        val authenticatedUser = AuthenticationHelper.getAuthenticatedUser()
+                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        return if (!group.server.hasUser(authenticatedUser)) {
             ResponseEntity(HttpStatus.FORBIDDEN)
         } else ResponseEntity(group.userList, HttpStatus.OK)
     }
@@ -103,10 +86,7 @@ class UserController {
     @JsonView(Views.Companion.Public::class)
     @PostMapping
     fun signup(@RequestBody userSignupReader: UserSignupReader): ResponseEntity<Any> {
-        val optionalUserRole = roleRepository.findByName(RoleEnum.USER.value!!)
-        if (!optionalUserRole.isPresent()) {
-            return ResponseEntity(HttpStatus.BAD_REQUEST)
-        }
+        val role = roleRepository.findByName(RoleEnum.USER.value) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         val user = User(
                 uuid.v4(),
                 userSignupReader.email,
@@ -114,7 +94,7 @@ class UserController {
                 userSignupReader.firstname,
                 userSignupReader.lastname,
                 bCryptPasswordEncoder.encode(userSignupReader.password),
-                optionalUserRole.get())
+                role)
         this.userRepository.save(user)
         return ResponseEntity(user, HttpStatus.CREATED)
     }
@@ -123,11 +103,7 @@ class UserController {
     @PutMapping("/{id}")
     fun update(
             @PathVariable("id") uuid: String, @RequestBody userUpdateReader: UserUpdateReader): ResponseEntity<Any> {
-        val optionalAuthenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
-        if (!optionalAuthenticatedUser.isPresent) {
-            return ResponseEntity(HttpStatus.BAD_REQUEST)
-        }
-        val user = optionalAuthenticatedUser.get()
+        val user = AuthenticationHelper.getAuthenticatedUser() ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         if (user.uuid != uuid) {
             return ResponseEntity(HttpStatus.FORBIDDEN)
         }

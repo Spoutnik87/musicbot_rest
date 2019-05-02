@@ -34,18 +34,10 @@ class GroupController {
     @JsonView(Views.Companion.Public::class)
     @GetMapping("/{id}")
     fun getById(@PathVariable("id") uuid: String): ResponseEntity<Any> {
-        val optionalGroup = groupRepository.findByUuid(uuid)
-        if (!optionalGroup.isPresent) {
-            return ResponseEntity(HttpStatus.BAD_REQUEST)
-        }
-        val group = optionalGroup.get()
-        val server = group.server
-        val optionalAuthenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
-        if (!optionalAuthenticatedUser.isPresent) {
-            return ResponseEntity(HttpStatus.BAD_REQUEST)
-        }
-        val user = optionalAuthenticatedUser.get()
-        return if (!server.hasUser(user)) {
+        val group = groupRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        val authenticatedUser = AuthenticationHelper.getAuthenticatedUser()
+                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        return if (!group.server.hasUser(authenticatedUser)) {
             ResponseEntity(HttpStatus.FORBIDDEN)
         } else ResponseEntity(group, HttpStatus.OK)
     }
@@ -53,17 +45,10 @@ class GroupController {
     @JsonView(Views.Companion.Public::class)
     @GetMapping("/server/{id}")
     fun getByServerId(@PathVariable("id") serverUuid: String): ResponseEntity<Any> {
-        val optionalServer = serverRepository.findByUuid(serverUuid)
-        if (!optionalServer.isPresent) {
-            return ResponseEntity(HttpStatus.BAD_REQUEST)
-        }
-        val server = optionalServer.get()
-        val optionalAuthenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
-        if (!optionalAuthenticatedUser.isPresent) {
-            return ResponseEntity(HttpStatus.BAD_REQUEST)
-        }
-        val user = optionalAuthenticatedUser.get()
-        return if (!server.hasUser(user)) {
+        val server = serverRepository.findByUuid(serverUuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        val authenticatedUser = AuthenticationHelper.getAuthenticatedUser()
+                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        return if (!server.hasUser(authenticatedUser)) {
             ResponseEntity(HttpStatus.FORBIDDEN)
         } else ResponseEntity(server.groupSet.toTypedArray(), HttpStatus.OK)
     }
@@ -71,39 +56,27 @@ class GroupController {
     @JsonView(Views.Companion.Public::class)
     @PostMapping("")
     fun create(@RequestBody groupCreateReader: GroupCreateReader): ResponseEntity<Any> {
-        val optionalServer = serverRepository.findByUuid(groupCreateReader.serverId)
-        if (!optionalServer.isPresent) {
-            return ResponseEntity(HttpStatus.BAD_REQUEST)
-        }
-        val server = optionalServer.get()
-        val optionalAuthenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
-        if (!optionalAuthenticatedUser.isPresent) {
-            return ResponseEntity(HttpStatus.BAD_REQUEST)
-        }
-        val user = optionalAuthenticatedUser.get()
-        if (!user.isOwner(server)) {
+        val server = serverRepository.findByUuid(groupCreateReader.serverId)
+                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        val authenticatedUser = AuthenticationHelper.getAuthenticatedUser()
+                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        if (!authenticatedUser.isOwner(server)) {
             return ResponseEntity(HttpStatus.FORBIDDEN)
         }
         val group = Group(uuid.v4(), groupCreateReader.name, server)
         server.groupSet.plus(group)
-        groupRepository.save<Group>(group)
-        return ResponseEntity<Any>(null!!)
+        groupRepository.save(group)
+        return ResponseEntity(group, HttpStatus.ACCEPTED)
     }
 
     @JsonView(Views.Companion.Public::class)
     @PutMapping("/{id}")
     fun update(
             @PathVariable("id") uuid: String, @RequestBody groupUpdateReader: GroupUpdateReader): ResponseEntity<Any> {
-        val optionalGroup = groupRepository.findByUuid(uuid)
-        if (!optionalGroup.isPresent) {
-            return ResponseEntity(HttpStatus.BAD_REQUEST)
-        }
-        val group = optionalGroup.get()
-        val optionalAuthenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
-        if (!optionalAuthenticatedUser.isPresent) {
-            return ResponseEntity(HttpStatus.BAD_REQUEST)
-        }
-        if (!optionalAuthenticatedUser.get().isOwner(group.server)) {
+        val group = groupRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        val authenticatedUser = AuthenticationHelper.getAuthenticatedUser()
+                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        if (!authenticatedUser.isOwner(group.server)) {
             return ResponseEntity(HttpStatus.FORBIDDEN)
         }
         group.name = groupUpdateReader.name

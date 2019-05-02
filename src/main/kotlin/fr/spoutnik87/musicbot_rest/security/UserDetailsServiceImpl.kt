@@ -14,12 +14,9 @@ class UserDetailsServiceImpl : UserDetailsService {
     @Autowired
     private lateinit var userRepository: UserRepository
 
-    override fun loadUserByUsername(email: String): UserDetails {
-        val optionalUser = userRepository.findByEmail(email)
-        if (!optionalUser.isPresent) {
-            throw UsernameNotFoundException(email)
-        }
-        val user = optionalUser.get()
+    @Throws(UsernameNotFoundException::class)
+    override fun loadUserByUsername(email: String): UserDetails? {
+        val user = userRepository.findByEmail(email) ?: throw UsernameNotFoundException(email)
         return UserDetails(user, getAuthorities(user.role.lvl))
     }
 

@@ -43,72 +43,60 @@ class ServerController {
     @JsonView(Views.Companion.Public::class)
     @GetMapping("/{id}")
     fun getById(@PathVariable("id") uuid: String): ResponseEntity<Any> {
-        val optionalServer = serverRepository.findByUuid(uuid)
-        return if (!optionalServer.isPresent) {
-            ResponseEntity(HttpStatus.BAD_REQUEST)
-        } else ResponseEntity(optionalServer.get(), HttpStatus.OK)
+        val server = serverRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        return ResponseEntity(server, HttpStatus.OK)
     }
 
     @JsonView(Views.Companion.Public::class)
     @GetMapping("/list/{userId}")
     fun getByUserId(@PathVariable("userId") userUuid: String): ResponseEntity<Any> {
-        val optionalAuthenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
-        if (!optionalAuthenticatedUser.isPresent) {
-            return ResponseEntity(HttpStatus.BAD_REQUEST)
+        val authenticatedUser = AuthenticationHelper.getAuthenticatedUser()
+                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        if (authenticatedUser.uuid == userUuid) {
+            return ResponseEntity(authenticatedUser.serverSet.toTypedArray(), HttpStatus.OK)
         }
-        var user = optionalAuthenticatedUser.get()
-        if (user.uuid === userUuid) {
-            return ResponseEntity(user.serverSet.toTypedArray(), HttpStatus.OK)
-        }
-        if (user.role.name !== RoleEnum.ADMIN.value) {
+        if (authenticatedUser.role.name != RoleEnum.ADMIN.value) {
             return ResponseEntity(HttpStatus.FORBIDDEN)
         }
-        val optionalUser = userRepository.findByUuid(userUuid)
-        if (!optionalUser.isPresent) {
-            return ResponseEntity(HttpStatus.BAD_REQUEST)
-        }
-        user = optionalUser.get()
+        val user = userRepository.findByUuid(userUuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         return ResponseEntity(user.serverSet.toTypedArray(), HttpStatus.OK)
     }
 
     @JsonView(Views.Companion.Public::class)
     @PostMapping("")
     fun create(@RequestBody serverCreateReader: ServerCreateReader): ResponseEntity<Any> {
-        val optionalAuthenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
-        if (!optionalAuthenticatedUser.isPresent) {
-            return ResponseEntity(HttpStatus.BAD_REQUEST)
-        }
-        val user = optionalAuthenticatedUser.get()
-        val server = Server(uuid.v4(), serverCreateReader.name, user)
-        user.serverSet.plus(server)
+        val authenticatedUser = AuthenticationHelper.getAuthenticatedUser()
+                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        val server = Server(uuid.v4(), serverCreateReader.name, authenticatedUser)
+        authenticatedUser.serverSet.plus(server)
         val bot = Bot(uuid.v4(), "Bot " + serverCreateReader.name, serverCreateReader.token)
         server.bot = bot
 
         val group = Group(uuid.v4(), "Default", server)
-        val userGroup = UserGroup(uuid.v4(), user, group)
+        val userGroup = UserGroup(uuid.v4(), authenticatedUser, group)
         val permissionSet = HashSet<Permission>()
         permissionSet.add(
-                permissionRepository.findByValue(PermissionEnum.CREATE_MEDIA.value).get())
+                permissionRepository.findByValue(PermissionEnum.CREATE_MEDIA.value)!!)
         permissionSet.add(
-                permissionRepository.findByValue(PermissionEnum.DELETE_MEDIA.value).get())
-        permissionSet.add(permissionRepository.findByValue(PermissionEnum.READ_MEDIA.value).get())
+                permissionRepository.findByValue(PermissionEnum.DELETE_MEDIA.value)!!)
+        permissionSet.add(permissionRepository.findByValue(PermissionEnum.READ_MEDIA.value)!!)
         permissionSet.add(
-                permissionRepository.findByValue(PermissionEnum.CHANGE_MODE.value).get())
-        permissionSet.add(permissionRepository.findByValue(PermissionEnum.PLAY_MEDIA.value).get())
-        permissionSet.add(permissionRepository.findByValue(PermissionEnum.STOP_MEDIA.value).get())
+                permissionRepository.findByValue(PermissionEnum.CHANGE_MODE.value)!!)
+        permissionSet.add(permissionRepository.findByValue(PermissionEnum.PLAY_MEDIA.value)!!)
+        permissionSet.add(permissionRepository.findByValue(PermissionEnum.STOP_MEDIA.value)!!)
         permissionSet.add(
-                permissionRepository.findByValue(PermissionEnum.CREATE_CATEGORY.value).get())
+                permissionRepository.findByValue(PermissionEnum.CREATE_CATEGORY.value)!!)
         permissionSet.add(
-                permissionRepository.findByValue(PermissionEnum.DELETE_CATEGORY.value).get())
+                permissionRepository.findByValue(PermissionEnum.DELETE_CATEGORY.value)!!)
         userGroup.permissionSet = permissionSet
-        user.userGroupSet.plus(userGroup)
+        authenticatedUser.userGroupSet.plus(userGroup)
         group.userGroupSet.plus(userGroup)
 
         serverRepository.save(server)
         botRepository.save(bot)
         groupRepository.save(group)
         userGroupRepository.save(userGroup)
-        userRepository.save(user)
+        userRepository.save(authenticatedUser)
         return ResponseEntity(server, HttpStatus.CREATED)
     }
 
@@ -116,14 +104,10 @@ class ServerController {
     @PutMapping("/{id}")
     fun update(
             @PathVariable("id") uuid: String, @RequestBody serverUpdateReader: ServerUpdateReader): ResponseEntity<Any> {
-        val optionalServer = serverRepository.findByUuid(uuid)
-        if (!optionalServer.isPresent) {
-            return ResponseEntity(HttpStatus.BAD_REQUEST)
-        }
-        val server = optionalServer.get()
-        val optionalAuthenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
-        val user = optionalAuthenticatedUser.get()
-        if (!user.isOwner(server)) {
+        val server = serverRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        val authenticatedUser = AuthenticationHelper.getAuthenticatedUser()
+                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        if (!authenticatedUser.isOwner(server)) {
             return ResponseEntity(HttpStatus.FORBIDDEN)
         }
         server.name = serverUpdateReader.name
@@ -134,14 +118,10 @@ class ServerController {
     @JsonView(Views.Companion.Public::class)
     @DeleteMapping("/{id}")
     fun delete(@PathVariable("id") uuid: String): ResponseEntity<Any> {
-        val optionalServer = serverRepository.findByUuid(uuid)
-        if (!optionalServer.isPresent) {
-            return ResponseEntity(HttpStatus.BAD_REQUEST)
-        }
-        val server = optionalServer.get()
-        val optionalAuthenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
-        val user = optionalAuthenticatedUser.get()
-        if (!user.isOwner(server)) {
+        val server = serverRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        val authenticatedUser = AuthenticationHelper.getAuthenticatedUser()
+                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        if (!authenticatedUser.isOwner(server)) {
             return ResponseEntity(HttpStatus.FORBIDDEN)
         }
         serverRepository.delete(server)
