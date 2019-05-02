@@ -7,4 +7,4 @@ import java.lang.annotation.RetentionPolicy
 
 @Retention(RetentionPolicy.RUNTIME)
 @WithSecurityContext(factory = WithUserDetailsSecurityContextFactory::class, setupBefore = TestExecutionEvent.TEST_EXECUTION)
-annotation class WithCustomUserDetails(val value: String = "user", val userDetailsServiceBeanName: String = "", val setupBefore: TestExecutionEvent = TestExecutionEvent.TEST_EXECUTION)
+annotation class WithUserDetails(val value: String = "user", val userDetailsServiceBeanName: String = "userDetailsService", val setupBefore: TestExecutionEvent = TestExecutionEvent.TEST_EXECUTION)

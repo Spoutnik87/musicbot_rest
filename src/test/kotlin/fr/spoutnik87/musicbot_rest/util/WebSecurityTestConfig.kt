@@ -5,7 +5,6 @@ import fr.spoutnik87.musicbot_rest.security.JWTAuthorizationFilter
 import fr.spoutnik87.musicbot_rest.security.SecurityConfiguration
 import fr.spoutnik87.musicbot_rest.security.UserDetailsServiceImpl
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpMethod
@@ -26,21 +25,19 @@ class WebSecurityTestConfig : WebSecurityConfigurerAdapter() {
     @Autowired
     private lateinit var bCryptPasswordEncoder: BCryptPasswordEncoder
 
-    /*@Autowired
-    private lateinit var userDetailsService: UserDetailsServiceImpl*/
-
     @Autowired
     private lateinit var securityConfiguration: SecurityConfiguration
 
     @Bean
     fun securityConfiguration() = SecurityConfiguration()
 
-    @MockBean
-    private lateinit var userDetailsService: UserDetailsServiceImpl
-
+    @Bean
     override fun userDetailsService(): UserDetailsServiceImpl {
-        return userDetailsService
+        return UserDetailsServiceImpl()
     }
+
+    @Autowired
+    private lateinit var userDetailsService: UserDetailsServiceImpl
 
     override fun configure(http: HttpSecurity) {
         http.cors()

@@ -17,10 +17,7 @@ import java.lang.reflect.AnnotatedElement
 
 class WithSecurityContextTestExecutionListener : AbstractTestExecutionListener() {
 
-    override fun beforeTestMethod(testContext: TestContext) {
-        System.out.println("b")
-
-    }
+    override fun beforeTestMethod(testContext: TestContext) {}
 
     override fun beforeTestExecution(testContext: TestContext) {
         var testSecurityContext = this.createTestSecurityContext(testContext.testMethod as AnnotatedElement, testContext)

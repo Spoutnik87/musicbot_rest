@@ -8,12 +8,11 @@ import fr.spoutnik87.musicbot_rest.repository.GroupRepository
 import fr.spoutnik87.musicbot_rest.repository.RoleRepository
 import fr.spoutnik87.musicbot_rest.repository.ServerRepository
 import fr.spoutnik87.musicbot_rest.repository.UserRepository
-import fr.spoutnik87.musicbot_rest.security.UserDetails
 import fr.spoutnik87.musicbot_rest.security.UserDetailsServiceImpl
 import fr.spoutnik87.musicbot_rest.util.Util
 import fr.spoutnik87.musicbot_rest.util.WebSecurityTestConfig
-import fr.spoutnik87.musicbot_rest.util.WithCustomUserDetails
 import fr.spoutnik87.musicbot_rest.util.WithSecurityContextTestExecutionListener
+import fr.spoutnik87.musicbot_rest.util.WithUserDetails
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -24,7 +23,6 @@ import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.boot.test.mock.mockito.MockitoTestExecutionListener
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
-import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.TestExecutionListeners
@@ -94,32 +92,6 @@ class UserControllerTest {
                                 "Lastname",
                                 bCryptPasswordEncoder.encode("password"),
                                 Role("token2", "ADMIN", 1)))
-
-        val roleUser = Role("token", "USER", 2)
-        val user = User(
-                "token",
-                "user@test.com",
-                "Nickname",
-                "Firstname",
-                "Lastname",
-                bCryptPasswordEncoder.encode("password"),
-                roleUser)
-        val basicUser = UserDetails(user, listOf(SimpleGrantedAuthority(RoleEnum.USER.value)))
-
-        val roleAdmin = Role("token2", "ADMIN", 1)
-        val userAdmin = User(
-                "token2",
-                "admin@test.com",
-                "Nickname",
-                "Firstname",
-                "Lastname",
-                bCryptPasswordEncoder.encode("password"),
-                roleAdmin)
-        val adminUser = UserDetails(
-                userAdmin, listOf(SimpleGrantedAuthority(RoleEnum.ADMIN.value)))
-
-        Mockito.`when`(userDetailsService.loadUserByUsername("user@test.com")).thenReturn(basicUser)
-        Mockito.`when`(userDetailsService.loadUserByUsername("admin@test.com")).thenReturn(adminUser)
     }
 
     @Test
@@ -167,7 +139,7 @@ class UserControllerTest {
     }
 
     @Test
-    @WithCustomUserDetails("user@test.com")
+    @WithUserDetails("user@test.com")
     fun getLogged_Authenticated_ReturnLoggedUser() {
         Util.basicTest(
                 mockMvc,
@@ -189,19 +161,19 @@ class UserControllerTest {
     }
 
     @Test
-    @WithCustomUserDetails("user@test.com")
+    @WithUserDetails("user@test.com")
     fun getById_NotAdmin_ReturnForbiddenStatus() {
         Util.basicTest(mockMvc, HttpMethod.GET, "/user/1", HashMap(), HttpStatus.FORBIDDEN)
     }
 
     @Test
-    @WithCustomUserDetails("admin@test.com")
+    @WithUserDetails("admin@test.com")
     fun getById_AdminAndUserNotFound_ReturnNotFoundStatus() {
         Util.basicTest(mockMvc, HttpMethod.GET, "/user/1", HashMap(), HttpStatus.BAD_REQUEST)
     }
 
     @Test
-    @WithCustomUserDetails("admin@test.com")
+    @WithUserDetails("admin@test.com")
     fun getById_AdminAndUserFound_ReturnUser() {
         Mockito.`when`(userRepository.findByUuid("1"))
                 .thenReturn(
@@ -223,7 +195,7 @@ class UserControllerTest {
     }
 
     @Test
-    @WithCustomUserDetails("user@test.com")
+    @WithUserDetails("user@test.com")
     fun update_ChangeUserValues_ReturnNewUser() {
         val body = HashMap<String, Any>()
         body["firstname"] = "Newfirstname"

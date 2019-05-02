@@ -24,7 +24,7 @@ abstract class AuthenticationHelper {
          *
          * @return User informations
          */
-        fun getAuthenticatedUserDetails(): UserDetails? = SecurityContextHolder.getContext().authentication?.principal as UserDetails
+        fun getAuthenticatedUserDetails(): UserDetails? = SecurityContextHolder.getContext().authentication?.principal as UserDetails?
 
         /**
          * Return email of connected user or null if no user is connected.
