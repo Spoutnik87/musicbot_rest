@@ -1,6 +1,7 @@
 package fr.spoutnik87.musicbot_rest.loader
 
 import fr.spoutnik87.musicbot_rest.UUID
+import fr.spoutnik87.musicbot_rest.constant.RoleEnum
 import fr.spoutnik87.musicbot_rest.model.Role
 import fr.spoutnik87.musicbot_rest.repository.RoleRepository
 import org.springframework.beans.factory.annotation.Autowired
@@ -20,7 +21,8 @@ class RoleLoader : ApplicationListener<ContextRefreshedEvent> {
     private lateinit var uuid: UUID
 
     override fun onApplicationEvent(contextRefreshedEvent: ContextRefreshedEvent) {
-        this.roleRepository.save(Role(uuid.v4(), "ADMIN", 1))
-        this.roleRepository.save(Role(uuid.v4(), "USER", 2))
+        RoleEnum.values().forEach {
+            roleRepository.save(Role(uuid.v4(), it.value, it.lvl))
+        }
     }
 }

@@ -25,29 +25,19 @@ data class Server(
     @JsonManagedReference
     lateinit var owner: User
 
-    @JsonView(Views.Companion.Public::class)
-    @OneToOne(mappedBy = "server")
-    @JoinColumn(name = "bot_id")
-    @JsonBackReference
-    lateinit var bot: Bot
-
     constructor(uuid: String, name: String, owner: User) : this(uuid, name) {
         this.owner = owner
     }
 
-    constructor(uuid: String, name: String, owner: User, bot: Bot) : this(uuid, name, owner) {
-        this.bot = bot
-    }
+    @JsonView(Views.Companion.Public::class)
+    @OneToMany(mappedBy = "server", cascade = [CascadeType.ALL])
+    @JsonBackReference
+    val groupSet: MutableSet<Group> = HashSet()
 
     @JsonView(Views.Companion.Public::class)
     @OneToMany(mappedBy = "server", cascade = [CascadeType.ALL])
     @JsonBackReference
-    val groupSet: Set<Group> = HashSet()
-
-    @JsonView(Views.Companion.Public::class)
-    @OneToMany(mappedBy = "server", cascade = [CascadeType.ALL])
-    @JsonBackReference
-    val categorySet: Set<Category> = HashSet()
+    val categorySet: MutableSet<Category> = HashSet()
 
     val userList
         get() = groupSet.flatMap { it.userList }.distinctBy { it.id }

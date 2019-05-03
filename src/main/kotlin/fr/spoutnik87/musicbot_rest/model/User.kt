@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonBackReference
 import com.fasterxml.jackson.annotation.JsonManagedReference
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonView
+import fr.spoutnik87.musicbot_rest.constant.PermissionEnum
 import java.io.Serializable
 import javax.persistence.*
 
@@ -44,12 +45,35 @@ data class User(
     @JsonView(Views.Companion.Public::class)
     @OneToMany(mappedBy = "user", cascade = [CascadeType.ALL])
     @JsonBackReference
-    val userGroupSet: Set<UserGroup> = HashSet()
+    val userGroupSet: MutableSet<UserGroup> = HashSet()
 
     @JsonView(Views.Companion.Public::class)
     @OneToMany(mappedBy = "owner", cascade = [CascadeType.ALL])
     @JsonBackReference
-    val serverSet: Set<Server> = HashSet()
+    val serverSet: MutableSet<Server> = HashSet()
 
-    fun isOwner(server: Server) = serverSet.any { it.id == server.id }
+    val groupList
+        get() = userGroupSet.map { it.group }
+
+    fun isOwner(server: Server) = server.owner.id == id
+
+    fun hasServer(server: Server) = serverSet.any { it.id == server.id }
+
+    fun hasPermission(group: Group, permission: Permission) = userGroupSet.filter { it.group.id == group.id }.any { it.hasPermission(permission) }
+
+    fun hasPermission(group: Group, permissionEnum: PermissionEnum) = userGroupSet.filter { it.group.id == group.id }.any { it.hasPermission(permissionEnum) }
+
+    fun hasReadMediaPermission(media: Media) = media.groupList.any { hasPermission(it, PermissionEnum.READ_MEDIA) }
+
+    fun hasDeleteMediaPermission(media: Media) = media.groupList.any { hasPermission(it, PermissionEnum.DELETE_MEDIA) }
+
+    fun hasCreateMediaPermission(group: Group) = groupList.filter { it.id == group.id }.any { hasPermission(it, PermissionEnum.CREATE_MEDIA) }
+
+    fun hasCreateMediaPermission(media: Media) = media.groupList.any { hasPermission(it, PermissionEnum.CREATE_MEDIA) }
+
+    fun hasCreateCategoryPermission(server: Server) = server.groupSet.any { hasPermission(it, PermissionEnum.CREATE_CATEGORY) }
+
+    fun hasCreateCategoryPermission(category: Category) = hasCreateCategoryPermission(category.server)
+
+    fun hasDeleteCategoryPermission(category: Category) = category.server.groupSet.any { hasPermission(it, PermissionEnum.DELETE_CATEGORY) }
 }

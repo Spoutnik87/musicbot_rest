@@ -32,5 +32,5 @@ data class Category(
     @JsonView(Views.Companion.Public::class)
     @OneToMany(mappedBy = "category", cascade = [CascadeType.ALL])
     @JsonBackReference
-    val mediaSet: Set<Media> = HashSet()
+    val mediaSet: MutableSet<Media> = HashSet()
 }

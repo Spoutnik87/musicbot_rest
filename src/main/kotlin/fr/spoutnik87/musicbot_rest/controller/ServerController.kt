@@ -26,9 +26,6 @@ class ServerController {
     private lateinit var serverRepository: ServerRepository
 
     @Autowired
-    private lateinit var botRepository: BotRepository
-
-    @Autowired
     private lateinit var groupRepository: GroupRepository
 
     @Autowired
@@ -69,31 +66,23 @@ class ServerController {
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         val server = Server(uuid.v4(), serverCreateReader.name, authenticatedUser)
         authenticatedUser.serverSet.plus(server)
-        val bot = Bot(uuid.v4(), "Bot " + serverCreateReader.name, serverCreateReader.token)
-        server.bot = bot
 
         val group = Group(uuid.v4(), "Default", server)
         val userGroup = UserGroup(uuid.v4(), authenticatedUser, group)
         val permissionSet = HashSet<Permission>()
-        permissionSet.add(
-                permissionRepository.findByValue(PermissionEnum.CREATE_MEDIA.value)!!)
-        permissionSet.add(
-                permissionRepository.findByValue(PermissionEnum.DELETE_MEDIA.value)!!)
+        permissionSet.add(permissionRepository.findByValue(PermissionEnum.CREATE_MEDIA.value)!!)
+        permissionSet.add(permissionRepository.findByValue(PermissionEnum.DELETE_MEDIA.value)!!)
         permissionSet.add(permissionRepository.findByValue(PermissionEnum.READ_MEDIA.value)!!)
-        permissionSet.add(
-                permissionRepository.findByValue(PermissionEnum.CHANGE_MODE.value)!!)
+        permissionSet.add(permissionRepository.findByValue(PermissionEnum.CHANGE_MODE.value)!!)
         permissionSet.add(permissionRepository.findByValue(PermissionEnum.PLAY_MEDIA.value)!!)
         permissionSet.add(permissionRepository.findByValue(PermissionEnum.STOP_MEDIA.value)!!)
-        permissionSet.add(
-                permissionRepository.findByValue(PermissionEnum.CREATE_CATEGORY.value)!!)
-        permissionSet.add(
-                permissionRepository.findByValue(PermissionEnum.DELETE_CATEGORY.value)!!)
+        permissionSet.add(permissionRepository.findByValue(PermissionEnum.CREATE_CATEGORY.value)!!)
+        permissionSet.add(permissionRepository.findByValue(PermissionEnum.DELETE_CATEGORY.value)!!)
         userGroup.permissionSet = permissionSet
         authenticatedUser.userGroupSet.plus(userGroup)
         group.userGroupSet.plus(userGroup)
 
         serverRepository.save(server)
-        botRepository.save(bot)
         groupRepository.save(group)
         userGroupRepository.save(userGroup)
         userRepository.save(authenticatedUser)

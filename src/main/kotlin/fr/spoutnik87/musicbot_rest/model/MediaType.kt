@@ -14,12 +14,12 @@ data class MediaType(
         @Column(nullable = false, unique = true)
         var uuid: String,
         @JsonView(Views.Companion.Public::class)
-        @Column(nullable = false)
-        var name: String
+        @Column(nullable = false, unique = true)
+        var value: String
 ) : AuditModel(), Serializable {
 
     @JsonView(Views.Companion.Public::class)
     @OneToMany(mappedBy = "mediaType", cascade = [CascadeType.ALL])
     @JsonBackReference
-    val mediaSet: Set<Media> = HashSet()
+    val mediaSet: MutableSet<Media> = HashSet()
 }

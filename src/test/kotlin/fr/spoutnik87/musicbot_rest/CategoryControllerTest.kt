@@ -1,9 +1,9 @@
 package fr.spoutnik87.musicbot_rest
 
-import fr.spoutnik87.musicbot_rest.controller.ServerController
+import fr.spoutnik87.musicbot_rest.controller.CategoryController
 import fr.spoutnik87.musicbot_rest.model.Role
 import fr.spoutnik87.musicbot_rest.model.User
-import fr.spoutnik87.musicbot_rest.repository.*
+import fr.spoutnik87.musicbot_rest.repository.UserRepository
 import fr.spoutnik87.musicbot_rest.util.SpringApplicationContextTestConfig
 import fr.spoutnik87.musicbot_rest.util.WebSecurityTestConfig
 import fr.spoutnik87.musicbot_rest.util.WithSecurityContextTestExecutionListener
@@ -23,32 +23,21 @@ import org.springframework.test.web.servlet.MockMvc
 
 @ExtendWith(SpringExtension::class)
 @ContextConfiguration(classes = [
-    ServerController::class,
+    CategoryController::class,
     SpringApplicationContextTestConfig::class,
     BCryptPasswordEncoder::class,
     WebSecurityTestConfig::class
 ])
-@WebMvcTest(ServerController::class)
+@WebMvcTest(CategoryController::class)
 @TestExecutionListeners(listeners = [
     WithSecurityContextTestExecutionListener::class,
     DependencyInjectionTestExecutionListener::class,
     MockitoTestExecutionListener::class
 ])
-class ServerControllerTest {
+class CategoryControllerTest {
+
     @MockBean
     private lateinit var userRepository: UserRepository
-
-    @MockBean
-    private lateinit var groupRepository: GroupRepository
-
-    @MockBean
-    private lateinit var serverRepository: ServerRepository
-
-    @MockBean
-    private lateinit var userGroupRepository: UserGroupRepository
-
-    @MockBean
-    private lateinit var permissionRepository: PermissionRepository
 
     @MockBean(name = "UUID")
     private lateinit var uuid: UUID

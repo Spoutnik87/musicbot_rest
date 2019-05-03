@@ -8,7 +8,6 @@ import fr.spoutnik87.musicbot_rest.repository.GroupRepository
 import fr.spoutnik87.musicbot_rest.repository.RoleRepository
 import fr.spoutnik87.musicbot_rest.repository.ServerRepository
 import fr.spoutnik87.musicbot_rest.repository.UserRepository
-import fr.spoutnik87.musicbot_rest.security.UserDetailsServiceImpl
 import fr.spoutnik87.musicbot_rest.util.Util
 import fr.spoutnik87.musicbot_rest.util.WebSecurityTestConfig
 import fr.spoutnik87.musicbot_rest.util.WithSecurityContextTestExecutionListener
@@ -65,9 +64,6 @@ class UserControllerTest {
 
     @Autowired
     private lateinit var bCryptPasswordEncoder: BCryptPasswordEncoder
-
-    @Autowired
-    private lateinit var userDetailsService: UserDetailsServiceImpl
 
     @BeforeEach
     fun setup() {

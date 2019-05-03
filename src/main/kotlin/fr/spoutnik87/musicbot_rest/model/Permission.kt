@@ -17,15 +17,18 @@ data class Permission(
         @Column(nullable = false, unique = true)
         var uuid: String,
         @JsonView(Views.Companion.Public::class)
-        @Column(nullable = false)
-        var name: String,
-        @JsonView(Views.Companion.Public::class)
-        @Column(nullable = false)
+        @Column(nullable = false, unique = true)
         var value: String
 ) : AuditModel(), Serializable {
 
     @JsonView(Views.Companion.Public::class)
     @ManyToMany(mappedBy = "permissionSet")
     @JsonManagedReference
-    val userGroupSet: Set<UserGroup> = HashSet()
+    val userGroupSet: MutableSet<UserGroup> = HashSet()
+
+    val userList
+        get() = userGroupSet.map { it.user }
+
+    val groupList
+        get() = userGroupSet.map { it.group }
 }

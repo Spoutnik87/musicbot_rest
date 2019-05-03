@@ -32,15 +32,20 @@ data class Group(
     @JsonView(Views.Companion.Public::class)
     @OneToMany(mappedBy = "group", cascade = [CascadeType.ALL])
     @JsonBackReference
-    val userGroupSet: Set<UserGroup> = HashSet()
+    val userGroupSet: MutableSet<UserGroup> = HashSet()
 
     @JsonView(Views.Companion.Public::class)
     @OneToMany(mappedBy = "group", cascade = [CascadeType.ALL])
     @JsonBackReference
-    val mediaGroupSet: Set<MediaGroup> = HashSet()
+    val mediaGroupSet: MutableSet<MediaGroup> = HashSet()
 
     val userList
         get() = userGroupSet.map { it.user }
 
+    val mediaList
+        get() = mediaGroupSet.map { it.media }
+
     fun hasUser(user: User) = userGroupSet.any { it.user.id == user.id }
+
+    fun hasMedia(media: Media) = mediaGroupSet.any { it.media.id == media.id }
 }

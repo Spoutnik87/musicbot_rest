@@ -23,5 +23,5 @@ data class Role(
     @JsonView(Views.Companion.Public::class)
     @OneToMany(mappedBy = "role", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
     @JsonBackReference
-    val userSet: Set<User> = HashSet()
+    val userSet: MutableSet<User> = HashSet()
 }

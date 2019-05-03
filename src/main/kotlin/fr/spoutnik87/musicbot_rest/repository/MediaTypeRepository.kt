@@ -7,4 +7,5 @@ import org.springframework.stereotype.Repository
 @Repository
 interface MediaTypeRepository : JpaRepository<MediaType, Long> {
     fun findByUuid(uuid: String): MediaType?
+    fun findByValue(value: String): MediaType?
 }
