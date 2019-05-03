@@ -1,6 +1,5 @@
 package fr.spoutnik87.musicbot_rest.model
 
-import com.fasterxml.jackson.annotation.JsonBackReference
 import java.io.Serializable
 import javax.persistence.*
 
@@ -16,6 +15,5 @@ data class Role(
 ) : AuditModel(), Serializable {
 
     @OneToMany(mappedBy = "role", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
-    @JsonBackReference
     val userSet: MutableSet<User> = HashSet()
 }
