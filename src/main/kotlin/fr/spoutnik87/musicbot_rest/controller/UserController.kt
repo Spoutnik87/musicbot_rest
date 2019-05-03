@@ -12,6 +12,7 @@ import fr.spoutnik87.musicbot_rest.repository.RoleRepository
 import fr.spoutnik87.musicbot_rest.repository.ServerRepository
 import fr.spoutnik87.musicbot_rest.repository.UserRepository
 import fr.spoutnik87.musicbot_rest.util.AuthenticationHelper
+import fr.spoutnik87.musicbot_rest.viewmodel.UserViewModel
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -40,16 +41,14 @@ class UserController {
     @Autowired
     private lateinit var bCryptPasswordEncoder: BCryptPasswordEncoder
 
-    @JsonView(Views.Companion.Public::class)
+    @JsonView(Views.Companion.Mixed::class)
     @GetMapping("")
     fun getLogged(): ResponseEntity<Any> {
-        val user = AuthenticationHelper.getAuthenticatedUser()
-        return if (user == null) {
-            ResponseEntity(HttpStatus.BAD_REQUEST)
-        } else ResponseEntity(user, HttpStatus.OK)
+        val user = AuthenticationHelper.getAuthenticatedUser() ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        return ResponseEntity(UserViewModel.from(user), HttpStatus.OK)
     }
 
-    @JsonView(Views.Companion.Public::class)
+    @JsonView(Views.Companion.Private::class)
     @GetMapping("/{id}")
     fun getById(@PathVariable("id") uuid: String): ResponseEntity<Any> {
         val authenticatedUser = AuthenticationHelper.getAuthenticatedUser()
@@ -58,7 +57,7 @@ class UserController {
             return ResponseEntity(HttpStatus.FORBIDDEN)
         }
         val user = userRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-        return ResponseEntity(user, HttpStatus.OK)
+        return ResponseEntity(UserViewModel.from(user), HttpStatus.OK)
     }
 
     @JsonView(Views.Companion.Public::class)
@@ -67,9 +66,10 @@ class UserController {
         val server = serverRepository.findByUuid(serverUuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         val authenticatedUser = AuthenticationHelper.getAuthenticatedUser()
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-        return if (!server.hasUser(authenticatedUser)) {
-            ResponseEntity(HttpStatus.FORBIDDEN)
-        } else ResponseEntity(server.userList, HttpStatus.OK)
+        if (!server.hasUser(authenticatedUser)) {
+            return ResponseEntity(HttpStatus.FORBIDDEN)
+        }
+        return ResponseEntity(server.userList.map { UserViewModel.from(it) }, HttpStatus.OK)
     }
 
     @JsonView(Views.Companion.Public::class)
@@ -78,12 +78,13 @@ class UserController {
         val group = groupRepository.findByUuid(groupUuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         val authenticatedUser = AuthenticationHelper.getAuthenticatedUser()
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-        return if (!group.server.hasUser(authenticatedUser)) {
-            ResponseEntity(HttpStatus.FORBIDDEN)
-        } else ResponseEntity(group.userList, HttpStatus.OK)
+        if (!group.server.hasUser(authenticatedUser)) {
+            return ResponseEntity(HttpStatus.FORBIDDEN)
+        }
+        return ResponseEntity(group.userList.map { UserViewModel.from(it) }, HttpStatus.OK)
     }
 
-    @JsonView(Views.Companion.Public::class)
+    @JsonView(Views.Companion.Mixed::class)
     @PostMapping
     fun signup(@RequestBody userSignupReader: UserSignupReader): ResponseEntity<Any> {
         val role = roleRepository.findByName(RoleEnum.USER.value) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
@@ -96,10 +97,10 @@ class UserController {
                 bCryptPasswordEncoder.encode(userSignupReader.password),
                 role)
         this.userRepository.save(user)
-        return ResponseEntity(user, HttpStatus.CREATED)
+        return ResponseEntity(UserViewModel.from(user), HttpStatus.CREATED)
     }
 
-    @JsonView(Views.Companion.Public::class)
+    @JsonView(Views.Companion.Mixed::class)
     @PutMapping("/{id}")
     fun update(
             @PathVariable("id") uuid: String, @RequestBody userUpdateReader: UserUpdateReader): ResponseEntity<Any> {
@@ -117,6 +118,11 @@ class UserController {
             user.lastname = userUpdateReader.lastname!!
         }
         userRepository.save(user)
-        return ResponseEntity(user, HttpStatus.OK)
+        return ResponseEntity(UserViewModel.from(user), HttpStatus.OK)
+    }
+
+    @DeleteMapping("/{id}")
+    fun delete(@PathVariable("id") uuid: String) {
+        TODO()
     }
 }

@@ -3,6 +3,7 @@ package fr.spoutnik87.musicbot_rest.model
 class Views {
     companion object {
         open class Public
-        class Private : Public()
+        open class Mixed : Public()
+        class Private : Mixed()
     }
 }

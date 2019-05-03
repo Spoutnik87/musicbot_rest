@@ -23,7 +23,7 @@ data class Media(
     var extension: String? = null
 
     @JsonView(Views.Companion.Public::class)
-    var size: Int? = null
+    var size: Long? = null
 
     @JsonView(Views.Companion.Public::class)
     @Column(nullable = false)

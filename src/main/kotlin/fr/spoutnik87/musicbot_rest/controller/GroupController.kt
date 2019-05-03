@@ -10,6 +10,7 @@ import fr.spoutnik87.musicbot_rest.repository.GroupRepository
 import fr.spoutnik87.musicbot_rest.repository.ServerRepository
 import fr.spoutnik87.musicbot_rest.repository.UserRepository
 import fr.spoutnik87.musicbot_rest.util.AuthenticationHelper
+import fr.spoutnik87.musicbot_rest.viewmodel.GroupViewModel
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -37,9 +38,10 @@ class GroupController {
         val group = groupRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         val authenticatedUser = AuthenticationHelper.getAuthenticatedUser()
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-        return if (!group.server.hasUser(authenticatedUser)) {
-            ResponseEntity(HttpStatus.FORBIDDEN)
-        } else ResponseEntity(group, HttpStatus.OK)
+        if (!group.server.hasUser(authenticatedUser)) {
+            return ResponseEntity(HttpStatus.FORBIDDEN)
+        }
+        return ResponseEntity(GroupViewModel.from(group), HttpStatus.OK)
     }
 
     @JsonView(Views.Companion.Public::class)
@@ -48,9 +50,10 @@ class GroupController {
         val server = serverRepository.findByUuid(serverUuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         val authenticatedUser = AuthenticationHelper.getAuthenticatedUser()
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-        return if (!server.hasUser(authenticatedUser)) {
-            ResponseEntity(HttpStatus.FORBIDDEN)
-        } else ResponseEntity(server.groupSet.toTypedArray(), HttpStatus.OK)
+        if (!server.hasUser(authenticatedUser)) {
+            return ResponseEntity(HttpStatus.FORBIDDEN)
+        }
+        return ResponseEntity(server.groupSet.toTypedArray().map { GroupViewModel.from(it) }, HttpStatus.OK)
     }
 
     @JsonView(Views.Companion.Public::class)
@@ -64,9 +67,9 @@ class GroupController {
             return ResponseEntity(HttpStatus.FORBIDDEN)
         }
         val group = Group(uuid.v4(), groupCreateReader.name, server)
-        server.groupSet.plus(group)
+        server.groupSet.add(group)
         groupRepository.save(group)
-        return ResponseEntity(group, HttpStatus.ACCEPTED)
+        return ResponseEntity(GroupViewModel.from(group), HttpStatus.ACCEPTED)
     }
 
     @JsonView(Views.Companion.Public::class)
@@ -81,6 +84,6 @@ class GroupController {
         }
         group.name = groupUpdateReader.name
         groupRepository.save(group)
-        return ResponseEntity(group, HttpStatus.ACCEPTED)
+        return ResponseEntity(GroupViewModel.from(group), HttpStatus.ACCEPTED)
     }
 }

@@ -55,9 +55,15 @@ data class User(
     val groupList
         get() = userGroupSet.map { it.group }
 
-    fun isOwner(server: Server) = server.owner.id == id
+    /**
+     * Return true if this user is the owner of the specified server.
+     */
+    fun isOwner(server: Server) = serverSet.any { it.id == server.id }
 
-    fun hasServer(server: Server) = serverSet.any { it.id == server.id }
+    /**
+     * Return true if this user is a member of the specified server.
+     */
+    fun hasServer(server: Server) = userGroupSet.map { it.group.server }.any { it.id == server.id }
 
     fun hasPermission(group: Group, permission: Permission) = userGroupSet.filter { it.group.id == group.id }.any { it.hasPermission(permission) }
 

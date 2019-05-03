@@ -132,6 +132,7 @@ class MediaControllerTest {
     fun createMedia_NotAuthenticated_ReturnForbiddenStatus() {
         val body = HashMap<String, Any>()
         body["groupId"] = "groupToken"
+        body["categoryId"] = "categoryToken"
         body["name"] = "New media"
         Util.basicTestWithBody(mockMvc, HttpMethod.POST, "/media", HashMap(), body, HttpStatus.FORBIDDEN)
     }

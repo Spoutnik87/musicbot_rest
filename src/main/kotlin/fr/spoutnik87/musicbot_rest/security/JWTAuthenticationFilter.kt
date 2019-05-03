@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.MapperFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import fr.spoutnik87.musicbot_rest.model.Views
+import fr.spoutnik87.musicbot_rest.viewmodel.UserViewModel
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.Authentication
@@ -48,8 +49,8 @@ class JWTAuthenticationFilter(
 
         val mapper = ObjectMapper().registerModule(KotlinModule())
         mapper.disable(MapperFeature.DEFAULT_VIEW_INCLUSION)
-        res.writer.print(mapper.writerWithView(Views.Companion.Public::class.java)
-                .writeValueAsString((auth.principal as UserDetails).user))
+        res.writer.print(mapper.writerWithView(Views.Companion.Mixed::class.java)
+                .writeValueAsString(UserViewModel.from((auth.principal as UserDetails).user)))
         res.writer.flush()
     }
 }
