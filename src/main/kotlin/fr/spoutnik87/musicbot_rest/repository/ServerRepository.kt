@@ -7,4 +7,5 @@ import org.springframework.stereotype.Repository
 @Repository
 interface ServerRepository : JpaRepository<Server, Long> {
     fun findByUuid(uuid: String): Server?
+    fun findByGuildId(guildId: String): Server?
 }

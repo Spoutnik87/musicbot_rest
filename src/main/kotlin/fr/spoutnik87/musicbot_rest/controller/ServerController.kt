@@ -6,6 +6,7 @@ import fr.spoutnik87.musicbot_rest.constant.PermissionEnum
 import fr.spoutnik87.musicbot_rest.constant.RoleEnum
 import fr.spoutnik87.musicbot_rest.model.*
 import fr.spoutnik87.musicbot_rest.reader.ServerCreateReader
+import fr.spoutnik87.musicbot_rest.reader.ServerLinkReader
 import fr.spoutnik87.musicbot_rest.reader.ServerUpdateReader
 import fr.spoutnik87.musicbot_rest.repository.*
 import fr.spoutnik87.musicbot_rest.util.AuthenticationHelper
@@ -43,6 +44,36 @@ class ServerController {
     fun getById(@PathVariable("id") uuid: String): ResponseEntity<Any> {
         val server = serverRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         return ResponseEntity(server, HttpStatus.OK)
+    }
+
+    @JsonView(Views.Companion.Private::class)
+    @GetMapping("/guild/{guildId}")
+    fun getByGuildId(@PathVariable("guildId") guildId: String): ResponseEntity<Any> {
+        val authenticatedUser = AuthenticationHelper.getAuthenticatedUser()
+                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        if (authenticatedUser.role.name != RoleEnum.BOT.value) {
+            return ResponseEntity(HttpStatus.FORBIDDEN)
+        }
+        val server = serverRepository.findByGuildId(guildId) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        return ResponseEntity(ServerViewModel.from(server), HttpStatus.OK)
+    }
+
+    @JsonView(Views.Companion.Private::class)
+    @PostMapping("/link/{serverId}")
+    fun linkGuildToServer(@PathVariable("serverId") serverId: String, @RequestBody serverLinkReader: ServerLinkReader): ResponseEntity<Any> {
+        val authenticatedUser = AuthenticationHelper.getAuthenticatedUser()
+                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        if (authenticatedUser.role.name != RoleEnum.BOT.value) {
+            return ResponseEntity(HttpStatus.FORBIDDEN)
+        }
+        val server = serverRepository.findByUuid(serverId) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        if (server.isLinked || server.linkToken != serverLinkReader.token) {
+            return ResponseEntity(HttpStatus.BAD_REQUEST)
+        }
+        server.guildId = serverLinkReader.guildId
+        server.linkToken = null
+        serverRepository.save(server)
+        return ResponseEntity(ServerViewModel.from(server), HttpStatus.ACCEPTED)
     }
 
     @JsonView(Views.Companion.Public::class)

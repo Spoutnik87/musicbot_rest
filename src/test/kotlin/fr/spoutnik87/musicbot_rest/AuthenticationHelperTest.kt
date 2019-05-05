@@ -19,7 +19,6 @@ import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.boot.test.mock.mockito.MockitoTestExecutionListener
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
-import org.springframework.security.test.context.support.TestExecutionEvent
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.TestExecutionListeners
 import org.springframework.test.context.junit.jupiter.SpringExtension
@@ -68,19 +67,19 @@ class AuthenticationHelperTest {
     }
 
     @Test
-    fun isAuthenticatedWhenUserNotAuthenticated() {
+    fun isAuthenticated_NotAuthenticated_ReturnFalse() {
         assertFalse(AuthenticationHelper.isAuthenticated())
     }
 
     @Test
-    @WithUserDetails("user@test.com", setupBefore = TestExecutionEvent.TEST_EXECUTION)
-    fun isAuthenticatedWhenUserAuthenticated() {
+    @WithUserDetails("user@test.com")
+    fun isAuthenticated_Authenticated_ReturnTrue() {
         assertTrue(AuthenticationHelper.isAuthenticated())
     }
 
     @Test
     @WithUserDetails("user@test.com")
-    fun getAuthenticatedUserDetails() {
+    fun getAuthenticatedUserDetails_Authenticated_ReturnUserDetails() {
         val userDetails = AuthenticationHelper.getAuthenticatedUserDetails()
         assertEquals("user@test.com", userDetails?.username)
         assertNotNull(userDetails?.password)
@@ -91,13 +90,13 @@ class AuthenticationHelperTest {
 
     @Test
     @WithUserDetails("user@test.com")
-    fun getAuthenticatedUserEmail() {
+    fun getAuthenticatedUserEmail_Authenticated_ReturnUserEmail() {
         assertEquals("user@test.com", AuthenticationHelper.getAuthenticatedUserEmail())
     }
 
     @Test
     @WithUserDetails("user@test.com")
-    fun getAuthenticatedUserAuthorities() {
+    fun getAuthenticatedUserAuthorities_Authenticated_ReturnUserAuthorities() {
         val simpleGrantedAuthorities = AuthenticationHelper.getAuthenticatedUserAuthorities()
         assertNotNull(simpleGrantedAuthorities)
         assertEquals(RoleEnum.USER.value, simpleGrantedAuthorities?.get(0)?.authority)
@@ -105,14 +104,19 @@ class AuthenticationHelperTest {
 
     @Test
     @WithUserDetails("user@test.com")
-    fun isAuthenticatedUserInRole() {
+    fun isAuthenticatedUserInRole_AuthenticatedUser_ReturnTrueIfUser() {
         assertTrue(AuthenticationHelper.isAuthenticatedUserInRole(RoleEnum.USER))
         assertFalse(AuthenticationHelper.isAuthenticatedUserInRole(RoleEnum.ADMIN))
     }
 
     @Test
+    fun getAuthenticatedUser_NotAuthenticated_ReturnNull() {
+        assertNull(AuthenticationHelper.getAuthenticatedUser())
+    }
+
+    @Test
     @WithUserDetails("user@test.com")
-    fun getAuthenticatedUser() {
+    fun getAuthenticatedUser_Authenticated_ReturnUser() {
         assertNotNull(AuthenticationHelper.getAuthenticatedUser())
     }
 }

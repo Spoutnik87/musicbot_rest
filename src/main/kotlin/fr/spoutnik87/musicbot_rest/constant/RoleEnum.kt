@@ -5,5 +5,6 @@ enum class RoleEnum(
         val lvl: Int
 ) {
     ADMIN("ADMIN", 1),
-    USER("USER", 2)
+    USER("USER", 2),
+    BOT("BOT", 3)
 }

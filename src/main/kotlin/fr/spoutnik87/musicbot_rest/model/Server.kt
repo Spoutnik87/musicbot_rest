@@ -12,6 +12,10 @@ data class Server(
         var name: String
 ) : AuditModel(), Serializable {
 
+    var linkToken: String? = null
+
+    var guildId: String? = null
+
     @ManyToOne
     @JoinColumn(name = "user_id")
     lateinit var owner: User
@@ -28,6 +32,9 @@ data class Server(
 
     val userList
         get() = groupSet.flatMap { it.userList }.distinctBy { it.id }
+
+    val isLinked
+        get() = guildId != null
 
     fun hasUser(user: User) = groupSet.any { it.hasUser(user) }
 }

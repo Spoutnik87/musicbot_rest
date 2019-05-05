@@ -197,5 +197,17 @@ class MediaControllerTest {
         body["categoryId"] = "categoryToken"
         body["name"] = "New media"
         Util.basicTestWithBody(mockMvc, HttpMethod.POST, "/media", HashMap(), body, HttpStatus.CREATED, "{\"id\":\"token\",\"name\":\"New media\",\"extension\":null,\"size\":null,\"content\":false,\"thumbnail\":false,\"mediaType\":{\"id\":\"mediaTypeToken\",\"value\":\"DEFAULT\"},\"category\":{\"id\":\"categoryToken\",\"name\":\"Category\",\"serverId\":\"serverToken\"}}")
+        Mockito.verify(mediaRepository, Mockito.atLeastOnce()).save(Mockito.any())
+    }
+
+    @Test
+    fun deleteMedia_NotAuthenticated_ReturnForbiddenStatus() {
+        Util.basicTest(mockMvc, HttpMethod.DELETE, "/media/mediaToken", HashMap(), HttpStatus.FORBIDDEN)
+    }
+
+    @Test
+    @WithUserDetails("user@test.com")
+    fun deleteMedia_InvalidMedia_ReturnBadRequestStatus() {
+        Util.basicTest(mockMvc, HttpMethod.DELETE, "/media/invalidMediaToken", HashMap(), HttpStatus.BAD_REQUEST)
     }
 }

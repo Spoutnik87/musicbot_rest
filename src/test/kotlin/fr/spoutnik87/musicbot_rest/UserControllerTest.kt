@@ -204,5 +204,6 @@ class UserControllerTest {
                 body,
                 HttpStatus.OK,
                 "{\"id\":\"token\",\"email\":\"user@test.com\",\"nickname\":\"Nickname\",\"firstname\":\"Newfirstname\",\"lastname\":\"Newlastname\",\"role\":{\"id\":\"token\",\"name\":\"USER\"}}")
+        Mockito.verify(userRepository, Mockito.atLeastOnce()).save(Mockito.any())
     }
 }

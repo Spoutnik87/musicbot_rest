@@ -115,6 +115,7 @@ class ServerControllerTest {
 
         val body = HashMap<String, Any>()
         body["name"] = "New server"
-        Util.basicPrintWithBody(mockMvc, HttpMethod.POST, "/server", HashMap(), body)
+        Util.basicTestWithBody(mockMvc, HttpMethod.POST, "/server", HashMap(), body, HttpStatus.CREATED, "{\"id\":\"token\",\"name\":\"New server\",\"ownerId\":\"token\",\"linked\": false}")
+        Mockito.verify(serverRepository, Mockito.atLeastOnce()).save(Mockito.any())
     }
 }
