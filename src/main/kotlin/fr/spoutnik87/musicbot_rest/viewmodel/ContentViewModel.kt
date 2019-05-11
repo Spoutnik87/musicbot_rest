@@ -1,11 +1,11 @@
 package fr.spoutnik87.musicbot_rest.viewmodel
 
 import com.fasterxml.jackson.annotation.JsonView
-import fr.spoutnik87.musicbot_rest.model.Media
+import fr.spoutnik87.musicbot_rest.model.Content
 import fr.spoutnik87.musicbot_rest.model.Views
 import java.io.Serializable
 
-data class MediaViewModel(
+data class ContentViewModel(
         @JsonView(Views.Companion.Public::class)
         val id: String,
         @JsonView(Views.Companion.Public::class)
@@ -19,21 +19,24 @@ data class MediaViewModel(
         @JsonView(Views.Companion.Public::class)
         val thumbnail: Boolean,
         @JsonView(Views.Companion.Public::class)
-        val mediaType: MediaTypeViewModel,
+        val contentType: ContentTypeViewModel,
         @JsonView(Views.Companion.Public::class)
-        val category: CategoryViewModel
+        val category: CategoryViewModel,
+        @JsonView(Views.Companion.Public::class)
+        val serverId: String
 
 ) : Serializable {
 
     companion object {
-        fun from(media: Media) = MediaViewModel(
-                media.uuid,
-                media.name,
-                media.extension,
-                media.size,
-                media.content,
-                media.thumbnail,
-                MediaTypeViewModel.from(media.mediaType),
-                CategoryViewModel.from(media.category))
+        fun from(content: Content) = ContentViewModel(
+                content.uuid,
+                content.name,
+                content.extension,
+                content.size,
+                content.content,
+                content.thumbnail,
+                ContentTypeViewModel.from(content.contentType),
+                CategoryViewModel.from(content.category),
+                content.groupList[0].server.uuid)
     }
 }

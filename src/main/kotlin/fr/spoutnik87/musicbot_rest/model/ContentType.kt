@@ -4,14 +4,14 @@ import java.io.Serializable
 import javax.persistence.*
 
 @Entity
-@Table(name = "MediaType")
-data class MediaType(
+@Table(name = "ContentType")
+data class ContentType(
         @Column(nullable = false, unique = true)
         var uuid: String,
         @Column(nullable = false, unique = true)
         var value: String
 ) : AuditModel(), Serializable {
 
-    @OneToMany(mappedBy = "mediaType", cascade = [CascadeType.ALL])
-    val mediaSet: MutableSet<Media> = HashSet()
+    @OneToMany(mappedBy = "contentType", cascade = [CascadeType.ALL])
+    val contentSet: MutableSet<Content> = HashSet()
 }

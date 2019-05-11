@@ -24,15 +24,15 @@ data class Group(
     val userGroupSet: MutableSet<UserGroup> = HashSet()
 
     @OneToMany(mappedBy = "group", cascade = [CascadeType.ALL])
-    val mediaGroupSet: MutableSet<MediaGroup> = HashSet()
+    val contentGroupSet: MutableSet<ContentGroup> = HashSet()
 
     val userList
         get() = userGroupSet.map { it.user }
 
     val mediaList
-        get() = mediaGroupSet.map { it.media }
+        get() = contentGroupSet.map { it.content }
 
     fun hasUser(user: User) = userGroupSet.any { it.user.id == user.id }
 
-    fun hasMedia(media: Media) = mediaGroupSet.any { it.media.id == media.id }
+    fun hasMedia(content: Content) = contentGroupSet.any { it.content.id == content.id }
 }

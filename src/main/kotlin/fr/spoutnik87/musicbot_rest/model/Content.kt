@@ -4,8 +4,8 @@ import java.io.Serializable
 import javax.persistence.*
 
 @Entity
-@Table(name = "Media")
-data class Media(
+@Table(name = "Content")
+data class Content(
         @Column(nullable = false, unique = true)
         var uuid: String,
         @Column(nullable = false)
@@ -23,21 +23,21 @@ data class Media(
     var thumbnail: Boolean = false
 
     @ManyToOne
-    @JoinColumn(name = "media_type_id")
-    lateinit var mediaType: MediaType
+    @JoinColumn(name = "content_type_id")
+    lateinit var contentType: ContentType
 
     @ManyToOne
     @JoinColumn(name = "category_id")
     lateinit var category: Category
 
-    @OneToMany(mappedBy = "media", cascade = [CascadeType.ALL])
-    val mediaGroupSet: MutableSet<MediaGroup> = HashSet()
+    @OneToMany(mappedBy = "content", cascade = [CascadeType.ALL])
+    val contentGroupSet: MutableSet<ContentGroup> = HashSet()
 
     val groupList
-        get() = mediaGroupSet.map { it.group }
+        get() = contentGroupSet.map { it.group }
 
-    constructor(uuid: String, name: String, mediaType: MediaType, category: Category) : this(uuid, name) {
-        this.mediaType = mediaType
+    constructor(uuid: String, name: String, contentType: ContentType, category: Category) : this(uuid, name) {
+        this.contentType = contentType
         this.category = category
     }
 

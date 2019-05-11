@@ -104,9 +104,9 @@ class ServerControllerTest {
     @Test
     @WithUserDetails("user@test.com")
     fun create_ValidParameters_ReturnServer() {
-        Mockito.`when`(permissionRepository.findByValue(PermissionEnum.CREATE_MEDIA.value)).thenReturn(Permission("createMediaToken", PermissionEnum.CREATE_MEDIA.value))
-        Mockito.`when`(permissionRepository.findByValue(PermissionEnum.DELETE_MEDIA.value)).thenReturn(Permission("deleteMediaToken", PermissionEnum.DELETE_MEDIA.value))
-        Mockito.`when`(permissionRepository.findByValue(PermissionEnum.READ_MEDIA.value)).thenReturn(Permission("readMediaToken", PermissionEnum.READ_MEDIA.value))
+        Mockito.`when`(permissionRepository.findByValue(PermissionEnum.CREATE_CONTENT.value)).thenReturn(Permission("createMediaToken", PermissionEnum.CREATE_CONTENT.value))
+        Mockito.`when`(permissionRepository.findByValue(PermissionEnum.DELETE_CONTENT.value)).thenReturn(Permission("deleteMediaToken", PermissionEnum.DELETE_CONTENT.value))
+        Mockito.`when`(permissionRepository.findByValue(PermissionEnum.READ_CONTENT.value)).thenReturn(Permission("readMediaToken", PermissionEnum.READ_CONTENT.value))
         Mockito.`when`(permissionRepository.findByValue(PermissionEnum.CHANGE_MODE.value)).thenReturn(Permission("changeModeToken", PermissionEnum.CHANGE_MODE.value))
         Mockito.`when`(permissionRepository.findByValue(PermissionEnum.PLAY_MEDIA.value)).thenReturn(Permission("playMediaToken", PermissionEnum.PLAY_MEDIA.value))
         Mockito.`when`(permissionRepository.findByValue(PermissionEnum.STOP_MEDIA.value)).thenReturn(Permission("stopMediaToken", PermissionEnum.STOP_MEDIA.value))

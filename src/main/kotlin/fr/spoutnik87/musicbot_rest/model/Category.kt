@@ -21,5 +21,5 @@ data class Category(
     }
 
     @OneToMany(mappedBy = "category", cascade = [CascadeType.ALL])
-    val mediaSet: MutableSet<Media> = HashSet()
+    val contentSet: MutableSet<Content> = HashSet()
 }

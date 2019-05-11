@@ -8,11 +8,13 @@ data class GroupViewModel(
         @JsonView(Views.Companion.Public::class)
         val id: String,
         @JsonView(Views.Companion.Public::class)
-        val name: String
+        val name: String,
+        @JsonView(Views.Companion.Public::class)
+        val serverId: String
 ) {
 
     companion object {
 
-        fun from(group: Group) = GroupViewModel(group.uuid, group.name)
+        fun from(group: Group) = GroupViewModel(group.uuid, group.name, group.server.uuid)
     }
 }

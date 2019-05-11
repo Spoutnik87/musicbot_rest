@@ -54,13 +54,13 @@ data class User(
 
     fun hasPermission(group: Group, permissionEnum: PermissionEnum) = userGroupSet.filter { it.group.id == group.id }.any { it.hasPermission(permissionEnum) }
 
-    fun hasReadMediaPermission(media: Media) = media.groupList.any { hasPermission(it, PermissionEnum.READ_MEDIA) }
+    fun hasReadContentPermission(content: Content) = content.groupList.any { hasPermission(it, PermissionEnum.READ_CONTENT) }
 
-    fun hasDeleteMediaPermission(media: Media) = media.groupList.any { hasPermission(it, PermissionEnum.DELETE_MEDIA) }
+    fun hasDeleteContentPermission(content: Content) = content.groupList.any { hasPermission(it, PermissionEnum.DELETE_CONTENT) }
 
-    fun hasCreateMediaPermission(group: Group) = groupList.filter { it.id == group.id }.any { hasPermission(it, PermissionEnum.CREATE_MEDIA) }
+    fun hasCreateContentPermission(group: Group) = groupList.filter { it.id == group.id }.any { hasPermission(it, PermissionEnum.CREATE_CONTENT) }
 
-    fun hasCreateMediaPermission(media: Media) = media.groupList.any { hasPermission(it, PermissionEnum.CREATE_MEDIA) }
+    fun hasCreateContentPermission(content: Content) = content.groupList.any { hasPermission(it, PermissionEnum.CREATE_CONTENT) }
 
     fun hasCreateCategoryPermission(server: Server) = server.groupSet.any { hasPermission(it, PermissionEnum.CREATE_CATEGORY) }
 

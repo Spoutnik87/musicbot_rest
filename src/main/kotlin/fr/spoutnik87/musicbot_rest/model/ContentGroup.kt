@@ -4,22 +4,22 @@ import java.io.Serializable
 import javax.persistence.*
 
 @Entity
-@Table(name = "MediaGroup")
-data class MediaGroup(
+@Table(name = "ContentGroup")
+data class ContentGroup(
         @Column(nullable = false, unique = true)
         var uuid: String
 ) : AuditModel(), Serializable {
 
     @ManyToOne
-    @JoinColumn(name = "media_id")
-    lateinit var media: Media
+    @JoinColumn(name = "content_id")
+    lateinit var content: Content
 
     @ManyToOne
     @JoinColumn(name = "group_id")
     lateinit var group: Group
 
-    constructor(uuid: String, media: Media, group: Group) : this(uuid) {
-        this.media = media
+    constructor(uuid: String, content: Content, group: Group) : this(uuid) {
+        this.content = content
         this.group = group
     }
 }
