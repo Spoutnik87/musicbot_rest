@@ -23,13 +23,24 @@ class UserFactory {
 
     fun createAdminUser(): UserFactory {
         return create(
-                "token2",
+                "adminUserToken",
                 "admin@test.com",
                 "Nickname",
                 "Firstname",
                 "Lastname",
                 bCryptPasswordEncoder.encode("password"),
                 Role("adminRoleToken", "ADMIN", 1))
+    }
+
+    fun createBotUser(): UserFactory {
+        return create(
+                "botUserToken",
+                "bot@test.com",
+                "Nickname",
+                "Firstname",
+                "Lastname",
+                bCryptPasswordEncoder.encode("password"),
+                Role("botRoleToken", "BOT", 3))
     }
 
     fun role(role: Role): UserFactory {
@@ -43,7 +54,7 @@ class UserFactory {
     }
 
     fun inServer(group: Group, server: Server, permissions: List<Permission>, owner: Boolean = false): UserFactory {
-        val userGroup = UserGroup("userGroupToken", user, group, permissions)
+        val userGroup = UserGroup(user, group, permissions)
         user.userGroupSet.add(userGroup)
         group.userGroupSet.add(userGroup)
         group.server = server

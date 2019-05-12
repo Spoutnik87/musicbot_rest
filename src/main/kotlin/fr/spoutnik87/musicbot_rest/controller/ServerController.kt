@@ -42,8 +42,13 @@ class ServerController {
     @JsonView(Views.Companion.Public::class)
     @GetMapping("/{id}")
     fun getById(@PathVariable("id") uuid: String): ResponseEntity<Any> {
+        val authenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
+                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         val server = serverRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-        return ResponseEntity(server, HttpStatus.OK)
+        if (!server.hasUser(authenticatedUser)) {
+            return ResponseEntity(HttpStatus.FORBIDDEN)
+        }
+        return ResponseEntity(ServerViewModel.from(server), HttpStatus.OK)
     }
 
     @JsonView(Views.Companion.Private::class)
@@ -100,7 +105,7 @@ class ServerController {
         authenticatedUser.ownedServerSet.add(server)
 
         val group = Group(uuid.v4(), "Default", server)
-        val userGroup = UserGroup(uuid.v4(), authenticatedUser, group)
+        val userGroup = UserGroup(authenticatedUser, group)
         val permissionSet = HashSet<Permission>()
 
         val createContentPermission = permissionRepository.findByValue(PermissionEnum.CREATE_CONTENT.value)

@@ -108,7 +108,7 @@ class ContentController {
         var category = categoryRepository.findByUuid(contentCreateReader.categoryId)
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         val content = Content(uuid.v4(), contentCreateReader.name, contentType, category)
-        val contentGroup = ContentGroup(uuid.v4(), content, group)
+        val contentGroup = ContentGroup(content, group)
         content.contentGroupSet.add(contentGroup)
         group.contentGroupSet.add(contentGroup)
         contentRepository.save(content)

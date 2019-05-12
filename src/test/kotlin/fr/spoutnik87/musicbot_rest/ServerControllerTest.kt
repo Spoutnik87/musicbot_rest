@@ -2,12 +2,11 @@ package fr.spoutnik87.musicbot_rest
 
 import fr.spoutnik87.musicbot_rest.constant.PermissionEnum
 import fr.spoutnik87.musicbot_rest.controller.ServerController
+import fr.spoutnik87.musicbot_rest.model.Group
 import fr.spoutnik87.musicbot_rest.model.Permission
+import fr.spoutnik87.musicbot_rest.model.Server
 import fr.spoutnik87.musicbot_rest.repository.*
-import fr.spoutnik87.musicbot_rest.util.SpringApplicationContextTestConfig
-import fr.spoutnik87.musicbot_rest.util.UserFactory
-import fr.spoutnik87.musicbot_rest.util.Util
-import fr.spoutnik87.musicbot_rest.util.WebSecurityTestConfig
+import fr.spoutnik87.musicbot_rest.util.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mockito
@@ -101,8 +100,161 @@ class ServerControllerTest {
     }
 
     @Test
+    @WithMockUser(username = "user@test.com", authorities = ["USER"])
+    fun update_InvalidServer_ReturnBadRequestStatus() {
+        Mockito.`when`(userRepository.findByEmail("user@test.com"))
+                .thenReturn(UserFactory().createBasicUser().build())
+
+        val body = HashMap<String, Any>()
+        body["name"] = "New server"
+        Util.basicTestWithBody(mockMvc, HttpMethod.PUT, "/server/serverToken", HashMap(), body, HttpStatus.BAD_REQUEST)
+    }
+
+    @Test
+    @WithMockUser(username = "user@test.com", authorities = ["USER"])
+    fun update_ValidParameters_ReturnServer() {
+        val group = Group("groupToken", "Group")
+        val server = Server("serverToken", "server")
+        Mockito.`when`(userRepository.findByEmail("user@test.com"))
+                .thenReturn(UserFactory().createBasicUser().inServer(group, server, listOf()).build())
+        Mockito.`when`(serverRepository.findByUuid("serverToken")).thenReturn(server)
+
+        val body = HashMap<String, Any>()
+        body["name"] = "New server"
+        Util.basicTestWithBody(mockMvc, HttpMethod.PUT, "/server/serverToken", HashMap(), body, HttpStatus.ACCEPTED, "{\"id\":\"serverToken\",\"name\":\"New server\",\"ownerId\":\"basicUserToken\",\"linked\":false}")
+    }
+
+    @Test
     fun delete_NotAuthenticated_ReturnForbiddenStatus() {
         val body = HashMap<String, Any>()
         Util.basicTestWithBody(mockMvc, HttpMethod.DELETE, "/server/serverToken", HashMap(), body, HttpStatus.FORBIDDEN)
+    }
+
+    @Test
+    fun getByGuildId_NotAuthenticated_ReturnForbiddenStatus() {
+        Util.basicTest(mockMvc, HttpMethod.GET, "/server/guild/guildId", HashMap(), HttpStatus.FORBIDDEN)
+    }
+
+    @Test
+    @WithMockUser(username = "user@test.com", authorities = ["USER"])
+    fun getByGuildId_BasicUser_ReturnForbiddenStatus() {
+        Mockito.`when`(userRepository.findByEmail("user@test.com"))
+                .thenReturn(UserFactory().createBasicUser().build())
+
+        Util.basicTest(mockMvc, HttpMethod.GET, "/server/guild/guildId", HashMap(), HttpStatus.FORBIDDEN)
+    }
+
+    @Test
+    @WithMockUser(username = "admin@test.com", authorities = ["ADMIN"])
+    fun getByGuildId_AdminUser_ReturnForbiddenStatus() {
+        Mockito.`when`(userRepository.findByEmail("admin@test.com"))
+                .thenReturn(UserFactory().createAdminUser().build())
+
+        Util.basicTest(mockMvc, HttpMethod.GET, "/server/guild/guildId", HashMap(), HttpStatus.FORBIDDEN)
+    }
+
+    @Test
+    @WithMockUser(username = "bot@test.com", authorities = ["BOT"])
+    fun getByGuildId_BotUserAndServerExists_ReturnServer() {
+        Mockito.`when`(userRepository.findByEmail("bot@test.com"))
+                .thenReturn(UserFactory().createBotUser().build())
+        Mockito.`when`(serverRepository.findByGuildId("guildId"))
+                .thenReturn(ServerFactory().create("serverToken", "Server", "guildId").build())
+
+        Util.basicTest(mockMvc, HttpMethod.GET, "/server/guild/guildId", HashMap(), HttpStatus.OK, "{\"id\":\"serverToken\",\"name\":\"Server\",\"ownerId\":\"basicUserToken\",\"linkToken\":null,\"linked\":true}")
+    }
+
+    @Test
+    fun getById_NotAuthenticated_ReturnForbiddenStatus() {
+        Util.basicTest(mockMvc, HttpMethod.GET, "/server/serverId", HashMap(), HttpStatus.FORBIDDEN)
+    }
+
+    @Test
+    @WithMockUser(username = "user@test.com", authorities = ["USER"])
+    fun getById_ValidParameters_ReturnServer() {
+        val group = Group("groupToken", "Group")
+        val server = Server("serverToken", "server")
+        Mockito.`when`(userRepository.findByEmail("user@test.com"))
+                .thenReturn(UserFactory().createBasicUser().inServer(group, server, listOf()).build())
+        Mockito.`when`(serverRepository.findByUuid("serverToken")).thenReturn(server)
+
+        Util.basicTest(mockMvc, HttpMethod.GET, "/server/serverToken", HashMap(), HttpStatus.OK, "{\"id\":\"serverToken\",\"name\":\"server\",\"ownerId\":\"basicUserToken\",\"linked\":false}")
+    }
+
+    @Test
+    fun linkGuildToServer_NotAuthenticated_ReturnForbiddenStatus() {
+        Util.basicTest(mockMvc, HttpMethod.GET, "/server/link/serverToken", HashMap(), HttpStatus.FORBIDDEN)
+    }
+
+    @Test
+    @WithMockUser(username = "user@test.com", authorities = ["USER"])
+    fun linkGuildToServer_BasicUser_ReturnForbiddenStatus() {
+        Mockito.`when`(userRepository.findByEmail("user@test.com"))
+                .thenReturn(UserFactory().createBasicUser().build())
+
+        val body = HashMap<String, Any>()
+        body["token"] = "linkToken"
+        body["guildId"] = "guildId"
+        Util.basicTestWithBody(mockMvc, HttpMethod.POST, "/server/link/serverToken", HashMap(), body, HttpStatus.FORBIDDEN)
+    }
+
+    @Test
+    @WithMockUser(username = "admin@test.com", authorities = ["ADMIN"])
+    fun linkGuildToServer_AdminUser_ReturnForbiddenStatus() {
+        Mockito.`when`(userRepository.findByEmail("admin@test.com"))
+                .thenReturn(UserFactory().createAdminUser().build())
+
+        val body = HashMap<String, Any>()
+        body["token"] = "linkToken"
+        body["guildId"] = "guildId"
+        Util.basicTestWithBody(mockMvc, HttpMethod.POST, "/server/link/serverToken", HashMap(), body, HttpStatus.FORBIDDEN)
+    }
+
+    @Test
+    @WithMockUser(username = "bot@test.com", authorities = ["BOT"])
+    fun linkGuildToServer_ServerNotFound_ReturnBadRequestStatus() {
+        Mockito.`when`(userRepository.findByEmail("bot@test.com"))
+                .thenReturn(UserFactory().createBotUser().build())
+
+        val body = HashMap<String, Any>()
+        body["token"] = "linkToken"
+        body["guildId"] = "guildId"
+        Util.basicTestWithBody(mockMvc, HttpMethod.POST, "/server/link/serverToken", HashMap(), body, HttpStatus.BAD_REQUEST)
+    }
+
+    @Test
+    @WithMockUser(username = "bot@test.com", authorities = ["BOT"])
+    fun linkGuildToServer_ServerAlreadyLinked_ReturnBadRequestStatus() {
+        Mockito.`when`(userRepository.findByEmail("bot@test.com"))
+                .thenReturn(UserFactory().createBotUser().build())
+        val group = Group("groupToken", "Group")
+        val server = Server("serverToken", "server")
+        server.guildId = "guildId"
+        Mockito.`when`(userRepository.findByEmail("user@test.com"))
+                .thenReturn(UserFactory().createBasicUser().inServer(group, server, listOf()).build())
+        Mockito.`when`(serverRepository.findByUuid("serverToken")).thenReturn(server)
+
+        val body = HashMap<String, Any>()
+        body["token"] = "linkToken"
+        body["guildId"] = "guildId"
+        Util.basicTestWithBody(mockMvc, HttpMethod.POST, "/server/link/serverToken", HashMap(), body, HttpStatus.BAD_REQUEST)
+    }
+
+    @Test
+    @WithMockUser(username = "bot@test.com", authorities = ["BOT"])
+    fun linkGuildToServer_ValidParameters_ReturnServer() {
+        Mockito.`when`(userRepository.findByEmail("bot@test.com"))
+                .thenReturn(UserFactory().createBotUser().build())
+        val group = Group("groupToken", "Group")
+        val server = Server("serverToken", "server")
+        server.linkToken = "linkToken"
+        Mockito.`when`(userRepository.findByEmail("user@test.com"))
+                .thenReturn(UserFactory().createBasicUser().inServer(group, server, listOf()).build())
+        Mockito.`when`(serverRepository.findByUuid("serverToken")).thenReturn(server)
+
+        val body = HashMap<String, Any>()
+        body["token"] = "linkToken"
+        body["guildId"] = "guildId"
+        Util.basicTestWithBody(mockMvc, HttpMethod.POST, "/server/link/serverToken", HashMap(), body, HttpStatus.ACCEPTED, "{\"id\":\"serverToken\",\"name\":\"server\",\"ownerId\":\"basicUserToken\",\"linkToken\":null,\"linked\":true}")
     }
 }
