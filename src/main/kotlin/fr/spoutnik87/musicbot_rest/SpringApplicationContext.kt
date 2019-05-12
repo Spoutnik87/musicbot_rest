@@ -2,6 +2,7 @@ package fr.spoutnik87.musicbot_rest
 
 import org.springframework.context.ApplicationContext
 import org.springframework.context.ApplicationContextAware
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 
 class SpringApplicationContext : ApplicationContextAware {
     override fun setApplicationContext(appContext: ApplicationContext) {
@@ -18,5 +19,8 @@ class SpringApplicationContext : ApplicationContextAware {
 
         val appConfig: AppConfig
             get() = getBean("AppConfig") as AppConfig
+
+        val bCryptPasswordEncoder: BCryptPasswordEncoder
+            get() = getBean("BCryptPasswordEncoder") as BCryptPasswordEncoder
     }
 }

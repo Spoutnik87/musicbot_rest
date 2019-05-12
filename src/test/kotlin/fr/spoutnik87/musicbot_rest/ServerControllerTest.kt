@@ -3,25 +3,23 @@ package fr.spoutnik87.musicbot_rest
 import fr.spoutnik87.musicbot_rest.constant.PermissionEnum
 import fr.spoutnik87.musicbot_rest.controller.ServerController
 import fr.spoutnik87.musicbot_rest.model.Permission
-import fr.spoutnik87.musicbot_rest.model.Role
-import fr.spoutnik87.musicbot_rest.model.User
 import fr.spoutnik87.musicbot_rest.repository.*
-import fr.spoutnik87.musicbot_rest.util.*
-import org.junit.jupiter.api.BeforeEach
+import fr.spoutnik87.musicbot_rest.util.SpringApplicationContextTestConfig
+import fr.spoutnik87.musicbot_rest.util.UserFactory
+import fr.spoutnik87.musicbot_rest.util.Util
+import fr.spoutnik87.musicbot_rest.util.WebSecurityTestConfig
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.boot.test.mock.mockito.MockBean
-import org.springframework.boot.test.mock.mockito.MockitoTestExecutionListener
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.context.ContextConfiguration
-import org.springframework.test.context.TestExecutionListeners
 import org.springframework.test.context.junit.jupiter.SpringExtension
-import org.springframework.test.context.support.DependencyInjectionTestExecutionListener
 import org.springframework.test.web.servlet.MockMvc
 
 @ExtendWith(SpringExtension::class)
@@ -32,11 +30,6 @@ import org.springframework.test.web.servlet.MockMvc
     WebSecurityTestConfig::class
 ])
 @WebMvcTest(ServerController::class)
-@TestExecutionListeners(listeners = [
-    WithSecurityContextTestExecutionListener::class,
-    DependencyInjectionTestExecutionListener::class,
-    MockitoTestExecutionListener::class
-])
 class ServerControllerTest {
     @MockBean
     private lateinit var userRepository: UserRepository
@@ -62,31 +55,6 @@ class ServerControllerTest {
     @Autowired
     private lateinit var bCryptPasswordEncoder: BCryptPasswordEncoder
 
-    @BeforeEach
-    fun setup() {
-        Mockito.`when`(uuid.v4()).thenReturn("token")
-        Mockito.`when`(userRepository.findByEmail("user@test.com"))
-                .thenReturn(
-                        User(
-                                "token",
-                                "user@test.com",
-                                "Nickname",
-                                "Firstname",
-                                "Lastname",
-                                bCryptPasswordEncoder.encode("password"),
-                                Role("token", "USER", 2)))
-        Mockito.`when`(userRepository.findByEmail("admin@test.com"))
-                .thenReturn(
-                        User(
-                                "token2",
-                                "admin@test.com",
-                                "Nickname",
-                                "Firstname",
-                                "Lastname",
-                                bCryptPasswordEncoder.encode("password"),
-                                Role("token2", "ADMIN", 1)))
-    }
-
     @Test
     fun create_NotAuthenticated_ReturnForbiddenStatus() {
         val body = HashMap<String, Any>()
@@ -95,15 +63,21 @@ class ServerControllerTest {
     }
 
     @Test
-    @WithUserDetails("user@test.com")
+    @WithMockUser(username = "user@test.com", authorities = ["USER"])
     fun create_InvalidParameters_ReturnForbiddenStatus() {
+        Mockito.`when`(userRepository.findByEmail("user@test.com"))
+                .thenReturn(UserFactory().createBasicUser().build())
+
         val body = HashMap<String, Any>()
         Util.basicTestWithBody(mockMvc, HttpMethod.POST, "/server", HashMap(), body, HttpStatus.BAD_REQUEST)
     }
 
     @Test
-    @WithUserDetails("user@test.com")
+    @WithMockUser(username = "user@test.com", authorities = ["USER"])
     fun create_ValidParameters_ReturnServer() {
+        Mockito.`when`(uuid.v4()).thenReturn("token")
+        Mockito.`when`(userRepository.findByEmail("user@test.com"))
+                .thenReturn(UserFactory().createBasicUser().build())
         Mockito.`when`(permissionRepository.findByValue(PermissionEnum.CREATE_CONTENT.value)).thenReturn(Permission("createMediaToken", PermissionEnum.CREATE_CONTENT.value))
         Mockito.`when`(permissionRepository.findByValue(PermissionEnum.DELETE_CONTENT.value)).thenReturn(Permission("deleteMediaToken", PermissionEnum.DELETE_CONTENT.value))
         Mockito.`when`(permissionRepository.findByValue(PermissionEnum.READ_CONTENT.value)).thenReturn(Permission("readMediaToken", PermissionEnum.READ_CONTENT.value))
@@ -115,7 +89,20 @@ class ServerControllerTest {
 
         val body = HashMap<String, Any>()
         body["name"] = "New server"
-        Util.basicTestWithBody(mockMvc, HttpMethod.POST, "/server", HashMap(), body, HttpStatus.CREATED, "{\"id\":\"token\",\"name\":\"New server\",\"ownerId\":\"token\",\"linked\": false}")
+        Util.basicTestWithBody(mockMvc, HttpMethod.POST, "/server", HashMap(), body, HttpStatus.CREATED, "{\"id\":\"token\",\"name\":\"New server\",\"ownerId\":\"basicUserToken\",\"linked\": false}")
         Mockito.verify(serverRepository, Mockito.atLeastOnce()).save(Mockito.any())
+    }
+
+    @Test
+    fun update_NotAuthenticated_ReturnForbiddenStatus() {
+        val body = HashMap<String, Any>()
+        body["name"] = "New server"
+        Util.basicTestWithBody(mockMvc, HttpMethod.PUT, "/server/serverToken", HashMap(), body, HttpStatus.FORBIDDEN)
+    }
+
+    @Test
+    fun delete_NotAuthenticated_ReturnForbiddenStatus() {
+        val body = HashMap<String, Any>()
+        Util.basicTestWithBody(mockMvc, HttpMethod.DELETE, "/server/serverToken", HashMap(), body, HttpStatus.FORBIDDEN)
     }
 }

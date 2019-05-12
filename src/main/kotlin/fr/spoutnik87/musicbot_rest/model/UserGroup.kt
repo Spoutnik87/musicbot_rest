@@ -26,9 +26,13 @@ data class UserGroup(
         this.group = group
     }
 
+    constructor(uuid: String, user: User, group: Group, permissions: List<Permission>) : this(uuid, user, group) {
+        permissionSet.addAll(permissions)
+    }
+
     @ManyToMany(cascade = [CascadeType.ALL])
     @JoinTable(name = "user_group_permission", joinColumns = [JoinColumn(name = "user_group_id", referencedColumnName = "id")], inverseJoinColumns = [JoinColumn(name = "permission_id", referencedColumnName = "id")])
-    lateinit var permissionSet: MutableSet<Permission>
+    var permissionSet: MutableSet<Permission> = HashSet()
 
     fun hasPermission(permission: Permission) = permissionSet.any { it.id == permission.id }
 

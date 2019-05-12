@@ -41,7 +41,7 @@ class JWTAuthorizationFilter(
             return if (user != null) {
                 var userDetails = this.userDetailsService.loadUserByUsername(user)
                 UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails?.authorities)
+                        userDetails?.user?.email, userDetails?.user?.password, userDetails?.authorities)
             } else null
         }
         return null

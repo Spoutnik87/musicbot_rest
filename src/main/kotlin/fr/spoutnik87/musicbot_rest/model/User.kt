@@ -35,7 +35,7 @@ data class User(
     val userGroupSet: MutableSet<UserGroup> = HashSet()
 
     @OneToMany(mappedBy = "owner", cascade = [CascadeType.ALL])
-    val serverSet: MutableSet<Server> = HashSet()
+    val ownedServerSet: MutableSet<Server> = HashSet()
 
     val groupList
         get() = userGroupSet.map { it.group }
@@ -43,7 +43,7 @@ data class User(
     /**
      * Return true if this user is the owner of the specified server.
      */
-    fun isOwner(server: Server) = serverSet.any { it.id == server.id }
+    fun isOwner(server: Server) = ownedServerSet.any { it.id == server.id }
 
     /**
      * Return true if this user is a member of the specified server.

@@ -45,6 +45,9 @@ class ContentController {
     private lateinit var contentTypeRepository: ContentTypeRepository
 
     @Autowired
+    private lateinit var userRepository: UserRepository
+
+    @Autowired
     private lateinit var uuid: UUID
 
     @Autowired
@@ -53,7 +56,7 @@ class ContentController {
     @JsonView(Views.Companion.Public::class)
     @GetMapping("/{id}")
     fun getContent(@PathVariable("id") uuid: String): ResponseEntity<Any> {
-        val authenticatedUser = AuthenticationHelper.getAuthenticatedUser()
+        val authenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         val content = contentRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         if (!authenticatedUser.hasReadContentPermission(content)) {
@@ -64,7 +67,7 @@ class ContentController {
 
     @GetMapping("/{id}/content")
     fun getMedia(@PathVariable("id") uuid: String): ResponseEntity<Any> {
-        val authenticatedUser = AuthenticationHelper.getAuthenticatedUser()
+        val authenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         val content = contentRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         if (!authenticatedUser.hasReadContentPermission(content)) {
@@ -78,7 +81,7 @@ class ContentController {
 
     @GetMapping("/{id}/thumbnail", produces = [MediaType.IMAGE_PNG_VALUE, MediaType.IMAGE_JPEG_VALUE, MediaType.IMAGE_GIF_VALUE])
     fun getThumbnail(@PathVariable("id") uuid: String): ResponseEntity<Any> {
-        val authenticatedUser = AuthenticationHelper.getAuthenticatedUser()
+        val authenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         val content = contentRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         if (!authenticatedUser.hasReadContentPermission(content)) {
@@ -93,7 +96,7 @@ class ContentController {
     @JsonView(Views.Companion.Public::class)
     @PostMapping("")
     fun createContent(@RequestBody contentCreateReader: ContentCreateReader): ResponseEntity<Any> {
-        val authenticatedUser = AuthenticationHelper.getAuthenticatedUser()
+        val authenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         val group = groupRepository.findByUuid(contentCreateReader.groupId)
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
@@ -117,7 +120,7 @@ class ContentController {
     @JsonView(Views.Companion.Public::class)
     @PutMapping("/{id}")
     fun updateMedia(@PathVariable("id") uuid: String, contentUpdateReader: ContentUpdateReader): ResponseEntity<Any> {
-        val authenticatedUser = AuthenticationHelper.getAuthenticatedUser()
+        val authenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         val content = contentRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         if (!authenticatedUser.hasCreateContentPermission(content)) {
@@ -137,7 +140,7 @@ class ContentController {
 
     @PutMapping("/{id}/content")
     fun updateMedia(@PathVariable("id") uuid: String, @RequestParam("content") file: MultipartFile): ResponseEntity<Any> {
-        val authenticatedUser = AuthenticationHelper.getAuthenticatedUser()
+        val authenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         val content = contentRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         if (!authenticatedUser.hasCreateContentPermission(content)) {
@@ -160,7 +163,7 @@ class ContentController {
 
     @PutMapping("/{id}/thumbnail")
     fun updateThumbnail(@PathVariable("id") uuid: String, @RequestParam("thumbnail") file: MultipartFile): ResponseEntity<Any> {
-        val authenticatedUser = AuthenticationHelper.getAuthenticatedUser()
+        val authenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         val content = contentRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         if (!authenticatedUser.hasCreateContentPermission(content)) {
@@ -179,7 +182,7 @@ class ContentController {
 
     @DeleteMapping("/{id}")
     fun deleteContent(@PathVariable("id") uuid: String): ResponseEntity<Any> {
-        val authenticatedUser = AuthenticationHelper.getAuthenticatedUser()
+        val authenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         val content = contentRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         if (!authenticatedUser.hasDeleteContentPermission(content)) {

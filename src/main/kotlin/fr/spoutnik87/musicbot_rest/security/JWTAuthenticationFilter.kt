@@ -36,8 +36,9 @@ class JWTAuthenticationFilter(
     }
 
     override fun successfulAuthentication(req: HttpServletRequest, res: HttpServletResponse, chain: FilterChain?, auth: Authentication?) {
+        val username = (auth?.principal as org.springframework.security.core.userdetails.UserDetails).username
         val token = JWT.create()
-                .withSubject((auth?.principal as UserDetails).username)
+                .withSubject(username)
                 .withExpiresAt(Date(System.currentTimeMillis() + this.securityConfiguration.expirationTime))
                 .sign(HMAC512(this.securityConfiguration.secret.toByteArray()))
         res.addHeader("Access-Control-Expose-Headers", "Authorization")
@@ -49,8 +50,9 @@ class JWTAuthenticationFilter(
 
         val mapper = ObjectMapper().registerModule(KotlinModule())
         mapper.disable(MapperFeature.DEFAULT_VIEW_INCLUSION)
+        val user = userDetailsService.loadUserByUsername(username)?.user
         res.writer.print(mapper.writerWithView(Views.Companion.Mixed::class.java)
-                .writeValueAsString(UserViewModel.from((auth.principal as UserDetails).user)))
+                .writeValueAsString(UserViewModel.from(user!!)))
         res.writer.flush()
     }
 }

@@ -1,10 +1,9 @@
 package fr.spoutnik87.musicbot_rest.util
 
 import fr.spoutnik87.musicbot_rest.constant.RoleEnum
-import fr.spoutnik87.musicbot_rest.model.User
-import fr.spoutnik87.musicbot_rest.security.UserDetails
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.security.core.userdetails.UserDetails
 
 abstract class AuthenticationHelper {
 
@@ -34,10 +33,5 @@ abstract class AuthenticationHelper {
         fun getAuthenticatedUserEmail(): String? = getAuthenticatedUserDetails()?.username
 
         fun getAuthenticatedUserAuthorities() = getAuthenticatedUserDetails()?.authorities?.map { it as SimpleGrantedAuthority }
-
-        /**
-         * Return User model instance of authenticated user.
-         */
-        fun getAuthenticatedUser(): User? = getAuthenticatedUserDetails()?.user
     }
 }
