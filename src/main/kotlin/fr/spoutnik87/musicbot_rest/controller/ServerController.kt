@@ -82,18 +82,18 @@ class ServerController {
     }
 
     @JsonView(Views.Companion.Public::class)
-    @GetMapping("/list/{userId}")
-    fun getByUserId(@PathVariable("userId") userUuid: String): ResponseEntity<Any> {
+    @GetMapping(value = ["/list/{userId}", "/list"])
+    fun getByUserId(@PathVariable("userId", required = false) userUuid: String?): ResponseEntity<Any> {
         val authenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-        if (authenticatedUser.uuid == userUuid) {
-            return ResponseEntity(authenticatedUser.ownedServerSet.toTypedArray(), HttpStatus.OK)
+        if (authenticatedUser.uuid == userUuid || userUuid == null) {
+            return ResponseEntity(authenticatedUser.ownedServerSet.map { ServerViewModel.from(it) }, HttpStatus.OK)
         }
         if (authenticatedUser.role.name != RoleEnum.ADMIN.value) {
             return ResponseEntity(HttpStatus.FORBIDDEN)
         }
         val user = userRepository.findByUuid(userUuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-        return ResponseEntity(user.ownedServerSet.toTypedArray().map { ServerViewModel.from(it) }, HttpStatus.OK)
+        return ResponseEntity(user.ownedServerSet.map { ServerViewModel.from(it) }, HttpStatus.OK)
     }
 
     @JsonView(Views.Companion.Public::class)
@@ -101,13 +101,6 @@ class ServerController {
     fun create(@RequestBody serverCreateReader: ServerCreateReader): ResponseEntity<Any> {
         val authenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-        val server = Server(uuid.v4(), serverCreateReader.name, authenticatedUser)
-        authenticatedUser.ownedServerSet.add(server)
-
-        val group = Group(uuid.v4(), "Default", server)
-        val userGroup = UserGroup(authenticatedUser, group)
-        val permissionSet = HashSet<Permission>()
-
         val createContentPermission = permissionRepository.findByValue(PermissionEnum.CREATE_CONTENT.value)
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         val deleteContentPermission = permissionRepository.findByValue(PermissionEnum.DELETE_CONTENT.value)
@@ -125,6 +118,16 @@ class ServerController {
         val deleteCategoryPermission = permissionRepository.findByValue(PermissionEnum.DELETE_CATEGORY.value)
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
 
+        var server = Server(uuid.v4(), serverCreateReader.name, authenticatedUser)
+
+        server = serverRepository.save(server)
+
+        var group = Group(uuid.v4(), "Default", server)
+        group = groupRepository.save(group)
+
+        var userGroup = UserGroup(authenticatedUser, group)
+        val permissionSet = HashSet<Permission>()
+
         permissionSet.add(createContentPermission)
         permissionSet.add(deleteContentPermission)
         permissionSet.add(readContentPermission)
@@ -134,13 +137,8 @@ class ServerController {
         permissionSet.add(createCategoryPermission)
         permissionSet.add(deleteCategoryPermission)
         userGroup.permissionSet = permissionSet
-        authenticatedUser.userGroupSet.add(userGroup)
-        group.userGroupSet.add(userGroup)
 
-        serverRepository.save(server)
-        groupRepository.save(group)
         userGroupRepository.save(userGroup)
-        userRepository.save(authenticatedUser)
         return ResponseEntity(ServerViewModel.from(server), HttpStatus.CREATED)
     }
 

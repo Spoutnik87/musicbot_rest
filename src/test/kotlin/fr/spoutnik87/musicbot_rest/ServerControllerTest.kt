@@ -9,6 +9,7 @@ import fr.spoutnik87.musicbot_rest.repository.*
 import fr.spoutnik87.musicbot_rest.util.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.ArgumentMatchers
 import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
@@ -85,6 +86,8 @@ class ServerControllerTest {
         Mockito.`when`(permissionRepository.findByValue(PermissionEnum.STOP_MEDIA.value)).thenReturn(Permission("stopMediaToken", PermissionEnum.STOP_MEDIA.value))
         Mockito.`when`(permissionRepository.findByValue(PermissionEnum.CREATE_CATEGORY.value)).thenReturn(Permission("createCategoryToken", PermissionEnum.CREATE_CATEGORY.value))
         Mockito.`when`(permissionRepository.findByValue(PermissionEnum.DELETE_CATEGORY.value)).thenReturn(Permission("deleteCategoryToken", PermissionEnum.DELETE_CATEGORY.value))
+        Mockito.`when`(serverRepository.save(ArgumentMatchers.any(Server::class.java))).then { it.getArgument(0) }
+        Mockito.`when`(groupRepository.save(ArgumentMatchers.any(Group::class.java))).then { it.getArgument(0) }
 
         val body = HashMap<String, Any>()
         body["name"] = "New server"

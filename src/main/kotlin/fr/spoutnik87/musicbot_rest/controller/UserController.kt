@@ -97,6 +97,7 @@ class UserController {
                 userSignupReader.lastname,
                 bCryptPasswordEncoder.encode(userSignupReader.password),
                 role)
+        userRepository.save(user)
         return ResponseEntity(UserViewModel.from(user), HttpStatus.CREATED)
     }
 
