@@ -109,6 +109,9 @@ class UserController {
         if (authenticatedUser.role.name != RoleEnum.BOT.value) {
             return ResponseEntity(HttpStatus.FORBIDDEN)
         }
+        if (userRepository.findByUserId(serverJoinTokenReader.userId) != null) {
+            return ResponseEntity(HttpStatus.BAD_REQUEST)
+        }
         val serverJoinToken = tokenService.decodeServerJoinToken(serverJoinTokenReader.serverJoinToken)
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         val user = userRepository.findByUuid(serverJoinToken.id) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)

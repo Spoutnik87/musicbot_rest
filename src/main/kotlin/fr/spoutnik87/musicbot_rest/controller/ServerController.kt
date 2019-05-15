@@ -11,8 +11,8 @@ import fr.spoutnik87.musicbot_rest.reader.ServerUpdateReader
 import fr.spoutnik87.musicbot_rest.repository.*
 import fr.spoutnik87.musicbot_rest.service.TokenService
 import fr.spoutnik87.musicbot_rest.util.AuthenticationHelper
+import fr.spoutnik87.musicbot_rest.viewmodel.ServerLinkTokenViewModel
 import fr.spoutnik87.musicbot_rest.viewmodel.ServerViewModel
-import fr.spoutnik87.musicbot_rest.viewmodel.UserServerJoinTokenViewModel
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -78,7 +78,7 @@ class ServerController {
             return ResponseEntity(HttpStatus.FORBIDDEN)
         }
         var serverLinkToken = tokenService.createServerLinkToken(server.uuid)
-        return ResponseEntity(UserServerJoinTokenViewModel(serverLinkToken), HttpStatus.OK)
+        return ResponseEntity(ServerLinkTokenViewModel(serverLinkToken), HttpStatus.OK)
     }
 
     @JsonView(Views.Companion.Private::class)
@@ -88,6 +88,9 @@ class ServerController {
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         if (authenticatedUser.role.name != RoleEnum.BOT.value) {
             return ResponseEntity(HttpStatus.FORBIDDEN)
+        }
+        if (serverRepository.findByGuildId(serverLinkReader.guildId) != null) {
+            return ResponseEntity(HttpStatus.BAD_REQUEST)
         }
         val serverLinkToken = tokenService.decodeServerLinkToken(serverLinkReader.token)
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
