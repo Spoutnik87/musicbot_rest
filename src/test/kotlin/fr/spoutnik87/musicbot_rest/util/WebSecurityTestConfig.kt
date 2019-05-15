@@ -29,9 +29,6 @@ class WebSecurityTestConfig : WebSecurityConfigurerAdapter() {
     private lateinit var securityConfiguration: SecurityConfiguration
 
     @Bean
-    fun securityConfiguration() = SecurityConfiguration()
-
-    @Bean
     override fun userDetailsService(): UserDetailsServiceImpl {
         return UserDetailsServiceImpl()
     }

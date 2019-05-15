@@ -6,10 +6,7 @@ import fr.spoutnik87.musicbot_rest.controller.ContentController
 import fr.spoutnik87.musicbot_rest.model.*
 import fr.spoutnik87.musicbot_rest.repository.*
 import fr.spoutnik87.musicbot_rest.service.FileService
-import fr.spoutnik87.musicbot_rest.util.SpringApplicationContextTestConfig
-import fr.spoutnik87.musicbot_rest.util.UserFactory
-import fr.spoutnik87.musicbot_rest.util.Util
-import fr.spoutnik87.musicbot_rest.util.WebSecurityTestConfig
+import fr.spoutnik87.musicbot_rest.util.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mockito
@@ -30,7 +27,8 @@ import org.springframework.test.web.servlet.MockMvc
     AppConfig::class,
     SpringApplicationContextTestConfig::class,
     BCryptPasswordEncoder::class,
-    WebSecurityTestConfig::class
+    WebSecurityTestConfig::class,
+    SecurityConfigurationTestConfig::class
 ])
 @WebMvcTest(ContentController::class)
 class ContentControllerTest {

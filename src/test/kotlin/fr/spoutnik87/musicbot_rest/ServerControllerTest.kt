@@ -1,11 +1,15 @@
 package fr.spoutnik87.musicbot_rest
 
+import com.auth0.jwt.JWT
+import com.auth0.jwt.algorithms.Algorithm
 import fr.spoutnik87.musicbot_rest.constant.PermissionEnum
 import fr.spoutnik87.musicbot_rest.controller.ServerController
 import fr.spoutnik87.musicbot_rest.model.Group
 import fr.spoutnik87.musicbot_rest.model.Permission
 import fr.spoutnik87.musicbot_rest.model.Server
 import fr.spoutnik87.musicbot_rest.repository.*
+import fr.spoutnik87.musicbot_rest.security.SecurityConfiguration
+import fr.spoutnik87.musicbot_rest.service.TokenService
 import fr.spoutnik87.musicbot_rest.util.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -21,13 +25,17 @@ import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.test.web.servlet.MockMvc
+import java.util.*
+import kotlin.collections.HashMap
 
 @ExtendWith(SpringExtension::class)
 @ContextConfiguration(classes = [
     ServerController::class,
     SpringApplicationContextTestConfig::class,
     BCryptPasswordEncoder::class,
-    WebSecurityTestConfig::class
+    WebSecurityTestConfig::class,
+    SecurityConfigurationTestConfig::class,
+    TokenService::class
 ])
 @WebMvcTest(ServerController::class)
 class ServerControllerTest {
@@ -54,6 +62,9 @@ class ServerControllerTest {
 
     @Autowired
     private lateinit var bCryptPasswordEncoder: BCryptPasswordEncoder
+
+    @Autowired
+    private lateinit var securityConfiguration: SecurityConfiguration
 
     @Test
     fun create_NotAuthenticated_ReturnForbiddenStatus() {
@@ -164,7 +175,7 @@ class ServerControllerTest {
         Mockito.`when`(serverRepository.findByGuildId("guildId"))
                 .thenReturn(ServerFactory().create("serverToken", "Server", "guildId").build())
 
-        Util.basicTest(mockMvc, HttpMethod.GET, "/server/guild/guildId", HashMap(), HttpStatus.OK, "{\"id\":\"serverToken\",\"name\":\"Server\",\"ownerId\":\"basicUserToken\",\"linkToken\":null,\"linked\":true}")
+        Util.basicTest(mockMvc, HttpMethod.GET, "/server/guild/guildId", HashMap(), HttpStatus.OK, "{\"id\":\"serverToken\",\"name\":\"Server\",\"ownerId\":\"basicUserToken\",\"linked\":true}")
     }
 
     @Test
@@ -196,9 +207,10 @@ class ServerControllerTest {
                 .thenReturn(UserFactory().createBasicUser().build())
 
         val body = HashMap<String, Any>()
+        body["userId"] = "userId"
         body["token"] = "linkToken"
         body["guildId"] = "guildId"
-        Util.basicTestWithBody(mockMvc, HttpMethod.POST, "/server/link/serverToken", HashMap(), body, HttpStatus.FORBIDDEN)
+        Util.basicTestWithBody(mockMvc, HttpMethod.POST, "/server/link", HashMap(), body, HttpStatus.FORBIDDEN)
     }
 
     @Test
@@ -208,9 +220,10 @@ class ServerControllerTest {
                 .thenReturn(UserFactory().createAdminUser().build())
 
         val body = HashMap<String, Any>()
+        body["userId"] = "userId"
         body["token"] = "linkToken"
         body["guildId"] = "guildId"
-        Util.basicTestWithBody(mockMvc, HttpMethod.POST, "/server/link/serverToken", HashMap(), body, HttpStatus.FORBIDDEN)
+        Util.basicTestWithBody(mockMvc, HttpMethod.POST, "/server/link", HashMap(), body, HttpStatus.FORBIDDEN)
     }
 
     @Test
@@ -219,10 +232,17 @@ class ServerControllerTest {
         Mockito.`when`(userRepository.findByEmail("bot@test.com"))
                 .thenReturn(UserFactory().createBotUser().build())
 
+        val linkServerToken = JWT.create()
+                .withClaim("type", "SERVER_LINK_TOKEN")
+                .withClaim("id", "serverId")
+                .withExpiresAt(Date(System.currentTimeMillis() + 300000))
+                .sign(Algorithm.HMAC512(this.securityConfiguration.secret.toByteArray()))
+
         val body = HashMap<String, Any>()
-        body["token"] = "linkToken"
+        body["userId"] = "userId"
+        body["token"] = linkServerToken
         body["guildId"] = "guildId"
-        Util.basicTestWithBody(mockMvc, HttpMethod.POST, "/server/link/serverToken", HashMap(), body, HttpStatus.BAD_REQUEST)
+        Util.basicTestWithBody(mockMvc, HttpMethod.POST, "/server/link", HashMap(), body, HttpStatus.BAD_REQUEST)
     }
 
     @Test
@@ -237,10 +257,41 @@ class ServerControllerTest {
                 .thenReturn(UserFactory().createBasicUser().inServer(group, server, listOf()).build())
         Mockito.`when`(serverRepository.findByUuid("serverToken")).thenReturn(server)
 
+        val linkServerToken = JWT.create()
+                .withClaim("type", "SERVER_LINK_TOKEN")
+                .withClaim("id", "serverToken")
+                .withExpiresAt(Date(System.currentTimeMillis() + 300000))
+                .sign(Algorithm.HMAC512(this.securityConfiguration.secret.toByteArray()))
+
         val body = HashMap<String, Any>()
-        body["token"] = "linkToken"
+        body["userId"] = "userId"
+        body["token"] = linkServerToken
         body["guildId"] = "guildId"
-        Util.basicTestWithBody(mockMvc, HttpMethod.POST, "/server/link/serverToken", HashMap(), body, HttpStatus.BAD_REQUEST)
+        Util.basicTestWithBody(mockMvc, HttpMethod.POST, "/server/link", HashMap(), body, HttpStatus.BAD_REQUEST)
+    }
+
+    @Test
+    @WithMockUser(username = "bot@test.com", authorities = ["BOT"])
+    fun linkGuildToServer_ExpiredToken_ReturnBadRequestStatus() {
+        Mockito.`when`(userRepository.findByEmail("bot@test.com"))
+                .thenReturn(UserFactory().createBotUser().build())
+        val group = Group("groupToken", "Group")
+        val server = Server("serverToken", "server")
+        Mockito.`when`(userRepository.findByEmail("user@test.com"))
+                .thenReturn(UserFactory().createBasicUser().inServer(group, server, listOf()).build())
+        Mockito.`when`(serverRepository.findByUuid("serverToken")).thenReturn(server)
+
+        val linkServerToken = JWT.create()
+                .withClaim("type", "SERVER_LINK_TOKEN")
+                .withClaim("id", "serverToken")
+                .withExpiresAt(Date(System.currentTimeMillis() - 10))
+                .sign(Algorithm.HMAC512(this.securityConfiguration.secret.toByteArray()))
+
+        val body = HashMap<String, Any>()
+        body["userId"] = "userId"
+        body["token"] = linkServerToken
+        body["guildId"] = "guildId"
+        Util.basicTestWithBody(mockMvc, HttpMethod.POST, "/server/link", HashMap(), body, HttpStatus.BAD_REQUEST)
     }
 
     @Test
@@ -250,14 +301,20 @@ class ServerControllerTest {
                 .thenReturn(UserFactory().createBotUser().build())
         val group = Group("groupToken", "Group")
         val server = Server("serverToken", "server")
-        server.linkToken = "linkToken"
         Mockito.`when`(userRepository.findByEmail("user@test.com"))
                 .thenReturn(UserFactory().createBasicUser().inServer(group, server, listOf()).build())
         Mockito.`when`(serverRepository.findByUuid("serverToken")).thenReturn(server)
 
+        val linkServerToken = JWT.create()
+                .withClaim("type", "SERVER_LINK_TOKEN")
+                .withClaim("id", "serverToken")
+                .withExpiresAt(Date(System.currentTimeMillis() + 300000))
+                .sign(Algorithm.HMAC512(this.securityConfiguration.secret.toByteArray()))
+
         val body = HashMap<String, Any>()
-        body["token"] = "linkToken"
+        body["userId"] = "userId"
+        body["token"] = linkServerToken
         body["guildId"] = "guildId"
-        Util.basicTestWithBody(mockMvc, HttpMethod.POST, "/server/link/serverToken", HashMap(), body, HttpStatus.ACCEPTED, "{\"id\":\"serverToken\",\"name\":\"server\",\"ownerId\":\"basicUserToken\",\"linkToken\":null,\"linked\":true}")
+        Util.basicTestWithBody(mockMvc, HttpMethod.POST, "/server/link", HashMap(), body, HttpStatus.ACCEPTED, "{\"id\":\"serverToken\",\"name\":\"server\",\"ownerId\":\"basicUserToken\",\"linked\":true}")
     }
 }

@@ -52,8 +52,31 @@ abstract class Util {
                 body: Map<String, Any>?,
                 expectedStatus: HttpStatus,
                 expectedValue: String?) {
+            basicTestWithTokenAndBody(mockMvc, httpMethod, endpoint, params, body, null, expectedStatus, expectedValue)
+        }
+
+        fun basicTestWithTokenAndBody(
+                mockMvc: MockMvc,
+                httpMethod: HttpMethod,
+                endpoint: String,
+                params: HashMap<String, String>,
+                body: Map<String, Any>?,
+                token: String?,
+                expectedStatus: HttpStatus) {
+            basicTestWithTokenAndBody(mockMvc, httpMethod, endpoint, params, body, null, expectedStatus, null)
+        }
+
+        fun basicTestWithTokenAndBody(
+                mockMvc: MockMvc,
+                httpMethod: HttpMethod,
+                endpoint: String,
+                params: HashMap<String, String>,
+                body: Map<String, Any>?,
+                token: String?,
+                expectedStatus: HttpStatus,
+                expectedValue: String?) {
             val result = mockMvc
-                    .perform(buildRequest(httpMethod, endpoint, params, body))
+                    .perform(buildRequest(httpMethod, endpoint, params, body, token))
                     .andExpect(status().`is`(expectedStatus.value()))
                     .andReturn()
             if (expectedValue != null) {
@@ -72,7 +95,27 @@ abstract class Util {
                 endpoint: String,
                 params: HashMap<String, String>,
                 body: Map<String, Any>?) {
-            val result = mockMvc.perform(buildRequest(httpMethod, endpoint, params, body)).andReturn()
+            val result = mockMvc.perform(buildRequest(httpMethod, endpoint, params, body, null)).andReturn()
+            println(
+                    "######################################################################################################")
+            println(
+                    "######################################################################################################")
+            println(result.response.status)
+            println(result.response.contentAsString)
+            println(
+                    "######################################################################################################")
+            println(
+                    "######################################################################################################")
+        }
+
+        fun basicPrintWithTokenAndBody(
+                mockMvc: MockMvc,
+                httpMethod: HttpMethod,
+                endpoint: String,
+                params: HashMap<String, String>,
+                body: Map<String, Any>?,
+                token: String?) {
+            val result = mockMvc.perform(buildRequest(httpMethod, endpoint, params, body, token)).andReturn()
             println(
                     "######################################################################################################")
             println(
@@ -89,7 +132,8 @@ abstract class Util {
                 httpMethod: HttpMethod,
                 endpoint: String,
                 params: HashMap<String, String>,
-                body: Map<String, Any>?): MockHttpServletRequestBuilder {
+                body: Map<String, Any>?,
+                token: String?): MockHttpServletRequestBuilder {
             val requestBuilder: MockHttpServletRequestBuilder
 
             when (httpMethod) {
@@ -106,6 +150,10 @@ abstract class Util {
 
             for ((key, value) in params) {
                 requestBuilder.param(key, value)
+            }
+
+            if (token != null) {
+                requestBuilder.header("Authorization", "Bearer $token")
             }
             return requestBuilder
         }

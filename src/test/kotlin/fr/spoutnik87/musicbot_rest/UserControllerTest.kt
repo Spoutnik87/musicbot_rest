@@ -1,17 +1,15 @@
 package fr.spoutnik87.musicbot_rest
 
+import com.auth0.jwt.JWT
+import com.auth0.jwt.algorithms.Algorithm
 import fr.spoutnik87.musicbot_rest.constant.RoleEnum
 import fr.spoutnik87.musicbot_rest.controller.UserController
 import fr.spoutnik87.musicbot_rest.model.Role
 import fr.spoutnik87.musicbot_rest.model.User
-import fr.spoutnik87.musicbot_rest.repository.GroupRepository
-import fr.spoutnik87.musicbot_rest.repository.RoleRepository
-import fr.spoutnik87.musicbot_rest.repository.ServerRepository
-import fr.spoutnik87.musicbot_rest.repository.UserRepository
-import fr.spoutnik87.musicbot_rest.util.SpringApplicationContextTestConfig
-import fr.spoutnik87.musicbot_rest.util.UserFactory
-import fr.spoutnik87.musicbot_rest.util.Util
-import fr.spoutnik87.musicbot_rest.util.WebSecurityTestConfig
+import fr.spoutnik87.musicbot_rest.repository.*
+import fr.spoutnik87.musicbot_rest.security.SecurityConfiguration
+import fr.spoutnik87.musicbot_rest.service.TokenService
+import fr.spoutnik87.musicbot_rest.util.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mockito
@@ -32,7 +30,9 @@ import java.util.*
     UserController::class,
     SpringApplicationContextTestConfig::class,
     BCryptPasswordEncoder::class,
-    WebSecurityTestConfig::class
+    WebSecurityTestConfig::class,
+    SecurityConfigurationTestConfig::class,
+    TokenService::class
 ])
 @WebMvcTest(UserController::class)
 class UserControllerTest {
@@ -52,11 +52,17 @@ class UserControllerTest {
     @MockBean(name = "UUID")
     private lateinit var uuid: UUID
 
+    @MockBean
+    private lateinit var userGroupRepository: UserGroupRepository
+
     @Autowired
     private lateinit var mockMvc: MockMvc
 
     @Autowired
     private lateinit var bCryptPasswordEncoder: BCryptPasswordEncoder
+
+    @Autowired
+    private lateinit var securityConfiguration: SecurityConfiguration
 
     @Test
     fun signUp_ValidParameters_UserCreated() {
@@ -113,6 +119,62 @@ class UserControllerTest {
         params["password"] = "password"
         Util.basicTestWithBody(
                 mockMvc, HttpMethod.POST, "/login", HashMap(), params, HttpStatus.UNAUTHORIZED)
+    }
+
+    @Test
+    fun getLogged_ExpiredToken_ReturnForbiddenStatus() {
+        Mockito.`when`(userRepository.findByEmail("user@test.com"))
+                .thenReturn(UserFactory().createBasicUser().build())
+
+        val token = JWT.create()
+                .withSubject("user@test.com")
+                .withExpiresAt(Date(System.currentTimeMillis() - 10))
+                .sign(Algorithm.HMAC512(this.securityConfiguration.secret.toByteArray()))
+
+        Util.basicTestWithTokenAndBody(
+                mockMvc,
+                HttpMethod.GET,
+                "/user",
+                HashMap(),
+                null,
+                token,
+                HttpStatus.FORBIDDEN)
+    }
+
+    @Test
+    fun getLogged_InvalidToken_ReturnForbiddenStatus() {
+        Mockito.`when`(userRepository.findByEmail("user@test.com"))
+                .thenReturn(UserFactory().createBasicUser().build())
+
+        Util.basicTestWithTokenAndBody(
+                mockMvc,
+                HttpMethod.GET,
+                "/user",
+                HashMap(),
+                null,
+                "token",
+                HttpStatus.FORBIDDEN)
+    }
+
+    @Test
+    fun getLogged_ValidToken_ReturnLoggedUser() {
+        Mockito.`when`(userRepository.findByEmail("user@test.com"))
+                .thenReturn(UserFactory().createBasicUser().build())
+
+        val token = JWT.create()
+                .withSubject("user@test.com")
+                .withExpiresAt(Date(System.currentTimeMillis() + 300000))
+                .sign(Algorithm.HMAC512(this.securityConfiguration.secret.toByteArray()))
+
+        Util.basicTestWithTokenAndBody(
+                mockMvc,
+                HttpMethod.GET,
+                "/user",
+                HashMap(),
+                null,
+                token,
+                HttpStatus.OK,
+                "{\"id\":\"basicUserToken\",\"email\":\"user@test.com\",\"nickname\":\"Nickname\",\"firstname\":\"Firstname\",\"lastname\":\"Lastname\",\"role\":{\"id\":\"userRoleToken\",\"name\":\"USER\"}}")
     }
 
     @Test

@@ -4,14 +4,15 @@ import com.fasterxml.jackson.annotation.JsonView
 import fr.spoutnik87.musicbot_rest.UUID
 import fr.spoutnik87.musicbot_rest.constant.RoleEnum
 import fr.spoutnik87.musicbot_rest.model.User
+import fr.spoutnik87.musicbot_rest.model.UserGroup
 import fr.spoutnik87.musicbot_rest.model.Views
+import fr.spoutnik87.musicbot_rest.reader.ServerJoinTokenReader
 import fr.spoutnik87.musicbot_rest.reader.UserSignupReader
 import fr.spoutnik87.musicbot_rest.reader.UserUpdateReader
-import fr.spoutnik87.musicbot_rest.repository.GroupRepository
-import fr.spoutnik87.musicbot_rest.repository.RoleRepository
-import fr.spoutnik87.musicbot_rest.repository.ServerRepository
-import fr.spoutnik87.musicbot_rest.repository.UserRepository
+import fr.spoutnik87.musicbot_rest.repository.*
+import fr.spoutnik87.musicbot_rest.service.TokenService
 import fr.spoutnik87.musicbot_rest.util.AuthenticationHelper
+import fr.spoutnik87.musicbot_rest.viewmodel.UserServerJoinTokenViewModel
 import fr.spoutnik87.musicbot_rest.viewmodel.UserViewModel
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
@@ -40,6 +41,12 @@ class UserController {
 
     @Autowired
     private lateinit var bCryptPasswordEncoder: BCryptPasswordEncoder
+
+    @Autowired
+    private lateinit var userGroupRepository: UserGroupRepository
+
+    @Autowired
+    private lateinit var tokenService: TokenService
 
     @JsonView(Views.Companion.Mixed::class)
     @GetMapping("")
@@ -83,6 +90,40 @@ class UserController {
             return ResponseEntity(HttpStatus.FORBIDDEN)
         }
         return ResponseEntity(group.userList.map { UserViewModel.from(it) }, HttpStatus.OK)
+    }
+
+    @JsonView(Views.Companion.Public::class)
+    @GetMapping("/serverJoinToken")
+    fun getServerJoinToken(): ResponseEntity<Any> {
+        val authenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
+                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        var serverJoinToken = tokenService.createServerJoinToken(authenticatedUser.uuid)
+        return ResponseEntity(UserServerJoinTokenViewModel(serverJoinToken), HttpStatus.OK)
+    }
+
+    @JsonView(Views.Companion.Public::class)
+    @PostMapping("/joinServer")
+    fun joinServer(@RequestBody serverJoinTokenReader: ServerJoinTokenReader): ResponseEntity<Any> {
+        val authenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
+                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        if (authenticatedUser.role.name != RoleEnum.BOT.value) {
+            return ResponseEntity(HttpStatus.FORBIDDEN)
+        }
+        val serverJoinToken = tokenService.decodeServerJoinToken(serverJoinTokenReader.serverJoinToken)
+                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        val user = userRepository.findByUuid(serverJoinToken.id) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        val defaultGroup = serverRepository.findByGuildId(serverJoinTokenReader.guildId)?.defaultGroup
+                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        if (defaultGroup.server.hasUser(user)) {
+            return ResponseEntity(HttpStatus.BAD_REQUEST)
+        }
+        val userGroup = UserGroup(user, defaultGroup)
+        userGroupRepository.save(userGroup)
+        if (!user.isLinked) {
+            user.userId = serverJoinTokenReader.userId
+            userRepository.save(user)
+        }
+        return ResponseEntity(HttpStatus.ACCEPTED)
     }
 
     @JsonView(Views.Companion.Mixed::class)

@@ -23,6 +23,11 @@ data class User(
         var password: String
 ) : AuditModel(), Serializable {
 
+    /**
+     * Discord user unique Id
+     */
+    var userId: String? = null
+
     @ManyToOne
     @JoinColumn(name = "role_id")
     lateinit var role: Role
@@ -39,6 +44,9 @@ data class User(
 
     val groupList
         get() = userGroupSet.map { it.group }
+
+    val isLinked
+        get() = userId != null
 
     /**
      * Return true if this user is the owner of the specified server.

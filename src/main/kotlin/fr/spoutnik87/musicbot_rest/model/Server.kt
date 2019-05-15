@@ -12,9 +12,14 @@ data class Server(
         var name: String
 ) : AuditModel(), Serializable {
 
-    var linkToken: String? = null
-
+    /**
+     * Discord server unique id
+     */
     var guildId: String? = null
+
+    @ManyToOne(cascade = [CascadeType.ALL])
+    @JoinColumn(name = "default_group_id")
+    lateinit var defaultGroup: Group
 
     @ManyToOne
     @JoinColumn(name = "user_id")

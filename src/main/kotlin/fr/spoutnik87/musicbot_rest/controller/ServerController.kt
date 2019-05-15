@@ -9,8 +9,10 @@ import fr.spoutnik87.musicbot_rest.reader.ServerCreateReader
 import fr.spoutnik87.musicbot_rest.reader.ServerLinkReader
 import fr.spoutnik87.musicbot_rest.reader.ServerUpdateReader
 import fr.spoutnik87.musicbot_rest.repository.*
+import fr.spoutnik87.musicbot_rest.service.TokenService
 import fr.spoutnik87.musicbot_rest.util.AuthenticationHelper
 import fr.spoutnik87.musicbot_rest.viewmodel.ServerViewModel
+import fr.spoutnik87.musicbot_rest.viewmodel.UserServerJoinTokenViewModel
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -39,6 +41,9 @@ class ServerController {
     @Autowired
     private lateinit var uuid: UUID
 
+    @Autowired
+    private lateinit var tokenService: TokenService
+
     @JsonView(Views.Companion.Public::class)
     @GetMapping("/{id}")
     fun getById(@PathVariable("id") uuid: String): ResponseEntity<Any> {
@@ -63,21 +68,39 @@ class ServerController {
         return ResponseEntity(ServerViewModel.from(server), HttpStatus.OK)
     }
 
+    @JsonView(Views.Companion.Public::class)
+    @GetMapping("/link/{serverId}")
+    fun getServerLinkToken(@PathVariable("serverId") serverId: String): ResponseEntity<Any> {
+        val authenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
+                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        val server = serverRepository.findByUuid(serverId) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        if (!authenticatedUser.isOwner(server)) {
+            return ResponseEntity(HttpStatus.FORBIDDEN)
+        }
+        var serverLinkToken = tokenService.createServerLinkToken(server.uuid)
+        return ResponseEntity(UserServerJoinTokenViewModel(serverLinkToken), HttpStatus.OK)
+    }
+
     @JsonView(Views.Companion.Private::class)
-    @PostMapping("/link/{serverId}")
-    fun linkGuildToServer(@PathVariable("serverId") serverId: String, @RequestBody serverLinkReader: ServerLinkReader): ResponseEntity<Any> {
+    @PostMapping("/link")
+    fun linkGuildToServer(@RequestBody serverLinkReader: ServerLinkReader): ResponseEntity<Any> {
         val authenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         if (authenticatedUser.role.name != RoleEnum.BOT.value) {
             return ResponseEntity(HttpStatus.FORBIDDEN)
         }
-        val server = serverRepository.findByUuid(serverId) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-        if (server.isLinked || server.linkToken != serverLinkReader.token) {
+        val serverLinkToken = tokenService.decodeServerLinkToken(serverLinkReader.token)
+                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        val server = serverRepository.findByUuid(serverLinkToken.id) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        if (server.isLinked) {
             return ResponseEntity(HttpStatus.BAD_REQUEST)
         }
         server.guildId = serverLinkReader.guildId
-        server.linkToken = null
         serverRepository.save(server)
+        if (!authenticatedUser.isLinked) {
+            authenticatedUser.userId = serverLinkReader.userId
+            userRepository.save(authenticatedUser)
+        }
         return ResponseEntity(ServerViewModel.from(server), HttpStatus.ACCEPTED)
     }
 
@@ -118,13 +141,20 @@ class ServerController {
         val deleteCategoryPermission = permissionRepository.findByValue(PermissionEnum.DELETE_CATEGORY.value)
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
 
+        var group = Group(uuid.v4(), "Default")
         var server = Server(uuid.v4(), serverCreateReader.name, authenticatedUser)
+        server.defaultGroup = group
 
+        /**
+         * Persist group and server
+         */
         server = serverRepository.save(server)
-
-        var group = Group(uuid.v4(), "Default", server)
-        group = groupRepository.save(group)
-
+        group = server.defaultGroup
+        /**
+         * Link group to server and persist
+         */
+        group.server = server
+        groupRepository.save(group)
         var userGroup = UserGroup(authenticatedUser, group)
         val permissionSet = HashSet<Permission>()
 
