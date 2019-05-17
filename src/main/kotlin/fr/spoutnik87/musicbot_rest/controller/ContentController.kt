@@ -73,7 +73,7 @@ class ContentController {
         if (!authenticatedUser.hasReadContentPermission(content)) {
             return ResponseEntity(HttpStatus.FORBIDDEN)
         }
-        if (!content.hasContent()) {
+        if (!content.hasMedia()) {
             return ResponseEntity(HttpStatus.BAD_REQUEST)
         }
         TODO()
@@ -146,15 +146,15 @@ class ContentController {
         if (!authenticatedUser.hasCreateContentPermission(content)) {
             return ResponseEntity(HttpStatus.FORBIDDEN)
         }
-        if (content.hasContent()) {
-            fileService.deleteFile(appConfig.applicationPath + CONTENTS_PATH + content.uuid)
-            content.content = false
+        if (content.hasMedia()) {
+            fileService.deleteFile(appConfig.applicationPath + MEDIA_PATH + content.uuid)
+            content.media = false
             content.extension = null
             content.size = null
             contentRepository.save(content)
         }
-        fileService.saveFile(appConfig.applicationPath + CONTENTS_PATH + content.uuid, file.bytes)
-        content.content = true
+        fileService.saveFile(appConfig.applicationPath + MEDIA_PATH + content.uuid, file.bytes)
+        content.media = true
         content.extension = FilenameUtils.getExtension(file.originalFilename)
         content.size = file.size
         contentRepository.save(content)
@@ -188,8 +188,8 @@ class ContentController {
         if (!authenticatedUser.hasDeleteContentPermission(content)) {
             return ResponseEntity(HttpStatus.FORBIDDEN)
         }
-        if (content.hasContent()) {
-            fileService.deleteFile(appConfig.applicationPath + CONTENTS_PATH + content.uuid)
+        if (content.hasMedia()) {
+            fileService.deleteFile(appConfig.applicationPath + MEDIA_PATH + content.uuid)
         }
         if (content.hasThumbnail()) {
             fileService.deleteFile(appConfig.applicationPath + THUMBNAILS_PATH + content.uuid)
@@ -199,7 +199,7 @@ class ContentController {
     }
 
     companion object {
-        const val CONTENTS_PATH = "contents/content/"
+        const val MEDIA_PATH = "contents/media/"
         const val THUMBNAILS_PATH = "contents/thumbnails/"
     }
 }

@@ -75,4 +75,8 @@ data class User(
     fun hasCreateCategoryPermission(category: Category) = hasCreateCategoryPermission(category.server)
 
     fun hasDeleteCategoryPermission(category: Category) = category.server.groupSet.any { hasPermission(it, PermissionEnum.DELETE_CATEGORY) }
+
+    fun hasPlayMediaPermission(content: Content) = content.contentGroupSet.flatMap { it.group.userGroupSet }.filter { it.user.id == id }.any { it.hasPermission(PermissionEnum.PLAY_MEDIA) }
+
+    fun hasStopMediaPermission(content: Content) = content.contentGroupSet.flatMap { it.group.userGroupSet }.filter { it.user.id == id }.any { it.hasPermission(PermissionEnum.STOP_MEDIA) }
 }

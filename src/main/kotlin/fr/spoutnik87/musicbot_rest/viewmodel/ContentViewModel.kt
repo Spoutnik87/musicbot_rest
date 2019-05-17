@@ -15,7 +15,7 @@ data class ContentViewModel(
         @JsonView(Views.Companion.Public::class)
         val size: Long?,
         @JsonView(Views.Companion.Public::class)
-        val content: Boolean,
+        val media: Boolean,
         @JsonView(Views.Companion.Public::class)
         val thumbnail: Boolean,
         @JsonView(Views.Companion.Public::class)
@@ -33,7 +33,7 @@ data class ContentViewModel(
                 content.name,
                 content.extension,
                 content.size,
-                content.content,
+                content.media,
                 content.thumbnail,
                 ContentTypeViewModel.from(content.contentType),
                 CategoryViewModel.from(content.category),

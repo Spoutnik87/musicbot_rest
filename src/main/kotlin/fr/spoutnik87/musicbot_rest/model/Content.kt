@@ -17,7 +17,7 @@ data class Content(
     var size: Long? = null
 
     @Column(nullable = false)
-    var content: Boolean = false
+    var media: Boolean = false
 
     @Column(nullable = false)
     var thumbnail: Boolean = false
@@ -36,12 +36,15 @@ data class Content(
     val groupList
         get() = contentGroupSet.map { it.group }
 
+    val server
+        get() = groupList[0].server
+
     constructor(uuid: String, name: String, contentType: ContentType, category: Category) : this(uuid, name) {
         this.contentType = contentType
         this.category = category
     }
 
-    fun hasContent() = content
+    fun hasMedia() = media
 
     fun hasThumbnail() = thumbnail
 }
