@@ -20,28 +20,9 @@ abstract class Util {
                 httpMethod: HttpMethod,
                 endpoint: String,
                 params: HashMap<String, String>,
-                expectedStatus: HttpStatus) {
-            basicTestWithBody(mockMvc, httpMethod, endpoint, params, null, expectedStatus, null)
-        }
-
-        fun basicTest(
-                mockMvc: MockMvc,
-                httpMethod: HttpMethod,
-                endpoint: String,
-                params: HashMap<String, String>,
                 expectedStatus: HttpStatus,
-                expectedValue: String) {
+                expectedValue: String? = null) {
             basicTestWithBody(mockMvc, httpMethod, endpoint, params, null, expectedStatus, expectedValue)
-        }
-
-        fun basicTestWithBody(
-                mockMvc: MockMvc,
-                httpMethod: HttpMethod,
-                endpoint: String,
-                params: HashMap<String, String>,
-                body: Map<String, Any>,
-                expectedStatus: HttpStatus) {
-            basicTestWithBody(mockMvc, httpMethod, endpoint, params, body, expectedStatus, null)
         }
 
         fun basicTestWithBody(
@@ -51,7 +32,7 @@ abstract class Util {
                 params: HashMap<String, String>,
                 body: Map<String, Any>?,
                 expectedStatus: HttpStatus,
-                expectedValue: String?) {
+                expectedValue: String? = null) {
             basicTestWithTokenAndBody(mockMvc, httpMethod, endpoint, params, body, null, expectedStatus, expectedValue)
         }
 
@@ -62,19 +43,8 @@ abstract class Util {
                 params: HashMap<String, String>,
                 body: Map<String, Any>?,
                 token: String?,
-                expectedStatus: HttpStatus) {
-            basicTestWithTokenAndBody(mockMvc, httpMethod, endpoint, params, body, null, expectedStatus, null)
-        }
-
-        fun basicTestWithTokenAndBody(
-                mockMvc: MockMvc,
-                httpMethod: HttpMethod,
-                endpoint: String,
-                params: HashMap<String, String>,
-                body: Map<String, Any>?,
-                token: String?,
                 expectedStatus: HttpStatus,
-                expectedValue: String?) {
+                expectedValue: String? = null) {
             val result = mockMvc
                     .perform(buildRequest(httpMethod, endpoint, params, body, token))
                     .andExpect(status().`is`(expectedStatus.value()))
@@ -85,36 +55,12 @@ abstract class Util {
         }
 
         fun basicPrint(
-                mockMvc: MockMvc, httpMethod: HttpMethod, endpoint: String, params: HashMap<String, String>) {
-            basicPrintWithBody(mockMvc, httpMethod, endpoint, params, null)
-        }
-
-        fun basicPrintWithBody(
                 mockMvc: MockMvc,
                 httpMethod: HttpMethod,
                 endpoint: String,
                 params: HashMap<String, String>,
-                body: Map<String, Any>?) {
-            val result = mockMvc.perform(buildRequest(httpMethod, endpoint, params, body, null)).andReturn()
-            println(
-                    "######################################################################################################")
-            println(
-                    "######################################################################################################")
-            println(result.response.status)
-            println(result.response.contentAsString)
-            println(
-                    "######################################################################################################")
-            println(
-                    "######################################################################################################")
-        }
-
-        fun basicPrintWithTokenAndBody(
-                mockMvc: MockMvc,
-                httpMethod: HttpMethod,
-                endpoint: String,
-                params: HashMap<String, String>,
-                body: Map<String, Any>?,
-                token: String?) {
+                body: Map<String, Any>? = null,
+                token: String? = null) {
             val result = mockMvc.perform(buildRequest(httpMethod, endpoint, params, body, token)).andReturn()
             println(
                     "######################################################################################################")
@@ -134,13 +80,11 @@ abstract class Util {
                 params: HashMap<String, String>,
                 body: Map<String, Any>?,
                 token: String?): MockHttpServletRequestBuilder {
-            val requestBuilder: MockHttpServletRequestBuilder
-
-            when (httpMethod) {
-                HttpMethod.PUT -> requestBuilder = put(endpoint)
-                HttpMethod.POST -> requestBuilder = post(endpoint)
-                HttpMethod.DELETE -> requestBuilder = delete(endpoint)
-                else -> requestBuilder = get(endpoint)
+            val requestBuilder: MockHttpServletRequestBuilder = when (httpMethod) {
+                HttpMethod.PUT -> put(endpoint)
+                HttpMethod.POST -> post(endpoint)
+                HttpMethod.DELETE -> delete(endpoint)
+                else -> get(endpoint)
             }
 
             requestBuilder.contentType(MediaType.APPLICATION_JSON)

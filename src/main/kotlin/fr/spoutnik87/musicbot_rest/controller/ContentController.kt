@@ -119,7 +119,7 @@ class ContentController {
 
     @JsonView(Views.Companion.Public::class)
     @PutMapping("/{id}")
-    fun updateMedia(@PathVariable("id") uuid: String, contentUpdateReader: ContentUpdateReader): ResponseEntity<Any> {
+    fun updateContent(@PathVariable("id") uuid: String, contentUpdateReader: ContentUpdateReader): ResponseEntity<Any> {
         val authenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         val content = contentRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)

@@ -128,7 +128,7 @@ class UserControllerTest {
 
         val token = JWT.create()
                 .withSubject("user@test.com")
-                .withExpiresAt(Date(System.currentTimeMillis() - 10))
+                .withExpiresAt(Date(System.currentTimeMillis() - 1000))
                 .sign(Algorithm.HMAC512(this.securityConfiguration.secret.toByteArray()))
 
         Util.basicTestWithTokenAndBody(
