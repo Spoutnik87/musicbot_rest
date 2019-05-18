@@ -22,5 +22,5 @@ class AppConfig {
     lateinit var botPassword: String
 
     val botAddress
-        get() = "http://$botHost/$botPort"
+        get() = "http://$botHost:$botPort"
 }

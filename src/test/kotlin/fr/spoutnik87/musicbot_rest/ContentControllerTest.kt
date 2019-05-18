@@ -6,9 +6,11 @@ import fr.spoutnik87.musicbot_rest.controller.ContentController
 import fr.spoutnik87.musicbot_rest.model.*
 import fr.spoutnik87.musicbot_rest.repository.*
 import fr.spoutnik87.musicbot_rest.service.FileService
+import fr.spoutnik87.musicbot_rest.service.ImageService
 import fr.spoutnik87.musicbot_rest.util.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.ArgumentMatchers
 import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
@@ -52,7 +54,13 @@ class ContentControllerTest {
     private lateinit var categoryRepository: CategoryRepository
 
     @MockBean
+    private lateinit var serverRepository: ServerRepository
+
+    @MockBean
     private lateinit var fileService: FileService
+
+    @MockBean
+    private lateinit var imageService: ImageService
 
     @MockBean(name = "UUID")
     private lateinit var uuid: UUID
@@ -162,12 +170,14 @@ class ContentControllerTest {
         Mockito.`when`(categoryRepository.findByUuid("categoryToken")).thenReturn(Category("categoryToken", "Category", server))
         Mockito.`when`(uuid.v4()).thenReturn("token")
         Mockito.`when`(contentTypeRepository.findByValue(ContentTypeEnum.DEFAULT.value)).thenReturn(ContentType("mediaTypeToken", ContentTypeEnum.DEFAULT.value))
+        Mockito.`when`(contentRepository.save(ArgumentMatchers.any(Content::class.java))).then { it.getArgument(0) }
+        Mockito.`when`(contentGroupRepository.save(ArgumentMatchers.any(ContentGroup::class.java))).then { it.getArgument(0) }
 
         val body = HashMap<String, Any>()
         body["groupId"] = "groupToken"
         body["categoryId"] = "categoryToken"
         body["name"] = "New content"
-        Util.basicTestWithBody(mockMvc, HttpMethod.POST, "/content", HashMap(), body, HttpStatus.CREATED, "{\"id\":\"token\",\"name\":\"New content\",\"extension\":null,\"size\":null,\"media\":false,\"thumbnail\":false,\"serverId\":\"serverToken\", \"contentType\":{\"id\":\"mediaTypeToken\",\"value\":\"DEFAULT\"},\"category\":{\"id\":\"categoryToken\",\"name\":\"Category\",\"serverId\":\"serverToken\"}}")
+        Util.basicTestWithBody(mockMvc, HttpMethod.POST, "/content", HashMap(), body, HttpStatus.CREATED, "{\"id\":\"token\",\"name\":\"New content\",\"extension\":null,\"size\":null,\"media\":false,\"thumbnail\":false,\"serverId\":\"serverToken\", \"contentType\":{\"id\":\"mediaTypeToken\",\"value\":\"DEFAULT\"},\"category\":{\"id\":\"categoryToken\",\"name\":\"Category\",\"serverId\":\"serverToken\"},\"groups\":[{\"id\":\"groupToken\",\"name\":\"Group\",\"serverId\":\"serverToken\"}]}")
         Mockito.verify(contentRepository, Mockito.atLeastOnce()).save(Mockito.any())
     }
 

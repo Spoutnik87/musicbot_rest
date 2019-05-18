@@ -29,10 +29,10 @@ data class Group(
     val userList
         get() = userGroupSet.map { it.user }
 
-    val mediaList
+    val contentList
         get() = contentGroupSet.map { it.content }
 
     fun hasUser(user: User) = userGroupSet.any { it.user.id == user.id }
 
-    fun hasMedia(content: Content) = contentGroupSet.any { it.content.id == content.id }
+    fun hasContent(content: Content) = contentGroupSet.any { it.content.id == content.id }
 }

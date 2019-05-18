@@ -48,6 +48,9 @@ data class User(
     val isLinked
         get() = userId != null
 
+    val servers
+        get() = userGroupSet.map { it.group.server }
+
     /**
      * Return true if this user is the owner of the specified server.
      */
@@ -56,7 +59,9 @@ data class User(
     /**
      * Return true if this user is a member of the specified server.
      */
-    fun hasServer(server: Server) = userGroupSet.map { it.group.server }.any { it.id == server.id }
+    fun hasServer(server: Server) = servers.any { it.id == server.id }
+
+    fun getPermissions(group: Group) = userGroupSet.filter { it.group.id == group.id }.flatMap { it.permissionSet }
 
     fun hasPermission(group: Group, permission: Permission) = userGroupSet.filter { it.group.id == group.id }.any { it.hasPermission(permission) }
 

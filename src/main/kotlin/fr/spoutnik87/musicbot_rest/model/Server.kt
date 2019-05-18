@@ -41,5 +41,12 @@ data class Server(
     val isLinked
         get() = guildId != null
 
+    val contentList
+        get() = groupSet.flatMap { it.contentList }.distinctBy { it.id }
+
     fun hasUser(user: User) = groupSet.any { it.hasUser(user) }
+
+    fun hasGroup(group: Group) = groupSet.any { it.id == group.id }
+
+    fun hasContent(content: Content) = contentList.any { it.id == content.id }
 }

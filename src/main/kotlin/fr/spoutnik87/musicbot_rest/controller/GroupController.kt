@@ -11,6 +11,7 @@ import fr.spoutnik87.musicbot_rest.repository.ServerRepository
 import fr.spoutnik87.musicbot_rest.repository.UserRepository
 import fr.spoutnik87.musicbot_rest.util.AuthenticationHelper
 import fr.spoutnik87.musicbot_rest.viewmodel.GroupViewModel
+import fr.spoutnik87.musicbot_rest.viewmodel.UserGroupViewModel
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -53,7 +54,7 @@ class GroupController {
         if (!server.hasUser(authenticatedUser)) {
             return ResponseEntity(HttpStatus.FORBIDDEN)
         }
-        return ResponseEntity(server.groupSet.toTypedArray().map { GroupViewModel.from(it) }, HttpStatus.OK)
+        return ResponseEntity(server.groupSet.map { UserGroupViewModel.from(it, authenticatedUser) }, HttpStatus.OK)
     }
 
     @JsonView(Views.Companion.Public::class)
@@ -67,7 +68,6 @@ class GroupController {
             return ResponseEntity(HttpStatus.FORBIDDEN)
         }
         val group = Group(uuid.v4(), groupCreateReader.name, server)
-        server.groupSet.add(group)
         groupRepository.save(group)
         return ResponseEntity(GroupViewModel.from(group), HttpStatus.ACCEPTED)
     }

@@ -23,8 +23,9 @@ data class ContentViewModel(
         @JsonView(Views.Companion.Public::class)
         val category: CategoryViewModel,
         @JsonView(Views.Companion.Public::class)
-        val serverId: String
-
+        val serverId: String,
+        @JsonView(Views.Companion.Public::class)
+        val groups: List<GroupViewModel>
 ) : Serializable {
 
     companion object {
@@ -37,6 +38,7 @@ data class ContentViewModel(
                 content.thumbnail,
                 ContentTypeViewModel.from(content.contentType),
                 CategoryViewModel.from(content.category),
-                content.groupList[0].server.uuid)
+                content.groupList[0].server.uuid,
+                content.groupList.map { GroupViewModel(it.uuid, it.name, it.server.uuid) })
     }
 }

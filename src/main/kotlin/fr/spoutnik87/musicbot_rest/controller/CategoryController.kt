@@ -33,6 +33,18 @@ class CategoryController {
     private lateinit var uuid: UUID
 
     @JsonView(Views.Companion.Public::class)
+    @GetMapping("/server/{serverId}")
+    fun getByServerId(@PathVariable("serverId") uuid: String): ResponseEntity<Any> {
+        val authenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
+                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        val server = serverRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        if (!authenticatedUser.hasServer(server)) {
+            return ResponseEntity(HttpStatus.FORBIDDEN)
+        }
+        return ResponseEntity(server.categorySet.map { CategoryViewModel.from(it) }, HttpStatus.OK)
+    }
+
+    @JsonView(Views.Companion.Public::class)
     @GetMapping("/{id}")
     fun getCategory(@PathVariable("id") uuid: String): ResponseEntity<Any> {
         val authenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
@@ -55,7 +67,7 @@ class CategoryController {
             return ResponseEntity(HttpStatus.FORBIDDEN)
         }
         var category = Category(uuid.v4(), categoryCreateReader.name, server)
-        server.categorySet.add(category)
+        categoryRepository.save(category)
         return ResponseEntity(CategoryViewModel.from(category), HttpStatus.ACCEPTED)
     }
 

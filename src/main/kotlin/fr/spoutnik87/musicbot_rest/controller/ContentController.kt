@@ -11,6 +11,7 @@ import fr.spoutnik87.musicbot_rest.reader.ContentCreateReader
 import fr.spoutnik87.musicbot_rest.reader.ContentUpdateReader
 import fr.spoutnik87.musicbot_rest.repository.*
 import fr.spoutnik87.musicbot_rest.service.FileService
+import fr.spoutnik87.musicbot_rest.service.ImageService
 import fr.spoutnik87.musicbot_rest.util.AuthenticationHelper
 import fr.spoutnik87.musicbot_rest.viewmodel.ContentViewModel
 import org.apache.commons.io.FilenameUtils
@@ -48,10 +49,30 @@ class ContentController {
     private lateinit var userRepository: UserRepository
 
     @Autowired
+    private lateinit var serverRepository: ServerRepository
+
+    @Autowired
     private lateinit var uuid: UUID
 
     @Autowired
     private lateinit var fileService: FileService
+
+    @Autowired
+    private lateinit var imageService: ImageService
+
+    @JsonView(Views.Companion.Public::class)
+    @GetMapping("/server/{serverId}")
+    fun getByServerId(@PathVariable("serverId") uuid: String): ResponseEntity<Any> {
+        val authenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
+                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        val server = serverRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        if (!server.hasUser(authenticatedUser)) {
+            return ResponseEntity(HttpStatus.BAD_REQUEST)
+        }
+        return ResponseEntity(
+                server.contentList.filter { authenticatedUser.hasReadContentPermission(it) }.map { ContentViewModel.from(it) },
+                HttpStatus.OK)
+    }
 
     @JsonView(Views.Companion.Public::class)
     @GetMapping("/{id}")
@@ -79,7 +100,7 @@ class ContentController {
         TODO()
     }
 
-    @GetMapping("/{id}/thumbnail", produces = [MediaType.IMAGE_PNG_VALUE, MediaType.IMAGE_JPEG_VALUE, MediaType.IMAGE_GIF_VALUE])
+    @GetMapping("/{id}/thumbnail", produces = [MediaType.IMAGE_PNG_VALUE])
     fun getThumbnail(@PathVariable("id") uuid: String): ResponseEntity<Any> {
         val authenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
@@ -107,13 +128,11 @@ class ContentController {
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         var category = categoryRepository.findByUuid(contentCreateReader.categoryId)
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-        val content = Content(uuid.v4(), contentCreateReader.name, contentType, category)
-        val contentGroup = ContentGroup(content, group)
+        var content = Content(uuid.v4(), contentCreateReader.name, contentType, category)
+        content = contentRepository.save(content)
+        var contentGroup = ContentGroup(content, group)
+        contentGroup = contentGroupRepository.save(contentGroup)
         content.contentGroupSet.add(contentGroup)
-        group.contentGroupSet.add(contentGroup)
-        contentRepository.save(content)
-        contentGroupRepository.save(contentGroup)
-        groupRepository.save(group)
         return ResponseEntity(ContentViewModel.from(content), HttpStatus.CREATED)
     }
 
@@ -138,8 +157,8 @@ class ContentController {
         return ResponseEntity(ContentViewModel.from(content), HttpStatus.ACCEPTED)
     }
 
-    @PutMapping("/{id}/content")
-    fun updateMedia(@PathVariable("id") uuid: String, @RequestParam("content") file: MultipartFile): ResponseEntity<Any> {
+    @PutMapping("/{id}/media")
+    fun updateMedia(@PathVariable("id") uuid: String, @RequestParam("file") file: MultipartFile): ResponseEntity<Any> {
         val authenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         val content = contentRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
@@ -158,11 +177,11 @@ class ContentController {
         content.extension = FilenameUtils.getExtension(file.originalFilename)
         content.size = file.size
         contentRepository.save(content)
-        return ResponseEntity(HttpStatus.ACCEPTED)
+        return ResponseEntity(ContentViewModel.from(content), HttpStatus.ACCEPTED)
     }
 
     @PutMapping("/{id}/thumbnail")
-    fun updateThumbnail(@PathVariable("id") uuid: String, @RequestParam("thumbnail") file: MultipartFile): ResponseEntity<Any> {
+    fun updateThumbnail(@PathVariable("id") uuid: String, @RequestParam("file") file: MultipartFile): ResponseEntity<Any> {
         val authenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         val content = contentRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
@@ -174,10 +193,16 @@ class ContentController {
             content.thumbnail = false
             contentRepository.save(content)
         }
-        fileService.saveFile(appConfig.applicationPath + THUMBNAILS_PATH + content.uuid, file.bytes)
+        val resizedThumbnail = try {
+            imageService.resize(file.bytes, 200, 200)
+        } catch (e: Exception) {
+            return ResponseEntity(HttpStatus.BAD_REQUEST)
+        }
+
+        fileService.saveFile(appConfig.applicationPath + THUMBNAILS_PATH + content.uuid, resizedThumbnail)
         content.thumbnail = true
         contentRepository.save(content)
-        return ResponseEntity(HttpStatus.ACCEPTED)
+        return ResponseEntity(ContentViewModel.from(content), HttpStatus.ACCEPTED)
     }
 
     @DeleteMapping("/{id}")
@@ -199,7 +224,7 @@ class ContentController {
     }
 
     companion object {
-        const val MEDIA_PATH = "contents/media/"
-        const val THUMBNAILS_PATH = "contents/thumbnails/"
+        const val MEDIA_PATH = "/contents/media/"
+        const val THUMBNAILS_PATH = "/contents/thumbnails/"
     }
 }
