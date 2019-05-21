@@ -22,6 +22,7 @@ import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
+import java.io.BufferedInputStream
 
 @RestController
 @RequestMapping("content")
@@ -86,7 +87,7 @@ class ContentController {
         return ResponseEntity(ContentViewModel.from(content), HttpStatus.OK)
     }
 
-    @GetMapping("/{id}/content")
+    @GetMapping("/{id}/media")
     fun getMedia(@PathVariable("id") uuid: String): ResponseEntity<Any> {
         val authenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
@@ -128,7 +129,7 @@ class ContentController {
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         var category = categoryRepository.findByUuid(contentCreateReader.categoryId)
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-        var content = Content(uuid.v4(), contentCreateReader.name, contentType, category)
+        var content = Content(uuid.v4(), contentCreateReader.name, authenticatedUser, contentType, category)
         content = contentRepository.save(content)
         var contentGroup = ContentGroup(content, group)
         contentGroup = contentGroupRepository.save(contentGroup)
@@ -165,18 +166,35 @@ class ContentController {
         if (!authenticatedUser.hasCreateContentPermission(content)) {
             return ResponseEntity(HttpStatus.FORBIDDEN)
         }
+        val inputStream = BufferedInputStream(file.inputStream)
+        inputStream.mark(file.size.toInt() + 1)
+        if (!fileService.isAudio(inputStream)) {
+            inputStream.close()
+            return ResponseEntity(HttpStatus.BAD_REQUEST)
+        }
+        inputStream.reset()
+        inputStream.mark(file.size.toInt() + 1)
+        val duration = fileService.getAudioFileDuration(inputStream)
+        if (duration == null) {
+            inputStream.close()
+            return ResponseEntity(HttpStatus.BAD_REQUEST)
+        }
+        inputStream.reset()
         if (content.hasMedia()) {
             fileService.deleteFile(appConfig.applicationPath + MEDIA_PATH + content.uuid)
             content.media = false
             content.extension = null
-            content.size = null
+            content.mediaSize = null
+            content.duration = null
             contentRepository.save(content)
         }
-        fileService.saveFile(appConfig.applicationPath + MEDIA_PATH + content.uuid, file.bytes)
+        fileService.saveFile(appConfig.applicationPath + MEDIA_PATH + content.uuid, inputStream.readBytes())
         content.media = true
         content.extension = FilenameUtils.getExtension(file.originalFilename)
-        content.size = file.size
+        content.mediaSize = file.size
+        content.duration = duration
         contentRepository.save(content)
+        inputStream.close()
         return ResponseEntity(ContentViewModel.from(content), HttpStatus.ACCEPTED)
     }
 
@@ -188,19 +206,28 @@ class ContentController {
         if (!authenticatedUser.hasCreateContentPermission(content)) {
             return ResponseEntity(HttpStatus.FORBIDDEN)
         }
+        val inputStream = BufferedInputStream(file.inputStream)
+        if (!fileService.isImage(inputStream)) {
+            return ResponseEntity(HttpStatus.BAD_REQUEST)
+        }
         if (content.hasThumbnail()) {
             fileService.deleteFile(appConfig.applicationPath + THUMBNAILS_PATH + content.uuid)
             content.thumbnail = false
+            content.thumbnailSize = null
             contentRepository.save(content)
         }
         val resizedThumbnail = try {
-            imageService.resize(file.bytes, 200, 200)
+            val resized = imageService.resize(inputStream.readBytes(), 200, 200)
+            inputStream.close()
+            resized
         } catch (e: Exception) {
+            inputStream.close()
             return ResponseEntity(HttpStatus.BAD_REQUEST)
         }
 
         fileService.saveFile(appConfig.applicationPath + THUMBNAILS_PATH + content.uuid, resizedThumbnail)
         content.thumbnail = true
+        content.thumbnailSize = resizedThumbnail.size.toLong()
         contentRepository.save(content)
         return ResponseEntity(ContentViewModel.from(content), HttpStatus.ACCEPTED)
     }

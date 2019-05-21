@@ -177,7 +177,7 @@ class ContentControllerTest {
         body["groupId"] = "groupToken"
         body["categoryId"] = "categoryToken"
         body["name"] = "New content"
-        Util.basicTestWithBody(mockMvc, HttpMethod.POST, "/content", HashMap(), body, HttpStatus.CREATED, "{\"id\":\"token\",\"name\":\"New content\",\"extension\":null,\"size\":null,\"media\":false,\"thumbnail\":false,\"serverId\":\"serverToken\", \"contentType\":{\"id\":\"mediaTypeToken\",\"value\":\"DEFAULT\"},\"category\":{\"id\":\"categoryToken\",\"name\":\"Category\",\"serverId\":\"serverToken\"},\"groups\":[{\"id\":\"groupToken\",\"name\":\"Group\",\"serverId\":\"serverToken\"}]}")
+        Util.basicTestWithBody(mockMvc, HttpMethod.POST, "/content", HashMap(), body, HttpStatus.CREATED, "{\"id\":\"token\",\"name\":\"New content\",\"extension\":null,\"thumbnailSize\":null,\"mediaSize\":null,\"media\":false,\"thumbnail\":false,\"serverId\":\"serverToken\", \"contentType\":{\"id\":\"mediaTypeToken\",\"value\":\"DEFAULT\"},\"category\":{\"id\":\"categoryToken\",\"name\":\"Category\",\"serverId\":\"serverToken\"},\"groups\":[{\"id\":\"groupToken\",\"name\":\"Group\",\"serverId\":\"serverToken\"}]}")
         Mockito.verify(contentRepository, Mockito.atLeastOnce()).save(Mockito.any())
     }
 

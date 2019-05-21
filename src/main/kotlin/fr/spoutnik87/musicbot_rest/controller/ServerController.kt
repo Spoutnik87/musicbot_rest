@@ -100,9 +100,9 @@ class ServerController {
         }
         server.guildId = serverLinkReader.guildId
         serverRepository.save(server)
-        if (!authenticatedUser.isLinked) {
-            authenticatedUser.userId = serverLinkReader.userId
-            userRepository.save(authenticatedUser)
+        if (!server.owner.isLinked) {
+            server.owner.userId = serverLinkReader.userId
+            userRepository.save(server.owner)
         }
         return ResponseEntity(ServerViewModel.from(server), HttpStatus.ACCEPTED)
     }

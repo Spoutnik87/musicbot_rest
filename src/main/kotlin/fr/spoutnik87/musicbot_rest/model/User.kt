@@ -42,14 +42,26 @@ data class User(
     @OneToMany(mappedBy = "owner", cascade = [CascadeType.ALL])
     val ownedServerSet: MutableSet<Server> = HashSet()
 
+    @OneToMany(mappedBy = "author", cascade = [CascadeType.ALL])
+    val ownedContentSet: MutableSet<Content> = HashSet()
+
     val groupList
         get() = userGroupSet.map { it.group }
 
     val isLinked
         get() = userId != null
 
-    val servers
+    val serverList
         get() = userGroupSet.map { it.group.server }
+
+    val spaceUsed
+        get() = ownedContentSet.map { it.spaceUsed }.reduce { acc, l -> acc + l }
+
+    val ownedServerCount
+        get() = ownedServerSet
+
+    val ownedContentCount
+        get() = ownedContentSet.size
 
     /**
      * Return true if this user is the owner of the specified server.
@@ -59,7 +71,7 @@ data class User(
     /**
      * Return true if this user is a member of the specified server.
      */
-    fun hasServer(server: Server) = servers.any { it.id == server.id }
+    fun hasServer(server: Server) = serverList.any { it.id == server.id }
 
     fun getPermissions(group: Group) = userGroupSet.filter { it.group.id == group.id }.flatMap { it.permissionSet }
 

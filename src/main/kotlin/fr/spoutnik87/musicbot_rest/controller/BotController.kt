@@ -8,8 +8,6 @@ import fr.spoutnik87.musicbot_rest.repository.ServerRepository
 import fr.spoutnik87.musicbot_rest.repository.UserRepository
 import fr.spoutnik87.musicbot_rest.service.BotService
 import fr.spoutnik87.musicbot_rest.util.AuthenticationHelper
-import fr.spoutnik87.musicbot_rest.viewmodel.BotContentViewModel
-import fr.spoutnik87.musicbot_rest.viewmodel.BotServerViewModel
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -44,10 +42,7 @@ class BotController {
             return ResponseEntity(HttpStatus.BAD_REQUEST)
         }
         val reader = botService.getServerStatus(server.guildId!!) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-        val viewModel = BotServerViewModel(server.uuid, reader.queue.trackList.map {
-            val user = userRepository.findByUserId(it.initiator)
-            BotContentViewModel.from(it, user!!)!!
-        }, BotContentViewModel.from(reader.currentlyPlaying, userRepository.findByUserId(reader.currentlyPlaying?.id!!)!!))
+        val viewModel = botService.toBotServerViewModel(server, reader) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         return ResponseEntity(viewModel, HttpStatus.OK)
     }
 
@@ -72,11 +67,7 @@ class BotController {
         val reader = botService.addContentToQueue(content.server.guildId!!, content.uuid, authenticatedUser.userId!!)
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         val server = serverRepository.findByGuildId(reader.guildId) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-
-        val viewModel = BotServerViewModel(server.uuid, reader.queue.trackList.map {
-            val user = userRepository.findByUserId(it.initiator)
-            BotContentViewModel.from(it, user!!)!!
-        }, BotContentViewModel.from(reader.currentlyPlaying, userRepository.findByUserId(reader.currentlyPlaying?.id!!)!!))
+        val viewModel = botService.toBotServerViewModel(server, reader) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         return ResponseEntity(viewModel, HttpStatus.OK)
     }
 
@@ -101,40 +92,26 @@ class BotController {
         val reader = botService.removeContentFromQueue(content.server.guildId!!, content.uuid, authenticatedUser.userId!!)
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         val server = serverRepository.findByGuildId(reader.guildId) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-
-        val viewModel = BotServerViewModel(server.uuid, reader.queue.trackList.map {
-            val user = userRepository.findByUserId(it.initiator)
-            BotContentViewModel.from(it, user!!)!!
-        }, BotContentViewModel.from(reader.currentlyPlaying, userRepository.findByUserId(reader.currentlyPlaying?.id!!)!!))
+        val viewModel = botService.toBotServerViewModel(server, reader) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         return ResponseEntity(viewModel, HttpStatus.OK)
     }
 
     @JsonView(Views.Companion.Public::class)
-    @PostMapping("/clear/{contentId}")
-    fun clearQueue(@PathVariable("contentId") uuid: String): ResponseEntity<Any> {
+    @PostMapping("/clear/{serverId}")
+    fun clearQueue(@PathVariable("serverId") uuid: String): ResponseEntity<Any> {
         val authenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         if (!authenticatedUser.isLinked) {
             return ResponseEntity(HttpStatus.BAD_REQUEST)
         }
-        val content = contentRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-        if (!content.hasMedia()) {
+        val server = serverRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        // TODO Check Permission
+        if (!server.isLinked) {
             return ResponseEntity(HttpStatus.BAD_REQUEST)
         }
-        if (!authenticatedUser.hasStopMediaPermission(content)) {
-            return ResponseEntity(HttpStatus.FORBIDDEN)
-        }
-        if (!content.server.isLinked) {
-            return ResponseEntity(HttpStatus.BAD_REQUEST)
-        }
-        val reader = botService.clearQueue(content.server.guildId!!, authenticatedUser.userId!!)
+        val reader = botService.clearQueue(server.guildId!!, authenticatedUser.userId!!)
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-        val server = serverRepository.findByGuildId(reader.guildId) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-
-        val viewModel = BotServerViewModel(server.uuid, reader.queue.trackList.map {
-            val user = userRepository.findByUserId(it.initiator)
-            BotContentViewModel.from(it, user!!)!!
-        }, BotContentViewModel.from(reader.currentlyPlaying, userRepository.findByUserId(reader.currentlyPlaying?.id!!)!!))
+        val viewModel = botService.toBotServerViewModel(server, reader) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         return ResponseEntity(viewModel, HttpStatus.OK)
     }
 
@@ -159,11 +136,7 @@ class BotController {
         val reader = botService.setContentPosition(content.server.guildId!!, content.uuid, authenticatedUser.userId!!, positionReader.position)
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         val server = serverRepository.findByGuildId(reader.guildId) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-
-        val viewModel = BotServerViewModel(server.uuid, reader.queue.trackList.map {
-            val user = userRepository.findByUserId(it.initiator)
-            BotContentViewModel.from(it, user!!)!!
-        }, BotContentViewModel.from(reader.currentlyPlaying, userRepository.findByUserId(reader.currentlyPlaying?.id!!)!!))
+        val viewModel = botService.toBotServerViewModel(server, reader) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         return ResponseEntity(viewModel, HttpStatus.OK)
     }
 }
