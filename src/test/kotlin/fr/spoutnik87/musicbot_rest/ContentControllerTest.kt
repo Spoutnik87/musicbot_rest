@@ -5,9 +5,14 @@ import fr.spoutnik87.musicbot_rest.constant.PermissionEnum
 import fr.spoutnik87.musicbot_rest.controller.ContentController
 import fr.spoutnik87.musicbot_rest.model.*
 import fr.spoutnik87.musicbot_rest.repository.*
+import fr.spoutnik87.musicbot_rest.security.SecurityConfiguration
+import fr.spoutnik87.musicbot_rest.service.ContentService
 import fr.spoutnik87.musicbot_rest.service.FileService
 import fr.spoutnik87.musicbot_rest.service.ImageService
-import fr.spoutnik87.musicbot_rest.util.*
+import fr.spoutnik87.musicbot_rest.service.UserService
+import fr.spoutnik87.musicbot_rest.util.UserFactory
+import fr.spoutnik87.musicbot_rest.util.Util
+import fr.spoutnik87.musicbot_rest.util.WebSecurityTestConfig
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentMatchers
@@ -26,11 +31,13 @@ import org.springframework.test.web.servlet.MockMvc
 @ExtendWith(SpringExtension::class)
 @ContextConfiguration(classes = [
     ContentController::class,
+    UserService::class,
+    ContentService::class,
     AppConfig::class,
-    SpringApplicationContextTestConfig::class,
+    SpringApplicationContext::class,
     BCryptPasswordEncoder::class,
     WebSecurityTestConfig::class,
-    SecurityConfigurationTestConfig::class
+    SecurityConfiguration::class
 ])
 @WebMvcTest(ContentController::class)
 class ContentControllerTest {
@@ -177,7 +184,7 @@ class ContentControllerTest {
         body["groupId"] = "groupToken"
         body["categoryId"] = "categoryToken"
         body["name"] = "New content"
-        Util.basicTestWithBody(mockMvc, HttpMethod.POST, "/content", HashMap(), body, HttpStatus.CREATED, "{\"id\":\"token\",\"name\":\"New content\",\"extension\":null,\"thumbnailSize\":null,\"mediaSize\":null,\"media\":false,\"thumbnail\":false,\"serverId\":\"serverToken\", \"contentType\":{\"id\":\"mediaTypeToken\",\"value\":\"DEFAULT\"},\"category\":{\"id\":\"categoryToken\",\"name\":\"Category\",\"serverId\":\"serverToken\"},\"groups\":[{\"id\":\"groupToken\",\"name\":\"Group\",\"serverId\":\"serverToken\"}]}")
+        Util.basicTestWithBody(mockMvc, HttpMethod.POST, "/content", HashMap(), body, HttpStatus.CREATED, "{\"id\":\"token\",\"name\":\"New content\",\"extension\":null,\"thumbnailSize\":null,\"mediaSize\":null,\"media\":false,\"thumbnail\":false,\"duration\":null,\"serverId\":\"serverToken\", \"contentType\":{\"id\":\"mediaTypeToken\",\"value\":\"DEFAULT\"},\"category\":{\"id\":\"categoryToken\",\"name\":\"Category\",\"serverId\":\"serverToken\"},\"groups\":[{\"id\":\"groupToken\",\"name\":\"Group\",\"serverId\":\"serverToken\"}]}")
         Mockito.verify(contentRepository, Mockito.atLeastOnce()).save(Mockito.any())
     }
 

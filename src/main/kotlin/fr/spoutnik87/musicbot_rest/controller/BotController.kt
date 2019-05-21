@@ -7,7 +7,7 @@ import fr.spoutnik87.musicbot_rest.repository.ContentRepository
 import fr.spoutnik87.musicbot_rest.repository.ServerRepository
 import fr.spoutnik87.musicbot_rest.repository.UserRepository
 import fr.spoutnik87.musicbot_rest.service.BotService
-import fr.spoutnik87.musicbot_rest.util.AuthenticationHelper
+import fr.spoutnik87.musicbot_rest.service.UserService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -29,11 +29,13 @@ class BotController {
     @Autowired
     private lateinit var botService: BotService
 
+    @Autowired
+    private lateinit var userService: UserService
+
     @JsonView(Views.Companion.Public::class)
     @GetMapping("/{serverId}")
     fun getStatus(@PathVariable("serverId") uuid: String): ResponseEntity<Any> {
-        val authenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
-                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        val authenticatedUser = userService.getAuthenticatedUser() ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         val server = serverRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         if (!server.isLinked) {
             return ResponseEntity(HttpStatus.BAD_REQUEST)
@@ -49,8 +51,7 @@ class BotController {
     @JsonView(Views.Companion.Public::class)
     @PostMapping("/play/{contentId}")
     fun play(@PathVariable("contentId") uuid: String): ResponseEntity<Any> {
-        val authenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
-                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        val authenticatedUser = userService.getAuthenticatedUser() ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         if (!authenticatedUser.isLinked) {
             return ResponseEntity(HttpStatus.BAD_REQUEST)
         }
@@ -74,8 +75,7 @@ class BotController {
     @JsonView(Views.Companion.Public::class)
     @PostMapping("/stop/{contentId}")
     fun stop(@PathVariable("contentId") uuid: String): ResponseEntity<Any> {
-        val authenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
-                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        val authenticatedUser = userService.getAuthenticatedUser() ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         if (!authenticatedUser.isLinked) {
             return ResponseEntity(HttpStatus.BAD_REQUEST)
         }
@@ -99,8 +99,7 @@ class BotController {
     @JsonView(Views.Companion.Public::class)
     @PostMapping("/clear/{serverId}")
     fun clearQueue(@PathVariable("serverId") uuid: String): ResponseEntity<Any> {
-        val authenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
-                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        val authenticatedUser = userService.getAuthenticatedUser() ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         if (!authenticatedUser.isLinked) {
             return ResponseEntity(HttpStatus.BAD_REQUEST)
         }
@@ -118,8 +117,7 @@ class BotController {
     @JsonView(Views.Companion.Public::class)
     @PostMapping("/position/{contentId}")
     fun setPosition(@PathVariable("contentId") uuid: String, @RequestBody positionReader: BotPositionReader): ResponseEntity<Any> {
-        val authenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
-                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        val authenticatedUser = userService.getAuthenticatedUser() ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         if (!authenticatedUser.isLinked) {
             return ResponseEntity(HttpStatus.BAD_REQUEST)
         }

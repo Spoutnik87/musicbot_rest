@@ -2,8 +2,8 @@ package fr.spoutnik87.musicbot_rest
 
 import fr.spoutnik87.musicbot_rest.constant.RoleEnum
 import fr.spoutnik87.musicbot_rest.repository.UserRepository
+import fr.spoutnik87.musicbot_rest.security.SecurityConfiguration
 import fr.spoutnik87.musicbot_rest.util.AuthenticationHelper
-import fr.spoutnik87.musicbot_rest.util.SecurityConfigurationTestConfig
 import fr.spoutnik87.musicbot_rest.util.WebSecurityTestConfig
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -17,7 +17,7 @@ import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit.jupiter.SpringExtension
 
 @ExtendWith(SpringExtension::class)
-@ContextConfiguration(classes = [BCryptPasswordEncoder::class, WebSecurityTestConfig::class, SecurityConfigurationTestConfig::class])
+@ContextConfiguration(classes = [BCryptPasswordEncoder::class, WebSecurityTestConfig::class, SecurityConfiguration::class])
 class AuthenticationHelperTest {
 
     @MockBean

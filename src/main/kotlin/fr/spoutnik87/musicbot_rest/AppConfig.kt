@@ -23,4 +23,13 @@ class AppConfig {
 
     val botAddress
         get() = "http://$botHost:$botPort"
+
+    val contentMediaPath
+        get() = "$applicationPath/contents/media/"
+
+    val contentThumbnailsPath
+        get() = "$applicationPath/contents/thumbnails/"
+
+    val serverThumbnailsPath
+        get() = "$applicationPath/servers/thumbnails/"
 }

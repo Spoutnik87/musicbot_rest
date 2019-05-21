@@ -9,7 +9,7 @@ import fr.spoutnik87.musicbot_rest.reader.GroupUpdateReader
 import fr.spoutnik87.musicbot_rest.repository.GroupRepository
 import fr.spoutnik87.musicbot_rest.repository.ServerRepository
 import fr.spoutnik87.musicbot_rest.repository.UserRepository
-import fr.spoutnik87.musicbot_rest.util.AuthenticationHelper
+import fr.spoutnik87.musicbot_rest.service.UserService
 import fr.spoutnik87.musicbot_rest.viewmodel.GroupViewModel
 import fr.spoutnik87.musicbot_rest.viewmodel.UserGroupViewModel
 import org.springframework.beans.factory.annotation.Autowired
@@ -33,12 +33,14 @@ class GroupController {
     @Autowired
     private lateinit var uuid: UUID
 
+    @Autowired
+    private lateinit var userService: UserService
+
     @JsonView(Views.Companion.Public::class)
     @GetMapping("/{id}")
     fun getById(@PathVariable("id") uuid: String): ResponseEntity<Any> {
         val group = groupRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-        val authenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
-                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        val authenticatedUser = userService.getAuthenticatedUser() ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         if (!group.server.hasUser(authenticatedUser)) {
             return ResponseEntity(HttpStatus.FORBIDDEN)
         }
@@ -49,8 +51,7 @@ class GroupController {
     @GetMapping("/server/{id}")
     fun getByServerId(@PathVariable("id") serverUuid: String): ResponseEntity<Any> {
         val server = serverRepository.findByUuid(serverUuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-        val authenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
-                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        val authenticatedUser = userService.getAuthenticatedUser() ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         if (!server.hasUser(authenticatedUser)) {
             return ResponseEntity(HttpStatus.FORBIDDEN)
         }
@@ -62,8 +63,7 @@ class GroupController {
     fun create(@RequestBody groupCreateReader: GroupCreateReader): ResponseEntity<Any> {
         val server = serverRepository.findByUuid(groupCreateReader.serverId)
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-        val authenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
-                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        val authenticatedUser = userService.getAuthenticatedUser() ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         if (!authenticatedUser.isOwner(server)) {
             return ResponseEntity(HttpStatus.FORBIDDEN)
         }
@@ -77,8 +77,7 @@ class GroupController {
     fun update(
             @PathVariable("id") uuid: String, @RequestBody groupUpdateReader: GroupUpdateReader): ResponseEntity<Any> {
         val group = groupRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-        val authenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
-                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        val authenticatedUser = userService.getAuthenticatedUser() ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         if (!authenticatedUser.isOwner(group.server)) {
             return ResponseEntity(HttpStatus.FORBIDDEN)
         }

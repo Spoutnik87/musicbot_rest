@@ -9,8 +9,13 @@ import fr.spoutnik87.musicbot_rest.model.Permission
 import fr.spoutnik87.musicbot_rest.model.Server
 import fr.spoutnik87.musicbot_rest.repository.*
 import fr.spoutnik87.musicbot_rest.security.SecurityConfiguration
+import fr.spoutnik87.musicbot_rest.service.ServerService
 import fr.spoutnik87.musicbot_rest.service.TokenService
-import fr.spoutnik87.musicbot_rest.util.*
+import fr.spoutnik87.musicbot_rest.service.UserService
+import fr.spoutnik87.musicbot_rest.util.ServerFactory
+import fr.spoutnik87.musicbot_rest.util.UserFactory
+import fr.spoutnik87.musicbot_rest.util.Util
+import fr.spoutnik87.musicbot_rest.util.WebSecurityTestConfig
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentMatchers
@@ -31,10 +36,12 @@ import kotlin.collections.HashMap
 @ExtendWith(SpringExtension::class)
 @ContextConfiguration(classes = [
     ServerController::class,
-    SpringApplicationContextTestConfig::class,
+    UserService::class,
+    ServerService::class,
+    SpringApplicationContext::class,
     BCryptPasswordEncoder::class,
     WebSecurityTestConfig::class,
-    SecurityConfigurationTestConfig::class,
+    SecurityConfiguration::class,
     TokenService::class
 ])
 @WebMvcTest(ServerController::class)

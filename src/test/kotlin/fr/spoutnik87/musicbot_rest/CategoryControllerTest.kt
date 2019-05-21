@@ -4,8 +4,8 @@ import fr.spoutnik87.musicbot_rest.controller.CategoryController
 import fr.spoutnik87.musicbot_rest.repository.CategoryRepository
 import fr.spoutnik87.musicbot_rest.repository.ServerRepository
 import fr.spoutnik87.musicbot_rest.repository.UserRepository
-import fr.spoutnik87.musicbot_rest.util.SecurityConfigurationTestConfig
-import fr.spoutnik87.musicbot_rest.util.SpringApplicationContextTestConfig
+import fr.spoutnik87.musicbot_rest.security.SecurityConfiguration
+import fr.spoutnik87.musicbot_rest.service.UserService
 import fr.spoutnik87.musicbot_rest.util.Util
 import fr.spoutnik87.musicbot_rest.util.WebSecurityTestConfig
 import org.junit.jupiter.api.Test
@@ -23,10 +23,11 @@ import org.springframework.test.web.servlet.MockMvc
 @ExtendWith(SpringExtension::class)
 @ContextConfiguration(classes = [
     CategoryController::class,
-    SpringApplicationContextTestConfig::class,
+    UserService::class,
+    SpringApplicationContext::class,
     BCryptPasswordEncoder::class,
     WebSecurityTestConfig::class,
-    SecurityConfigurationTestConfig::class
+    SecurityConfiguration::class
 ])
 @WebMvcTest(CategoryController::class)
 class CategoryControllerTest {

@@ -12,7 +12,7 @@ import fr.spoutnik87.musicbot_rest.reader.ContentUpdateReader
 import fr.spoutnik87.musicbot_rest.repository.*
 import fr.spoutnik87.musicbot_rest.service.FileService
 import fr.spoutnik87.musicbot_rest.service.ImageService
-import fr.spoutnik87.musicbot_rest.util.AuthenticationHelper
+import fr.spoutnik87.musicbot_rest.service.UserService
 import fr.spoutnik87.musicbot_rest.viewmodel.ContentViewModel
 import org.apache.commons.io.FilenameUtils
 import org.apache.commons.io.IOUtils
@@ -61,11 +61,13 @@ class ContentController {
     @Autowired
     private lateinit var imageService: ImageService
 
+    @Autowired
+    private lateinit var userService: UserService
+
     @JsonView(Views.Companion.Public::class)
     @GetMapping("/server/{serverId}")
     fun getByServerId(@PathVariable("serverId") uuid: String): ResponseEntity<Any> {
-        val authenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
-                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        val authenticatedUser = userService.getAuthenticatedUser() ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         val server = serverRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         if (!server.hasUser(authenticatedUser)) {
             return ResponseEntity(HttpStatus.BAD_REQUEST)
@@ -78,8 +80,7 @@ class ContentController {
     @JsonView(Views.Companion.Public::class)
     @GetMapping("/{id}")
     fun getContent(@PathVariable("id") uuid: String): ResponseEntity<Any> {
-        val authenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
-                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        val authenticatedUser = userService.getAuthenticatedUser() ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         val content = contentRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         if (!authenticatedUser.hasReadContentPermission(content)) {
             return ResponseEntity(HttpStatus.FORBIDDEN)
@@ -89,8 +90,7 @@ class ContentController {
 
     @GetMapping("/{id}/media")
     fun getMedia(@PathVariable("id") uuid: String): ResponseEntity<Any> {
-        val authenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
-                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        val authenticatedUser = userService.getAuthenticatedUser() ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         val content = contentRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         if (!authenticatedUser.hasReadContentPermission(content)) {
             return ResponseEntity(HttpStatus.FORBIDDEN)
@@ -103,8 +103,7 @@ class ContentController {
 
     @GetMapping("/{id}/thumbnail", produces = [MediaType.IMAGE_PNG_VALUE])
     fun getThumbnail(@PathVariable("id") uuid: String): ResponseEntity<Any> {
-        val authenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
-                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        val authenticatedUser = userService.getAuthenticatedUser() ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         val content = contentRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         if (!authenticatedUser.hasReadContentPermission(content)) {
             return ResponseEntity(HttpStatus.FORBIDDEN)
@@ -112,14 +111,13 @@ class ContentController {
         if (!content.hasThumbnail()) {
             return ResponseEntity(HttpStatus.BAD_REQUEST)
         }
-        return ResponseEntity(IOUtils.toByteArray(fileService.getFile(appConfig.applicationPath + THUMBNAILS_PATH + content.uuid).toURI()), HttpStatus.OK)
+        return ResponseEntity(IOUtils.toByteArray(fileService.getFile(appConfig.contentThumbnailsPath + content.uuid).toURI()), HttpStatus.OK)
     }
 
     @JsonView(Views.Companion.Public::class)
     @PostMapping("")
     fun createContent(@RequestBody contentCreateReader: ContentCreateReader): ResponseEntity<Any> {
-        val authenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
-                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        val authenticatedUser = userService.getAuthenticatedUser() ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         val group = groupRepository.findByUuid(contentCreateReader.groupId)
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         if (!authenticatedUser.hasCreateContentPermission(group)) {
@@ -140,8 +138,7 @@ class ContentController {
     @JsonView(Views.Companion.Public::class)
     @PutMapping("/{id}")
     fun updateContent(@PathVariable("id") uuid: String, contentUpdateReader: ContentUpdateReader): ResponseEntity<Any> {
-        val authenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
-                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        val authenticatedUser = userService.getAuthenticatedUser() ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         val content = contentRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         if (!authenticatedUser.hasCreateContentPermission(content)) {
             return ResponseEntity(HttpStatus.FORBIDDEN)
@@ -160,8 +157,7 @@ class ContentController {
 
     @PutMapping("/{id}/media")
     fun updateMedia(@PathVariable("id") uuid: String, @RequestParam("file") file: MultipartFile): ResponseEntity<Any> {
-        val authenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
-                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        val authenticatedUser = userService.getAuthenticatedUser() ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         val content = contentRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         if (!authenticatedUser.hasCreateContentPermission(content)) {
             return ResponseEntity(HttpStatus.FORBIDDEN)
@@ -181,14 +177,14 @@ class ContentController {
         }
         inputStream.reset()
         if (content.hasMedia()) {
-            fileService.deleteFile(appConfig.applicationPath + MEDIA_PATH + content.uuid)
+            fileService.deleteFile(appConfig.contentMediaPath + content.uuid)
             content.media = false
             content.extension = null
             content.mediaSize = null
             content.duration = null
             contentRepository.save(content)
         }
-        fileService.saveFile(appConfig.applicationPath + MEDIA_PATH + content.uuid, inputStream.readBytes())
+        fileService.saveFile(appConfig.contentMediaPath + content.uuid, inputStream.readBytes())
         content.media = true
         content.extension = FilenameUtils.getExtension(file.originalFilename)
         content.mediaSize = file.size
@@ -200,8 +196,7 @@ class ContentController {
 
     @PutMapping("/{id}/thumbnail")
     fun updateThumbnail(@PathVariable("id") uuid: String, @RequestParam("file") file: MultipartFile): ResponseEntity<Any> {
-        val authenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
-                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        val authenticatedUser = userService.getAuthenticatedUser() ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         val content = contentRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         if (!authenticatedUser.hasCreateContentPermission(content)) {
             return ResponseEntity(HttpStatus.FORBIDDEN)
@@ -211,7 +206,7 @@ class ContentController {
             return ResponseEntity(HttpStatus.BAD_REQUEST)
         }
         if (content.hasThumbnail()) {
-            fileService.deleteFile(appConfig.applicationPath + THUMBNAILS_PATH + content.uuid)
+            fileService.deleteFile(appConfig.contentThumbnailsPath + content.uuid)
             content.thumbnail = false
             content.thumbnailSize = null
             contentRepository.save(content)
@@ -225,7 +220,7 @@ class ContentController {
             return ResponseEntity(HttpStatus.BAD_REQUEST)
         }
 
-        fileService.saveFile(appConfig.applicationPath + THUMBNAILS_PATH + content.uuid, resizedThumbnail)
+        fileService.saveFile(appConfig.contentThumbnailsPath + content.uuid, resizedThumbnail)
         content.thumbnail = true
         content.thumbnailSize = resizedThumbnail.size.toLong()
         contentRepository.save(content)
@@ -234,24 +229,18 @@ class ContentController {
 
     @DeleteMapping("/{id}")
     fun deleteContent(@PathVariable("id") uuid: String): ResponseEntity<Any> {
-        val authenticatedUser = userRepository.findByEmail(AuthenticationHelper.getAuthenticatedUserEmail()!!)
-                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        val authenticatedUser = userService.getAuthenticatedUser() ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         val content = contentRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         if (!authenticatedUser.hasDeleteContentPermission(content)) {
             return ResponseEntity(HttpStatus.FORBIDDEN)
         }
         if (content.hasMedia()) {
-            fileService.deleteFile(appConfig.applicationPath + MEDIA_PATH + content.uuid)
+            fileService.deleteFile(appConfig.contentMediaPath + content.uuid)
         }
         if (content.hasThumbnail()) {
-            fileService.deleteFile(appConfig.applicationPath + THUMBNAILS_PATH + content.uuid)
+            fileService.deleteFile(appConfig.contentThumbnailsPath + content.uuid)
         }
         contentRepository.delete(content)
         return ResponseEntity(HttpStatus.ACCEPTED)
-    }
-
-    companion object {
-        const val MEDIA_PATH = "/contents/media/"
-        const val THUMBNAILS_PATH = "/contents/thumbnails/"
     }
 }

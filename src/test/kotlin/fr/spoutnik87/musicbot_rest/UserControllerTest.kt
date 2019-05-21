@@ -9,9 +9,13 @@ import fr.spoutnik87.musicbot_rest.model.User
 import fr.spoutnik87.musicbot_rest.repository.*
 import fr.spoutnik87.musicbot_rest.security.SecurityConfiguration
 import fr.spoutnik87.musicbot_rest.service.TokenService
-import fr.spoutnik87.musicbot_rest.util.*
+import fr.spoutnik87.musicbot_rest.service.UserService
+import fr.spoutnik87.musicbot_rest.util.UserFactory
+import fr.spoutnik87.musicbot_rest.util.Util
+import fr.spoutnik87.musicbot_rest.util.WebSecurityTestConfig
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.ArgumentMatchers
 import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
@@ -28,10 +32,11 @@ import java.util.*
 @ExtendWith(SpringExtension::class)
 @ContextConfiguration(classes = [
     UserController::class,
-    SpringApplicationContextTestConfig::class,
+    UserService::class,
+    SpringApplicationContext::class,
     BCryptPasswordEncoder::class,
     WebSecurityTestConfig::class,
-    SecurityConfigurationTestConfig::class,
+    SecurityConfiguration::class,
     TokenService::class
 ])
 @WebMvcTest(UserController::class)
@@ -69,6 +74,7 @@ class UserControllerTest {
         Mockito.`when`(uuid.v4()).thenReturn("token")
         Mockito.`when`(roleRepository.findByName(RoleEnum.USER.value))
                 .thenReturn(Role("token", "USER", 2))
+        Mockito.`when`(userRepository.save(ArgumentMatchers.any(User::class.java))).then { it.getArgument(0) }
 
         val params = HashMap<String, Any>()
         params["email"] = "test@test.com"
