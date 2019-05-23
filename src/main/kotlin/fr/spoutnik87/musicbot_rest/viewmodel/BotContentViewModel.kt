@@ -9,6 +9,8 @@ import java.io.Serializable
 
 data class BotContentViewModel(
         @JsonView(Views.Companion.Public::class)
+        val uid: String,
+        @JsonView(Views.Companion.Public::class)
         val id: String,
         @JsonView(Views.Companion.Public::class)
         val name: String,
@@ -19,13 +21,16 @@ data class BotContentViewModel(
         @JsonView(Views.Companion.Public::class)
         val startTime: Long?,
         @JsonView(Views.Companion.Public::class)
-        val position: Long?
+        val position: Long?,
+        @JsonView(Views.Companion.Public::class)
+        val paused: Boolean?
 ) : Serializable {
 
     companion object {
         fun from(reader: BotContentReader?, content: Content, initiator: User): BotContentViewModel? {
             return if (reader != null) {
-                BotContentViewModel(reader.id, content.name, BotContentInitiatorViewModel(initiator.uuid, initiator.nickname), reader.duration, reader.startTime, reader.position)
+                BotContentViewModel(reader.uid, reader.id, content.name, BotContentInitiatorViewModel(initiator.uuid, initiator.nickname), content.duration
+                        ?: return null, reader.startTime, reader.position, reader.paused)
             } else {
                 null
             }
