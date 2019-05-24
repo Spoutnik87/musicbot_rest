@@ -19,8 +19,8 @@ class ContentService {
     @Autowired
     private lateinit var uuid: UUID
 
-    fun save(name: String, author: User, contentType: ContentType, category: Category, group: Group): Content {
-        var content = Content(uuid.v4(), name, author, contentType, category)
+    fun save(name: String, description: String, author: User, contentType: ContentType, category: Category, group: Group): Content {
+        var content = Content(uuid.v4(), description, name, author, contentType, category)
         content = contentRepository.save(content)
         var contentGroup = ContentGroup(content, group)
         contentGroup = contentGroupRepository.save(contentGroup)

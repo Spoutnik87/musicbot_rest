@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonView
 import fr.spoutnik87.musicbot_rest.AppConfig
 import fr.spoutnik87.musicbot_rest.UUID
 import fr.spoutnik87.musicbot_rest.constant.ContentTypeEnum
+import fr.spoutnik87.musicbot_rest.constant.MimeTypeEnum
 import fr.spoutnik87.musicbot_rest.model.Content
 import fr.spoutnik87.musicbot_rest.model.ContentGroup
 import fr.spoutnik87.musicbot_rest.model.Views
@@ -14,7 +15,6 @@ import fr.spoutnik87.musicbot_rest.service.FileService
 import fr.spoutnik87.musicbot_rest.service.ImageService
 import fr.spoutnik87.musicbot_rest.service.UserService
 import fr.spoutnik87.musicbot_rest.viewmodel.ContentViewModel
-import org.apache.commons.io.FilenameUtils
 import org.apache.commons.io.IOUtils
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
@@ -127,7 +127,11 @@ class ContentController {
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         var category = categoryRepository.findByUuid(contentCreateReader.categoryId)
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-        var content = Content(uuid.v4(), contentCreateReader.name, authenticatedUser, contentType, category)
+        var content = Content(uuid.v4(), contentCreateReader.name, contentCreateReader.description, authenticatedUser, contentType, category)
+        val thumbnail = imageService.generateRandomImage(content.uuid)
+        content.thumbnail = true
+        content.thumbnailSize = thumbnail.size.toLong()
+        fileService.saveFile(appConfig.contentThumbnailsPath + content.uuid, thumbnail)
         content = contentRepository.save(content)
         var contentGroup = ContentGroup(content, group)
         contentGroup = contentGroupRepository.save(contentGroup)
@@ -179,14 +183,14 @@ class ContentController {
         if (content.hasMedia()) {
             fileService.deleteFile(appConfig.contentMediaPath + content.uuid)
             content.media = false
-            content.extension = null
+            content.mimeType = null
             content.mediaSize = null
             content.duration = null
             contentRepository.save(content)
         }
         fileService.saveFile(appConfig.contentMediaPath + content.uuid, inputStream.readBytes())
         content.media = true
-        content.extension = FilenameUtils.getExtension(file.originalFilename)
+        content.mimeType = MimeTypeEnum.AUDIO_MPEG.value
         content.mediaSize = file.size
         content.duration = duration
         contentRepository.save(content)

@@ -11,7 +11,9 @@ data class ContentViewModel(
         @JsonView(Views.Companion.Public::class)
         val name: String,
         @JsonView(Views.Companion.Public::class)
-        val extension: String?,
+        val description: String,
+        @JsonView(Views.Companion.Public::class)
+        val mimeType: String?,
         @JsonView(Views.Companion.Public::class)
         val mediaSize: Long?,
         @JsonView(Views.Companion.Public::class)
@@ -36,7 +38,8 @@ data class ContentViewModel(
         fun from(content: Content) = ContentViewModel(
                 content.uuid,
                 content.name,
-                content.extension,
+                content.description,
+                content.mimeType,
                 content.mediaSize,
                 content.thumbnailSize,
                 content.duration,

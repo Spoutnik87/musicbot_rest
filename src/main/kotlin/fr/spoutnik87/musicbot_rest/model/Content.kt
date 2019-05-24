@@ -9,10 +9,12 @@ data class Content(
         @Column(nullable = false, unique = true)
         var uuid: String,
         @Column(nullable = false)
-        var name: String
+        var name: String,
+        @Column(nullable = false, length = 2000)
+        val description: String
 ) : AuditModel(), Serializable {
 
-    var extension: String? = null
+    var mimeType: String? = null
 
     var mediaSize: Long? = null
 
@@ -50,7 +52,7 @@ data class Content(
     val spaceUsed
         get() = (thumbnailSize ?: 0) + (mediaSize ?: 0)
 
-    constructor(uuid: String, name: String, author: User, contentType: ContentType, category: Category) : this(uuid, name) {
+    constructor(uuid: String, name: String, description: String, author: User, contentType: ContentType, category: Category) : this(uuid, name, description) {
         this.author = author
         this.contentType = contentType
         this.category = category

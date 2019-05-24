@@ -1,5 +1,6 @@
 package fr.spoutnik87.musicbot_rest.service
 
+import fr.spoutnik87.musicbot_rest.constant.MimeTypeEnum
 import org.apache.tika.config.TikaConfig
 import org.apache.tika.metadata.Metadata
 import org.apache.tika.metadata.XMPDM
@@ -35,11 +36,11 @@ class FileService {
         }
     }
 
-    fun isPNG(mimeType: String?) = mimeType == "image/png"
+    fun isPNG(mimeType: String?) = mimeType == MimeTypeEnum.IMAGE_PNG.value
 
-    fun isJPG(mimeType: String?) = mimeType == "image/jpeg"
+    fun isJPG(mimeType: String?) = mimeType == MimeTypeEnum.IMAGE_JPEG.value
 
-    fun isMP3(mimeType: String?) = mimeType == "audio/mpeg"
+    fun isMP3(mimeType: String?) = mimeType == MimeTypeEnum.AUDIO_MPEG.value
 
     fun isPNG(stream: InputStream) = isPNG(getMimeType(stream))
 
