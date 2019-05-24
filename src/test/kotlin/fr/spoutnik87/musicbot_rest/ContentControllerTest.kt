@@ -81,6 +81,7 @@ class ContentControllerTest {
         body["groupId"] = "groupToken"
         body["categoryId"] = "categoryToken"
         body["name"] = "New content"
+        body["description"] = "Desc"
         Util.basicTestWithBody(mockMvc, HttpMethod.POST, "/content", HashMap(), body, HttpStatus.FORBIDDEN)
     }
 
@@ -94,6 +95,7 @@ class ContentControllerTest {
         body["group"] = "groupToken"
         body["categoryId"] = "categoryToken"
         body["name"] = "New content"
+        body["description"] = "Desc"
         Util.basicTestWithBody(mockMvc, HttpMethod.POST, "/content", HashMap(), body, HttpStatus.BAD_REQUEST)
     }
 
@@ -107,6 +109,7 @@ class ContentControllerTest {
         body["groupId"] = "invalidGroupToken"
         body["categoryId"] = "categoryToken"
         body["name"] = "New content"
+        body["description"] = "Desc"
         Util.basicTestWithBody(mockMvc, HttpMethod.POST, "/content", HashMap(), body, HttpStatus.BAD_REQUEST)
     }
 
@@ -125,6 +128,7 @@ class ContentControllerTest {
         body["groupId"] = "groupToken"
         body["categoryId"] = "categoryToken"
         body["name"] = "New content"
+        body["description"] = "Desc"
         Util.basicTestWithBody(mockMvc, HttpMethod.POST, "/content", HashMap(), body, HttpStatus.BAD_REQUEST)
     }
 
@@ -143,6 +147,7 @@ class ContentControllerTest {
         body["groupId"] = "groupToken"
         body["categoryId"] = "invalidCategoryToken"
         body["name"] = "New content"
+        body["description"] = "Desc"
         Util.basicTestWithBody(mockMvc, HttpMethod.POST, "/content", HashMap(), body, HttpStatus.BAD_REQUEST)
     }
 
@@ -162,6 +167,7 @@ class ContentControllerTest {
         body["groupId"] = "groupToken2"
         body["categoryId"] = "categoryToken"
         body["name"] = "New content"
+        body["description"] = "Desc"
         Util.basicTestWithBody(mockMvc, HttpMethod.POST, "/content", HashMap(), body, HttpStatus.FORBIDDEN)
     }
 
@@ -179,12 +185,14 @@ class ContentControllerTest {
         Mockito.`when`(contentTypeRepository.findByValue(ContentTypeEnum.DEFAULT.value)).thenReturn(ContentType("mediaTypeToken", ContentTypeEnum.DEFAULT.value))
         Mockito.`when`(contentRepository.save(ArgumentMatchers.any(Content::class.java))).then { it.getArgument(0) }
         Mockito.`when`(contentGroupRepository.save(ArgumentMatchers.any(ContentGroup::class.java))).then { it.getArgument(0) }
+        Mockito.`when`(imageService.generateRandomImage("token")).then { ByteArray(0) }
 
         val body = HashMap<String, Any>()
         body["groupId"] = "groupToken"
         body["categoryId"] = "categoryToken"
         body["name"] = "New content"
-        Util.basicTestWithBody(mockMvc, HttpMethod.POST, "/content", HashMap(), body, HttpStatus.CREATED, "{\"id\":\"token\",\"name\":\"New content\",\"extension\":null,\"thumbnailSize\":null,\"mediaSize\":null,\"media\":false,\"thumbnail\":false,\"duration\":null,\"serverId\":\"serverToken\", \"contentType\":{\"id\":\"mediaTypeToken\",\"value\":\"DEFAULT\"},\"category\":{\"id\":\"categoryToken\",\"name\":\"Category\",\"serverId\":\"serverToken\"},\"groups\":[{\"id\":\"groupToken\",\"name\":\"Group\",\"serverId\":\"serverToken\"}]}")
+        body["description"] = "Desc"
+        Util.basicTestWithBody(mockMvc, HttpMethod.POST, "/content", HashMap(), body, HttpStatus.CREATED, "{\"id\":\"token\",\"name\":\"New content\",\"description\":\"Desc\",\"mimeType\":null,\"thumbnailSize\":0,\"mediaSize\":null,\"media\":false,\"thumbnail\":true,\"duration\":null,\"serverId\":\"serverToken\", \"contentType\":{\"id\":\"mediaTypeToken\",\"value\":\"DEFAULT\"},\"category\":{\"id\":\"categoryToken\",\"name\":\"Category\",\"serverId\":\"serverToken\"},\"groups\":[{\"id\":\"groupToken\",\"name\":\"Group\",\"serverId\":\"serverToken\"}]}")
         Mockito.verify(contentRepository, Mockito.atLeastOnce()).save(Mockito.any())
     }
 
