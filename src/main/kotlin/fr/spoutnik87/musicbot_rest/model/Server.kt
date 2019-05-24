@@ -12,9 +12,14 @@ data class Server(
         var name: String
 ) : AuditModel(), Serializable {
 
-    var linkToken: String? = null
-
+    /**
+     * Discord server unique id
+     */
     var guildId: String? = null
+
+    @ManyToOne(cascade = [CascadeType.ALL])
+    @JoinColumn(name = "default_group_id")
+    lateinit var defaultGroup: Group
 
     @ManyToOne
     @JoinColumn(name = "user_id")
@@ -36,5 +41,12 @@ data class Server(
     val isLinked
         get() = guildId != null
 
+    val contentList
+        get() = groupSet.flatMap { it.contentList }.distinctBy { it.id }
+
     fun hasUser(user: User) = groupSet.any { it.hasUser(user) }
+
+    fun hasGroup(group: Group) = groupSet.any { it.id == group.id }
+
+    fun hasContent(content: Content) = contentList.any { it.id == content.id }
 }

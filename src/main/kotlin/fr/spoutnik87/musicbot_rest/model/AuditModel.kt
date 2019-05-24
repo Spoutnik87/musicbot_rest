@@ -8,7 +8,10 @@ import javax.persistence.*
 @EntityListeners(AuditingEntityListener::class)
 abstract class AuditModel : Serializable {
 
+    /**
+     * Generate a temporary ID. It is overwritten when saved in the repository.
+     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long = 0
+    var id: Long = System.nanoTime()
 }

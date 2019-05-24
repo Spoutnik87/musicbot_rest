@@ -23,6 +23,11 @@ data class User(
         var password: String
 ) : AuditModel(), Serializable {
 
+    /**
+     * Discord user unique Id
+     */
+    var userId: String? = null
+
     @ManyToOne
     @JoinColumn(name = "role_id")
     lateinit var role: Role
@@ -35,20 +40,40 @@ data class User(
     val userGroupSet: MutableSet<UserGroup> = HashSet()
 
     @OneToMany(mappedBy = "owner", cascade = [CascadeType.ALL])
-    val serverSet: MutableSet<Server> = HashSet()
+    val ownedServerSet: MutableSet<Server> = HashSet()
+
+    @OneToMany(mappedBy = "author", cascade = [CascadeType.ALL])
+    val ownedContentSet: MutableSet<Content> = HashSet()
 
     val groupList
         get() = userGroupSet.map { it.group }
 
+    val isLinked
+        get() = userId != null
+
+    val serverList
+        get() = userGroupSet.map { it.group.server }
+
+    val spaceUsed
+        get() = ownedContentSet.map { it.spaceUsed }.reduce { acc, l -> acc + l }
+
+    val ownedServerCount
+        get() = ownedServerSet
+
+    val ownedContentCount
+        get() = ownedContentSet.size
+
     /**
      * Return true if this user is the owner of the specified server.
      */
-    fun isOwner(server: Server) = serverSet.any { it.id == server.id }
+    fun isOwner(server: Server) = ownedServerSet.any { it.id == server.id }
 
     /**
      * Return true if this user is a member of the specified server.
      */
-    fun hasServer(server: Server) = userGroupSet.map { it.group.server }.any { it.id == server.id }
+    fun hasServer(server: Server) = serverList.any { it.id == server.id }
+
+    fun getPermissions(group: Group) = userGroupSet.filter { it.group.id == group.id }.flatMap { it.permissionSet }
 
     fun hasPermission(group: Group, permission: Permission) = userGroupSet.filter { it.group.id == group.id }.any { it.hasPermission(permission) }
 
@@ -67,4 +92,8 @@ data class User(
     fun hasCreateCategoryPermission(category: Category) = hasCreateCategoryPermission(category.server)
 
     fun hasDeleteCategoryPermission(category: Category) = category.server.groupSet.any { hasPermission(it, PermissionEnum.DELETE_CATEGORY) }
+
+    fun hasPlayMediaPermission(content: Content) = content.contentGroupSet.flatMap { it.group.userGroupSet }.filter { it.user.id == id }.any { it.hasPermission(PermissionEnum.PLAY_MEDIA) }
+
+    fun hasStopMediaPermission(content: Content) = content.contentGroupSet.flatMap { it.group.userGroupSet }.filter { it.user.id == id }.any { it.hasPermission(PermissionEnum.STOP_MEDIA) }
 }

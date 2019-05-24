@@ -4,12 +4,16 @@ import com.fasterxml.jackson.annotation.JsonView
 import fr.spoutnik87.musicbot_rest.UUID
 import fr.spoutnik87.musicbot_rest.constant.PermissionEnum
 import fr.spoutnik87.musicbot_rest.constant.RoleEnum
-import fr.spoutnik87.musicbot_rest.model.*
+import fr.spoutnik87.musicbot_rest.model.Permission
+import fr.spoutnik87.musicbot_rest.model.Views
 import fr.spoutnik87.musicbot_rest.reader.ServerCreateReader
 import fr.spoutnik87.musicbot_rest.reader.ServerLinkReader
 import fr.spoutnik87.musicbot_rest.reader.ServerUpdateReader
 import fr.spoutnik87.musicbot_rest.repository.*
-import fr.spoutnik87.musicbot_rest.util.AuthenticationHelper
+import fr.spoutnik87.musicbot_rest.service.ServerService
+import fr.spoutnik87.musicbot_rest.service.TokenService
+import fr.spoutnik87.musicbot_rest.service.UserService
+import fr.spoutnik87.musicbot_rest.viewmodel.ServerLinkTokenViewModel
 import fr.spoutnik87.musicbot_rest.viewmodel.ServerViewModel
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
@@ -39,18 +43,30 @@ class ServerController {
     @Autowired
     private lateinit var uuid: UUID
 
+    @Autowired
+    private lateinit var tokenService: TokenService
+
+    @Autowired
+    private lateinit var userService: UserService
+
+    @Autowired
+    private lateinit var serverService: ServerService
+
     @JsonView(Views.Companion.Public::class)
     @GetMapping("/{id}")
     fun getById(@PathVariable("id") uuid: String): ResponseEntity<Any> {
         val server = serverRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-        return ResponseEntity(server, HttpStatus.OK)
+        val authenticatedUser = userService.getAuthenticatedUser() ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        if (!server.hasUser(authenticatedUser)) {
+            return ResponseEntity(HttpStatus.FORBIDDEN)
+        }
+        return ResponseEntity(ServerViewModel.from(server), HttpStatus.OK)
     }
 
     @JsonView(Views.Companion.Private::class)
     @GetMapping("/guild/{guildId}")
     fun getByGuildId(@PathVariable("guildId") guildId: String): ResponseEntity<Any> {
-        val authenticatedUser = AuthenticationHelper.getAuthenticatedUser()
-                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        val authenticatedUser = userService.getAuthenticatedUser() ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         if (authenticatedUser.role.name != RoleEnum.BOT.value) {
             return ResponseEntity(HttpStatus.FORBIDDEN)
         }
@@ -58,51 +74,61 @@ class ServerController {
         return ResponseEntity(ServerViewModel.from(server), HttpStatus.OK)
     }
 
+    @JsonView(Views.Companion.Public::class)
+    @GetMapping("/link/{serverId}")
+    fun getServerLinkToken(@PathVariable("serverId") serverId: String): ResponseEntity<Any> {
+        val server = serverRepository.findByUuid(serverId) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        val authenticatedUser = userService.getAuthenticatedUser() ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        if (!authenticatedUser.isOwner(server)) {
+            return ResponseEntity(HttpStatus.FORBIDDEN)
+        }
+        var serverLinkToken = tokenService.createServerLinkToken(server.uuid)
+        return ResponseEntity(ServerLinkTokenViewModel(serverLinkToken), HttpStatus.OK)
+    }
+
     @JsonView(Views.Companion.Private::class)
-    @PostMapping("/link/{serverId}")
-    fun linkGuildToServer(@PathVariable("serverId") serverId: String, @RequestBody serverLinkReader: ServerLinkReader): ResponseEntity<Any> {
-        val authenticatedUser = AuthenticationHelper.getAuthenticatedUser()
-                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+    @PostMapping("/link")
+    fun linkGuildToServer(@RequestBody serverLinkReader: ServerLinkReader): ResponseEntity<Any> {
+        val authenticatedUser = userService.getAuthenticatedUser() ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         if (authenticatedUser.role.name != RoleEnum.BOT.value) {
             return ResponseEntity(HttpStatus.FORBIDDEN)
         }
-        val server = serverRepository.findByUuid(serverId) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-        if (server.isLinked || server.linkToken != serverLinkReader.token) {
+        if (serverRepository.findByGuildId(serverLinkReader.guildId) != null) {
+            return ResponseEntity(HttpStatus.BAD_REQUEST)
+        }
+        val serverLinkToken = tokenService.decodeServerLinkToken(serverLinkReader.token)
+                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        val server = serverRepository.findByUuid(serverLinkToken.id) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        if (server.isLinked) {
             return ResponseEntity(HttpStatus.BAD_REQUEST)
         }
         server.guildId = serverLinkReader.guildId
-        server.linkToken = null
         serverRepository.save(server)
+        if (!server.owner.isLinked) {
+            server.owner.userId = serverLinkReader.userId
+            userRepository.save(server.owner)
+        }
         return ResponseEntity(ServerViewModel.from(server), HttpStatus.ACCEPTED)
     }
 
     @JsonView(Views.Companion.Public::class)
-    @GetMapping("/list/{userId}")
-    fun getByUserId(@PathVariable("userId") userUuid: String): ResponseEntity<Any> {
-        val authenticatedUser = AuthenticationHelper.getAuthenticatedUser()
-                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-        if (authenticatedUser.uuid == userUuid) {
-            return ResponseEntity(authenticatedUser.serverSet.toTypedArray(), HttpStatus.OK)
+    @GetMapping(value = ["/list/{userId}", "/list"])
+    fun getByUserId(@PathVariable("userId", required = false) userUuid: String?): ResponseEntity<Any> {
+        val authenticatedUser = userService.getAuthenticatedUser() ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        if (authenticatedUser.uuid == userUuid || userUuid == null) {
+            return ResponseEntity(authenticatedUser.ownedServerSet.map { ServerViewModel.from(it) }, HttpStatus.OK)
         }
         if (authenticatedUser.role.name != RoleEnum.ADMIN.value) {
             return ResponseEntity(HttpStatus.FORBIDDEN)
         }
         val user = userRepository.findByUuid(userUuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-        return ResponseEntity(user.serverSet.toTypedArray().map { ServerViewModel.from(it) }, HttpStatus.OK)
+        return ResponseEntity(user.ownedServerSet.map { ServerViewModel.from(it) }, HttpStatus.OK)
     }
 
     @JsonView(Views.Companion.Public::class)
     @PostMapping("")
     fun create(@RequestBody serverCreateReader: ServerCreateReader): ResponseEntity<Any> {
-        val authenticatedUser = AuthenticationHelper.getAuthenticatedUser()
-                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-        val server = Server(uuid.v4(), serverCreateReader.name, authenticatedUser)
-        authenticatedUser.serverSet.add(server)
-
-        val group = Group(uuid.v4(), "Default", server)
-        val userGroup = UserGroup(uuid.v4(), authenticatedUser, group)
-        val permissionSet = HashSet<Permission>()
-
+        val authenticatedUser = userService.getAuthenticatedUser() ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         val createContentPermission = permissionRepository.findByValue(PermissionEnum.CREATE_CONTENT.value)
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         val deleteContentPermission = permissionRepository.findByValue(PermissionEnum.DELETE_CONTENT.value)
@@ -119,23 +145,17 @@ class ServerController {
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         val deleteCategoryPermission = permissionRepository.findByValue(PermissionEnum.DELETE_CATEGORY.value)
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        val permissions = ArrayList<Permission>()
+        permissions.add(createContentPermission)
+        permissions.add(deleteContentPermission)
+        permissions.add(readContentPermission)
+        permissions.add(changeModePermission)
+        permissions.add(playMediaPermission)
+        permissions.add(stopMediaPermission)
+        permissions.add(createCategoryPermission)
+        permissions.add(deleteCategoryPermission)
 
-        permissionSet.add(createContentPermission)
-        permissionSet.add(deleteContentPermission)
-        permissionSet.add(readContentPermission)
-        permissionSet.add(changeModePermission)
-        permissionSet.add(playMediaPermission)
-        permissionSet.add(stopMediaPermission)
-        permissionSet.add(createCategoryPermission)
-        permissionSet.add(deleteCategoryPermission)
-        userGroup.permissionSet = permissionSet
-        authenticatedUser.userGroupSet.add(userGroup)
-        group.userGroupSet.add(userGroup)
-
-        serverRepository.save(server)
-        groupRepository.save(group)
-        userGroupRepository.save(userGroup)
-        userRepository.save(authenticatedUser)
+        val server = serverService.save(serverCreateReader.name, authenticatedUser, permissions)
         return ResponseEntity(ServerViewModel.from(server), HttpStatus.CREATED)
     }
 
@@ -144,8 +164,7 @@ class ServerController {
     fun update(
             @PathVariable("id") uuid: String, @RequestBody serverUpdateReader: ServerUpdateReader): ResponseEntity<Any> {
         val server = serverRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-        val authenticatedUser = AuthenticationHelper.getAuthenticatedUser()
-                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        val authenticatedUser = userService.getAuthenticatedUser() ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         if (!authenticatedUser.isOwner(server)) {
             return ResponseEntity(HttpStatus.FORBIDDEN)
         }
@@ -158,8 +177,7 @@ class ServerController {
     @DeleteMapping("/{id}")
     fun delete(@PathVariable("id") uuid: String): ResponseEntity<Any> {
         val server = serverRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-        val authenticatedUser = AuthenticationHelper.getAuthenticatedUser()
-                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        val authenticatedUser = userService.getAuthenticatedUser() ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         if (!authenticatedUser.isOwner(server)) {
             return ResponseEntity(HttpStatus.FORBIDDEN)
         }

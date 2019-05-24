@@ -11,11 +11,17 @@ data class ContentViewModel(
         @JsonView(Views.Companion.Public::class)
         val name: String,
         @JsonView(Views.Companion.Public::class)
-        val extension: String?,
+        val description: String,
         @JsonView(Views.Companion.Public::class)
-        val size: Long?,
+        val mimeType: String?,
         @JsonView(Views.Companion.Public::class)
-        val content: Boolean,
+        val mediaSize: Long?,
+        @JsonView(Views.Companion.Public::class)
+        val thumbnailSize: Long?,
+        @JsonView(Views.Companion.Public::class)
+        val duration: Long?,
+        @JsonView(Views.Companion.Public::class)
+        val media: Boolean,
         @JsonView(Views.Companion.Public::class)
         val thumbnail: Boolean,
         @JsonView(Views.Companion.Public::class)
@@ -23,20 +29,25 @@ data class ContentViewModel(
         @JsonView(Views.Companion.Public::class)
         val category: CategoryViewModel,
         @JsonView(Views.Companion.Public::class)
-        val serverId: String
-
+        val serverId: String,
+        @JsonView(Views.Companion.Public::class)
+        val groups: List<GroupViewModel>
 ) : Serializable {
 
     companion object {
         fun from(content: Content) = ContentViewModel(
                 content.uuid,
                 content.name,
-                content.extension,
-                content.size,
-                content.content,
+                content.description,
+                content.mimeType,
+                content.mediaSize,
+                content.thumbnailSize,
+                content.duration,
+                content.media,
                 content.thumbnail,
                 ContentTypeViewModel.from(content.contentType),
                 CategoryViewModel.from(content.category),
-                content.groupList[0].server.uuid)
+                content.groupList[0].server.uuid,
+                content.groupList.map { GroupViewModel(it.uuid, it.name, it.server.uuid) })
     }
 }

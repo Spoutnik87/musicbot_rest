@@ -9,9 +9,27 @@ class AppConfig {
     @Value("\${application.path}")
     lateinit var applicationPath: String
 
+    @Value("\${application.bot.host}")
+    lateinit var botHost: String
+
+    @Value("\${application.bot.port}")
+    lateinit var botPort: String
+
     @Value("\${application.bot.username}")
     lateinit var botUsername: String
 
     @Value("\${application.bot.password}")
     lateinit var botPassword: String
+
+    val botAddress
+        get() = "http://$botHost:$botPort"
+
+    val contentMediaPath
+        get() = "$applicationPath/contents/media/"
+
+    val contentThumbnailsPath
+        get() = "$applicationPath/contents/thumbnails/"
+
+    val serverThumbnailsPath
+        get() = "$applicationPath/servers/thumbnails/"
 }

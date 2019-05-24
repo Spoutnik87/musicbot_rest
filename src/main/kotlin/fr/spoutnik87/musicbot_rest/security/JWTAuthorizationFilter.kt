@@ -21,12 +21,15 @@ class JWTAuthorizationFilter(
     @Throws(IOException::class, ServletException::class)
     override fun doFilterInternal(req: HttpServletRequest, res: HttpServletResponse, chain: FilterChain) {
         val header: String? = req.getHeader(this.securityConfiguration.headerString)
-        if (header == null || !header?.startsWith(this.securityConfiguration.tokenPrefix)) {
+        if (header == null || !header.startsWith(this.securityConfiguration.tokenPrefix)) {
             chain.doFilter(req, res)
             return
         }
-        val authentication = getAuthentication(req)
-        SecurityContextHolder.getContext().authentication = authentication
+        try {
+            val authentication = getAuthentication(req)
+            SecurityContextHolder.getContext().authentication = authentication
+        } catch (e: Exception) {
+        }
         chain.doFilter(req, res)
     }
 

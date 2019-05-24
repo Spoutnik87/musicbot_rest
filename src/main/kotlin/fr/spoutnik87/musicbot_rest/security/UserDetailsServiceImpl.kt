@@ -25,6 +25,7 @@ class UserDetailsServiceImpl : UserDetailsService {
         when (lvl) {
             RoleEnum.ADMIN.lvl -> authorities.add(SimpleGrantedAuthority(RoleEnum.ADMIN.value))
             RoleEnum.USER.lvl -> authorities.add(SimpleGrantedAuthority(RoleEnum.USER.value))
+            RoleEnum.BOT.lvl -> authorities.add(SimpleGrantedAuthority(RoleEnum.BOT.value))
         }
         return authorities
     }

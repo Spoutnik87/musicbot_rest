@@ -9,18 +9,28 @@ data class Content(
         @Column(nullable = false, unique = true)
         var uuid: String,
         @Column(nullable = false)
-        var name: String
+        var name: String,
+        @Column(nullable = false, length = 2000)
+        val description: String
 ) : AuditModel(), Serializable {
 
-    var extension: String? = null
+    var mimeType: String? = null
 
-    var size: Long? = null
+    var mediaSize: Long? = null
+
+    var thumbnailSize: Long? = null
+
+    var duration: Long? = null
 
     @Column(nullable = false)
-    var content: Boolean = false
+    var media: Boolean = false
 
     @Column(nullable = false)
     var thumbnail: Boolean = false
+
+    @ManyToOne
+    @JoinColumn(name = "author_id")
+    lateinit var author: User
 
     @ManyToOne
     @JoinColumn(name = "content_type_id")
@@ -36,12 +46,19 @@ data class Content(
     val groupList
         get() = contentGroupSet.map { it.group }
 
-    constructor(uuid: String, name: String, contentType: ContentType, category: Category) : this(uuid, name) {
+    val server
+        get() = groupList[0].server
+
+    val spaceUsed
+        get() = (thumbnailSize ?: 0) + (mediaSize ?: 0)
+
+    constructor(uuid: String, name: String, description: String, author: User, contentType: ContentType, category: Category) : this(uuid, name, description) {
+        this.author = author
         this.contentType = contentType
         this.category = category
     }
 
-    fun hasContent() = content
+    fun hasMedia() = media
 
     fun hasThumbnail() = thumbnail
 }
