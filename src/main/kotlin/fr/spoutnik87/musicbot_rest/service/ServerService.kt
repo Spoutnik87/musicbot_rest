@@ -23,7 +23,10 @@ class ServerService {
     @Autowired
     private lateinit var uuid: UUID
 
-    fun save(name: String, owner: User, permissions: List<Permission>): Server {
+    fun create(name: String, owner: User, permissions: List<Permission>): Server? {
+        if (!validName(name)) {
+            return null
+        }
         var group = Group(uuid.v4(), "Default")
         var server = Server(uuid.v4(), name, owner)
         server.defaultGroup = group
@@ -42,4 +45,10 @@ class ServerService {
         userGroupRepository.save(userGroup)
         return server
     }
+
+    /**
+     * Return true if name is valid.
+     * Max length is 255 characters.
+     */
+    private fun validName(name: String) = name.length <= 255
 }

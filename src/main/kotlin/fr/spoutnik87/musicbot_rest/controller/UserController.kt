@@ -1,7 +1,6 @@
 package fr.spoutnik87.musicbot_rest.controller
 
 import com.fasterxml.jackson.annotation.JsonView
-import fr.spoutnik87.musicbot_rest.UUID
 import fr.spoutnik87.musicbot_rest.constant.RoleEnum
 import fr.spoutnik87.musicbot_rest.model.UserGroup
 import fr.spoutnik87.musicbot_rest.model.Views
@@ -34,9 +33,6 @@ class UserController {
 
     @Autowired
     private lateinit var roleRepository: RoleRepository
-
-    @Autowired
-    private lateinit var uuid: UUID
 
     @Autowired
     private lateinit var bCryptPasswordEncoder: BCryptPasswordEncoder
@@ -129,7 +125,8 @@ class UserController {
     @PostMapping
     fun signup(@RequestBody userSignupReader: UserSignupReader): ResponseEntity<Any> {
         val role = roleRepository.findByName(RoleEnum.USER.value) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-        val user = userService.save(userSignupReader.email, userSignupReader.nickname, userSignupReader.firstname, userSignupReader.lastname, userSignupReader.password, role)
+        val user = userService.create(userSignupReader.email, userSignupReader.nickname, userSignupReader.firstname, userSignupReader.lastname, userSignupReader.password, role)
+                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         return ResponseEntity(UserViewModel.from(user), HttpStatus.CREATED)
     }
 

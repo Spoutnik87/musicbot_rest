@@ -1,7 +1,6 @@
 package fr.spoutnik87.musicbot_rest.controller
 
 import com.fasterxml.jackson.annotation.JsonView
-import fr.spoutnik87.musicbot_rest.UUID
 import fr.spoutnik87.musicbot_rest.constant.PermissionEnum
 import fr.spoutnik87.musicbot_rest.constant.RoleEnum
 import fr.spoutnik87.musicbot_rest.model.Permission
@@ -39,9 +38,6 @@ class ServerController {
 
     @Autowired
     private lateinit var permissionRepository: PermissionRepository
-
-    @Autowired
-    private lateinit var uuid: UUID
 
     @Autowired
     private lateinit var tokenService: TokenService
@@ -155,7 +151,8 @@ class ServerController {
         permissions.add(createCategoryPermission)
         permissions.add(deleteCategoryPermission)
 
-        val server = serverService.save(serverCreateReader.name, authenticatedUser, permissions)
+        val server = serverService.create(serverCreateReader.name, authenticatedUser, permissions)
+                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         return ResponseEntity(ServerViewModel.from(server), HttpStatus.CREATED)
     }
 
