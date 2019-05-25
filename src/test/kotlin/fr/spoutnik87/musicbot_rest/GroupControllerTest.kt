@@ -5,6 +5,7 @@ import fr.spoutnik87.musicbot_rest.repository.GroupRepository
 import fr.spoutnik87.musicbot_rest.repository.ServerRepository
 import fr.spoutnik87.musicbot_rest.repository.UserRepository
 import fr.spoutnik87.musicbot_rest.security.SecurityConfiguration
+import fr.spoutnik87.musicbot_rest.service.GroupService
 import fr.spoutnik87.musicbot_rest.service.UserService
 import fr.spoutnik87.musicbot_rest.util.Util
 import fr.spoutnik87.musicbot_rest.util.WebSecurityTestConfig
@@ -24,6 +25,7 @@ import org.springframework.test.web.servlet.MockMvc
 @ContextConfiguration(classes = [
     GroupController::class,
     UserService::class,
+    GroupService::class,
     SpringApplicationContext::class,
     BCryptPasswordEncoder::class,
     WebSecurityTestConfig::class,

@@ -11,7 +11,7 @@ data class Content(
         @Column(nullable = false)
         var name: String,
         @Column(nullable = false, length = 2000)
-        val description: String
+        var description: String
 ) : AuditModel(), Serializable {
 
     var mimeType: String? = null

@@ -1,14 +1,13 @@
 package fr.spoutnik87.musicbot_rest.controller
 
 import com.fasterxml.jackson.annotation.JsonView
-import fr.spoutnik87.musicbot_rest.UUID
-import fr.spoutnik87.musicbot_rest.model.Group
 import fr.spoutnik87.musicbot_rest.model.Views
 import fr.spoutnik87.musicbot_rest.reader.GroupCreateReader
 import fr.spoutnik87.musicbot_rest.reader.GroupUpdateReader
 import fr.spoutnik87.musicbot_rest.repository.GroupRepository
 import fr.spoutnik87.musicbot_rest.repository.ServerRepository
 import fr.spoutnik87.musicbot_rest.repository.UserRepository
+import fr.spoutnik87.musicbot_rest.service.GroupService
 import fr.spoutnik87.musicbot_rest.service.UserService
 import fr.spoutnik87.musicbot_rest.viewmodel.GroupViewModel
 import fr.spoutnik87.musicbot_rest.viewmodel.UserGroupViewModel
@@ -31,10 +30,10 @@ class GroupController {
     private lateinit var serverRepository: ServerRepository
 
     @Autowired
-    private lateinit var uuid: UUID
+    private lateinit var userService: UserService
 
     @Autowired
-    private lateinit var userService: UserService
+    private lateinit var groupService: GroupService
 
     @JsonView(Views.Companion.Public::class)
     @GetMapping("/{id}")
@@ -67,8 +66,7 @@ class GroupController {
         if (!authenticatedUser.isOwner(server)) {
             return ResponseEntity(HttpStatus.FORBIDDEN)
         }
-        val group = Group(uuid.v4(), groupCreateReader.name, server)
-        groupRepository.save(group)
+        val group = groupService.create(groupCreateReader.name, server) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         return ResponseEntity(GroupViewModel.from(group), HttpStatus.ACCEPTED)
     }
 
@@ -76,13 +74,12 @@ class GroupController {
     @PutMapping("/{id}")
     fun update(
             @PathVariable("id") uuid: String, @RequestBody groupUpdateReader: GroupUpdateReader): ResponseEntity<Any> {
-        val group = groupRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        var group = groupRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         val authenticatedUser = userService.getAuthenticatedUser() ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         if (!authenticatedUser.isOwner(group.server)) {
             return ResponseEntity(HttpStatus.FORBIDDEN)
         }
-        group.name = groupUpdateReader.name
-        groupRepository.save(group)
+        group = groupService.update(group, groupUpdateReader.name) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         return ResponseEntity(GroupViewModel.from(group), HttpStatus.ACCEPTED)
     }
 }

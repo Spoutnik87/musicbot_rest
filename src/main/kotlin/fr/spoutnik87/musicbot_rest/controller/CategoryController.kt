@@ -1,14 +1,13 @@
 package fr.spoutnik87.musicbot_rest.controller
 
 import com.fasterxml.jackson.annotation.JsonView
-import fr.spoutnik87.musicbot_rest.UUID
-import fr.spoutnik87.musicbot_rest.model.Category
 import fr.spoutnik87.musicbot_rest.model.Views
 import fr.spoutnik87.musicbot_rest.reader.CategoryCreateReader
 import fr.spoutnik87.musicbot_rest.reader.CategoryUpdateReader
 import fr.spoutnik87.musicbot_rest.repository.CategoryRepository
 import fr.spoutnik87.musicbot_rest.repository.ServerRepository
 import fr.spoutnik87.musicbot_rest.repository.UserRepository
+import fr.spoutnik87.musicbot_rest.service.CategoryService
 import fr.spoutnik87.musicbot_rest.service.UserService
 import fr.spoutnik87.musicbot_rest.viewmodel.CategoryViewModel
 import org.springframework.beans.factory.annotation.Autowired
@@ -30,10 +29,10 @@ class CategoryController {
     private lateinit var userRepository: UserRepository
 
     @Autowired
-    private lateinit var uuid: UUID
+    private lateinit var userService: UserService
 
     @Autowired
-    private lateinit var userService: UserService
+    private lateinit var categoryService: CategoryService
 
     @JsonView(Views.Companion.Public::class)
     @GetMapping("/server/{serverId}")
@@ -48,7 +47,7 @@ class CategoryController {
 
     @JsonView(Views.Companion.Public::class)
     @GetMapping("/{id}")
-    fun getCategory(@PathVariable("id") uuid: String): ResponseEntity<Any> {
+    fun getById(@PathVariable("id") uuid: String): ResponseEntity<Any> {
         val authenticatedUser = userService.getAuthenticatedUser() ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         val category = categoryRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         if (!authenticatedUser.hasServer(category.server)) {
@@ -59,32 +58,34 @@ class CategoryController {
 
     @JsonView(Views.Companion.Public::class)
     @PostMapping("")
-    fun createCategory(@RequestBody categoryCreateReader: CategoryCreateReader): ResponseEntity<Any> {
+    fun create(@RequestBody categoryCreateReader: CategoryCreateReader): ResponseEntity<Any> {
         val authenticatedUser = userService.getAuthenticatedUser() ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         val server = serverRepository.findByUuid(categoryCreateReader.serverId)
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         if (!authenticatedUser.hasCreateCategoryPermission(server)) {
             return ResponseEntity(HttpStatus.FORBIDDEN)
         }
-        var category = Category(uuid.v4(), categoryCreateReader.name, server)
-        categoryRepository.save(category)
+        val category = categoryService.create(categoryCreateReader.name, server)
+                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         return ResponseEntity(CategoryViewModel.from(category), HttpStatus.ACCEPTED)
     }
 
     @JsonView(Views.Companion.Public::class)
     @PutMapping("/{id}")
-    fun updateCategory(@PathVariable("id") uuid: String, @RequestBody categoryUpdateReader: CategoryUpdateReader): ResponseEntity<Any> {
+    fun update(@PathVariable("id") uuid: String, @RequestBody categoryUpdateReader: CategoryUpdateReader): ResponseEntity<Any> {
         val authenticatedUser = userService.getAuthenticatedUser() ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-        val category = categoryRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        var category = categoryRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         if (!authenticatedUser.hasCreateCategoryPermission(category)) {
             return ResponseEntity(HttpStatus.FORBIDDEN)
         }
+        category = categoryService.update(category, categoryUpdateReader.name)
+                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         return ResponseEntity(CategoryViewModel.from(category), HttpStatus.ACCEPTED)
     }
 
     @JsonView(Views.Companion.Public::class)
     @DeleteMapping("/{id}")
-    fun deleteCategory(@PathVariable("id") uuid: String): ResponseEntity<Any> {
+    fun delete(@PathVariable("id") uuid: String): ResponseEntity<Any> {
         val authenticatedUser = userService.getAuthenticatedUser() ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         val category = categoryRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         if (!authenticatedUser.hasDeleteCategoryPermission(category)) {

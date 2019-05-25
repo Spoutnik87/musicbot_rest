@@ -34,14 +34,14 @@ class ImageService {
      * Generate a random image based on UUID.
      */
     fun generateRandomImage(uuid: String): ByteArray {
-        val image = BufferedImage(200, 200, BufferedImage.TYPE_INT_ARGB)
+        val image = BufferedImage(400, 400, BufferedImage.TYPE_INT_ARGB)
         val g2d = image.createGraphics()
         val seed = uuid.toByteArray().map { it.toLong() }.reduce { acc, l -> acc + l }
         val colors = (0..5).map { Random(seed + it).nextInt(0, 16777217) }
         for (i in 0..9) {
             for (j in 0..9) {
                 g2d.color = Color(colors.random())
-                g2d.fillRect(20 * i, 20 * j, 20, 20)
+                g2d.fillRect(40 * i, 40 * j, 40, 40)
             }
         }
         g2d.dispose()
