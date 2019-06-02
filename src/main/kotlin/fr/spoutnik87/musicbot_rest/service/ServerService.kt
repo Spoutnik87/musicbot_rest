@@ -46,9 +46,22 @@ class ServerService {
         return server
     }
 
+    fun update(server: Server, name: String?): Server? {
+        var updated = false
+        if (validName(name)) {
+            server.name = name!!
+            updated = true
+        }
+        return if (updated) {
+            serverRepository.save(server)
+        } else {
+            null
+        }
+    }
+
     /**
      * Return true if name is valid.
      * Max length is 255 characters.
      */
-    private fun validName(name: String) = name.length <= 255
+    private fun validName(name: String?) = name != null && name.length <= 255
 }

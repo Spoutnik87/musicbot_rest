@@ -9,6 +9,7 @@ import fr.spoutnik87.musicbot_rest.model.Permission
 import fr.spoutnik87.musicbot_rest.model.Server
 import fr.spoutnik87.musicbot_rest.repository.*
 import fr.spoutnik87.musicbot_rest.security.SecurityConfiguration
+import fr.spoutnik87.musicbot_rest.service.PermissionService
 import fr.spoutnik87.musicbot_rest.service.ServerService
 import fr.spoutnik87.musicbot_rest.service.TokenService
 import fr.spoutnik87.musicbot_rest.service.UserService
@@ -38,6 +39,7 @@ import kotlin.collections.HashMap
     ServerController::class,
     UserService::class,
     ServerService::class,
+    PermissionService::class,
     SpringApplicationContext::class,
     BCryptPasswordEncoder::class,
     WebSecurityTestConfig::class,
@@ -60,6 +62,9 @@ class ServerControllerTest {
 
     @MockBean
     private lateinit var permissionRepository: PermissionRepository
+
+    @Autowired
+    private lateinit var tokenService: TokenService
 
     @MockBean(name = "UUID")
     private lateinit var uuid: UUID
@@ -102,6 +107,10 @@ class ServerControllerTest {
         Mockito.`when`(permissionRepository.findByValue(PermissionEnum.CHANGE_MODE.value)).thenReturn(Permission("changeModeToken", PermissionEnum.CHANGE_MODE.value))
         Mockito.`when`(permissionRepository.findByValue(PermissionEnum.PLAY_MEDIA.value)).thenReturn(Permission("playMediaToken", PermissionEnum.PLAY_MEDIA.value))
         Mockito.`when`(permissionRepository.findByValue(PermissionEnum.STOP_MEDIA.value)).thenReturn(Permission("stopMediaToken", PermissionEnum.STOP_MEDIA.value))
+        Mockito.`when`(permissionRepository.findByValue(PermissionEnum.PAUSE_MEDIA.value)).thenReturn(Permission("pauseMediaToken", PermissionEnum.PAUSE_MEDIA.value))
+        Mockito.`when`(permissionRepository.findByValue(PermissionEnum.RESUME_MEDIA.value)).thenReturn(Permission("resumeMediaToken", PermissionEnum.RESUME_MEDIA.value))
+        Mockito.`when`(permissionRepository.findByValue(PermissionEnum.UPDATE_POSITION_MEDIA.value)).thenReturn(Permission("updatePositionMediaToken", PermissionEnum.UPDATE_POSITION_MEDIA.value))
+        Mockito.`when`(permissionRepository.findByValue(PermissionEnum.CLEAR_QUEUE.value)).thenReturn(Permission("clearQueueToken", PermissionEnum.CLEAR_QUEUE.value))
         Mockito.`when`(permissionRepository.findByValue(PermissionEnum.CREATE_CATEGORY.value)).thenReturn(Permission("createCategoryToken", PermissionEnum.CREATE_CATEGORY.value))
         Mockito.`when`(permissionRepository.findByValue(PermissionEnum.DELETE_CATEGORY.value)).thenReturn(Permission("deleteCategoryToken", PermissionEnum.DELETE_CATEGORY.value))
         Mockito.`when`(serverRepository.save(ArgumentMatchers.any(Server::class.java))).then { it.getArgument(0) }
@@ -139,6 +148,7 @@ class ServerControllerTest {
         Mockito.`when`(userRepository.findByEmail("user@test.com"))
                 .thenReturn(UserFactory().createBasicUser().inServer(group, server, listOf()).build())
         Mockito.`when`(serverRepository.findByUuid("serverToken")).thenReturn(server)
+        Mockito.`when`(serverRepository.save(ArgumentMatchers.any(Server::class.java))).then { it.getArgument(0) }
 
         val body = HashMap<String, Any>()
         body["name"] = "New server"
@@ -239,11 +249,7 @@ class ServerControllerTest {
         Mockito.`when`(userRepository.findByEmail("bot@test.com"))
                 .thenReturn(UserFactory().createBotUser().build())
 
-        val linkServerToken = JWT.create()
-                .withClaim("type", "SERVER_LINK_TOKEN")
-                .withClaim("id", "serverId")
-                .withExpiresAt(Date(System.currentTimeMillis() + 300000))
-                .sign(Algorithm.HMAC512(this.securityConfiguration.secret.toByteArray()))
+        val linkServerToken = tokenService.createServerLinkToken("serverId")
 
         val body = HashMap<String, Any>()
         body["userId"] = "userId"
@@ -264,11 +270,7 @@ class ServerControllerTest {
                 .thenReturn(UserFactory().createBasicUser().inServer(group, server, listOf()).build())
         Mockito.`when`(serverRepository.findByUuid("serverToken")).thenReturn(server)
 
-        val linkServerToken = JWT.create()
-                .withClaim("type", "SERVER_LINK_TOKEN")
-                .withClaim("id", "serverToken")
-                .withExpiresAt(Date(System.currentTimeMillis() + 300000))
-                .sign(Algorithm.HMAC512(this.securityConfiguration.secret.toByteArray()))
+        val linkServerToken = tokenService.createServerLinkToken("serverToken")
 
         val body = HashMap<String, Any>()
         body["userId"] = "userId"

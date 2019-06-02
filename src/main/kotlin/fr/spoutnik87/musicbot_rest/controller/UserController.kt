@@ -8,6 +8,7 @@ import fr.spoutnik87.musicbot_rest.reader.ServerJoinTokenReader
 import fr.spoutnik87.musicbot_rest.reader.UserSignupReader
 import fr.spoutnik87.musicbot_rest.reader.UserUpdateReader
 import fr.spoutnik87.musicbot_rest.repository.*
+import fr.spoutnik87.musicbot_rest.service.PermissionService
 import fr.spoutnik87.musicbot_rest.service.TokenService
 import fr.spoutnik87.musicbot_rest.service.UserService
 import fr.spoutnik87.musicbot_rest.viewmodel.UserServerJoinTokenViewModel
@@ -45,6 +46,9 @@ class UserController {
 
     @Autowired
     private lateinit var userService: UserService
+
+    @Autowired
+    private lateinit var permissionService: PermissionService
 
     @JsonView(Views.Companion.Mixed::class)
     @GetMapping("")
@@ -101,18 +105,28 @@ class UserController {
         if (authenticatedUser.role.name != RoleEnum.BOT.value) {
             return ResponseEntity(HttpStatus.FORBIDDEN)
         }
-        if (userRepository.findByUserId(serverJoinTokenReader.userId) != null) {
-            return ResponseEntity(HttpStatus.BAD_REQUEST)
-        }
+        val userByUserId = userRepository.findByUserId(serverJoinTokenReader.userId)
         val serverJoinToken = tokenService.decodeServerJoinToken(serverJoinTokenReader.serverJoinToken)
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         val user = userRepository.findByUuid(serverJoinToken.id) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-        val defaultGroup = serverRepository.findByGuildId(serverJoinTokenReader.guildId)?.defaultGroup
+        /**
+         * If the user who sent the join request is already linked to another user.
+         */
+        if (userByUserId != null && userByUserId.id != user.id) {
+            return ResponseEntity(HttpStatus.BAD_REQUEST)
+        }
+        val server = serverRepository.findByGuildId(serverJoinTokenReader.guildId)
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        if (server.hasUser(user)) {
+            return ResponseEntity(HttpStatus.BAD_REQUEST)
+        }
+        val defaultGroup = server.defaultGroup
         if (defaultGroup.server.hasUser(user)) {
             return ResponseEntity(HttpStatus.BAD_REQUEST)
         }
-        val userGroup = UserGroup(user, defaultGroup)
+        val permissions = permissionService.getDefaultJoinServerPermissions()
+                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        val userGroup = UserGroup(user, defaultGroup, permissions)
         userGroupRepository.save(userGroup)
         if (!user.isLinked) {
             user.userId = serverJoinTokenReader.userId

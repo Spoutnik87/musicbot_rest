@@ -1,5 +1,6 @@
 package fr.spoutnik87.musicbot_rest.util
 
+import fr.spoutnik87.musicbot_rest.model.Group
 import fr.spoutnik87.musicbot_rest.model.Server
 import fr.spoutnik87.musicbot_rest.model.User
 
@@ -25,6 +26,22 @@ class ServerFactory {
     fun owner(user: User): ServerFactory {
         server.owner = user
         user.ownedServerSet.add(server)
+        return this
+    }
+
+    fun link(guildId: String): ServerFactory {
+        server.guildId = guildId
+        return this
+    }
+
+    fun defaultGroup(group: Group): ServerFactory {
+        server.defaultGroup = group
+        group.server = server
+        return this
+    }
+
+    fun defaultGroup(uuid: String, name: String): ServerFactory {
+        server.defaultGroup = Group(uuid, name, server)
         return this
     }
 

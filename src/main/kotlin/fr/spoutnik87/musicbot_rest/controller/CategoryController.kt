@@ -5,6 +5,7 @@ import fr.spoutnik87.musicbot_rest.model.Views
 import fr.spoutnik87.musicbot_rest.reader.CategoryCreateReader
 import fr.spoutnik87.musicbot_rest.reader.CategoryUpdateReader
 import fr.spoutnik87.musicbot_rest.repository.CategoryRepository
+import fr.spoutnik87.musicbot_rest.repository.ContentRepository
 import fr.spoutnik87.musicbot_rest.repository.ServerRepository
 import fr.spoutnik87.musicbot_rest.repository.UserRepository
 import fr.spoutnik87.musicbot_rest.service.CategoryService
@@ -27,6 +28,9 @@ class CategoryController {
 
     @Autowired
     private lateinit var userRepository: UserRepository
+
+    @Autowired
+    private lateinit var contentRepository: ContentRepository
 
     @Autowired
     private lateinit var userService: UserService
@@ -91,6 +95,10 @@ class CategoryController {
         if (!authenticatedUser.hasDeleteCategoryPermission(category)) {
             return ResponseEntity(HttpStatus.FORBIDDEN)
         }
+        if (contentRepository.findByCategory(category).isNotEmpty()) {
+            return ResponseEntity(HttpStatus.BAD_REQUEST)
+        }
+        categoryRepository.delete(category)
         return ResponseEntity(HttpStatus.ACCEPTED)
     }
 }

@@ -95,5 +95,16 @@ data class User(
 
     fun hasPlayMediaPermission(content: Content) = content.contentGroupSet.flatMap { it.group.userGroupSet }.filter { it.user.id == id }.any { it.hasPermission(PermissionEnum.PLAY_MEDIA) }
 
-    fun hasStopMediaPermission(content: Content) = content.contentGroupSet.flatMap { it.group.userGroupSet }.filter { it.user.id == id }.any { it.hasPermission(PermissionEnum.STOP_MEDIA) }
+    fun hasStopMediaPermission(server: Server) = server.groupSet.flatMap { it.userGroupSet }.filter { it.user.id == id }.any { it.hasPermission(PermissionEnum.STOP_MEDIA) }
+
+    fun hasPauseMediaPermission(server: Server) = server.groupSet.flatMap { it.userGroupSet }.filter { it.user.id == id }.any { it.hasPermission(PermissionEnum.PAUSE_MEDIA) }
+
+    fun hasResumeMediaPermission(server: Server) = server.groupSet.flatMap { it.userGroupSet }.filter { it.user.id == id }.any { it.hasPermission(PermissionEnum.RESUME_MEDIA) }
+
+    fun hasUpdatePositionMediaPermission(server: Server) = server.groupSet.flatMap { it.userGroupSet }.filter { it.user.id == id }.any { it.hasPermission(PermissionEnum.UPDATE_POSITION_MEDIA) }
+
+    /**
+     * Return true if this user is allowed to clear @param server queue.
+     */
+    fun hasClearQueuePermission(server: Server) = server.groupSet.flatMap { it.userGroupSet }.filter { it.user.id == id }.any { it.hasPermission(PermissionEnum.CLEAR_QUEUE) }
 }

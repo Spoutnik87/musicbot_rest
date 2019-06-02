@@ -19,4 +19,46 @@ class PermissionService {
             null
         }
     }
+
+    fun getDefaultCreateServerPermissions(): List<Permission>? {
+        return try {
+            listOf(
+                    permissionRepository.findByValue(PermissionEnum.CREATE_CONTENT.value),
+                    permissionRepository.findByValue(PermissionEnum.DELETE_CONTENT.value),
+                    permissionRepository.findByValue(PermissionEnum.READ_CONTENT.value),
+                    permissionRepository.findByValue(PermissionEnum.CHANGE_MODE.value),
+                    permissionRepository.findByValue(PermissionEnum.PLAY_MEDIA.value),
+                    permissionRepository.findByValue(PermissionEnum.STOP_MEDIA.value),
+                    permissionRepository.findByValue(PermissionEnum.PAUSE_MEDIA.value),
+                    permissionRepository.findByValue(PermissionEnum.RESUME_MEDIA.value),
+                    permissionRepository.findByValue(PermissionEnum.UPDATE_POSITION_MEDIA.value),
+                    permissionRepository.findByValue(PermissionEnum.CLEAR_QUEUE.value),
+                    permissionRepository.findByValue(PermissionEnum.CREATE_CATEGORY.value),
+                    permissionRepository.findByValue(PermissionEnum.DELETE_CATEGORY.value)
+            ).requireNoNulls()
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    fun getDefaultJoinServerPermissions(): List<Permission>? {
+        return try {
+            listOf(
+                    permissionRepository.findByValue(PermissionEnum.CREATE_CONTENT.value),
+                    permissionRepository.findByValue(PermissionEnum.DELETE_CONTENT.value),
+                    permissionRepository.findByValue(PermissionEnum.READ_CONTENT.value),
+                    permissionRepository.findByValue(PermissionEnum.CHANGE_MODE.value),
+                    permissionRepository.findByValue(PermissionEnum.PLAY_MEDIA.value),
+                    permissionRepository.findByValue(PermissionEnum.STOP_MEDIA.value),
+                    permissionRepository.findByValue(PermissionEnum.PAUSE_MEDIA.value),
+                    permissionRepository.findByValue(PermissionEnum.RESUME_MEDIA.value),
+                    permissionRepository.findByValue(PermissionEnum.UPDATE_POSITION_MEDIA.value),
+                    permissionRepository.findByValue(PermissionEnum.CLEAR_QUEUE.value),
+                    permissionRepository.findByValue(PermissionEnum.CREATE_CATEGORY.value),
+                    permissionRepository.findByValue(PermissionEnum.DELETE_CATEGORY.value)
+            ).requireNoNulls()
+        } catch (e: Exception) {
+            null
+        }
+    }
 }
