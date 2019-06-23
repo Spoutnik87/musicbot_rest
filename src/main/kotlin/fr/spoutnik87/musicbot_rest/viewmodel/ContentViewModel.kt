@@ -32,7 +32,7 @@ data class ContentViewModel(
         val serverId: String,
         @JsonView(Views.Companion.Public::class)
         val groups: List<GroupViewModel>
-) : Serializable {
+) : ViewModel {
 
     companion object {
         fun from(content: Content) = ContentViewModel(
@@ -44,7 +44,7 @@ data class ContentViewModel(
                 content.thumbnailSize,
                 content.duration,
                 content.media,
-                content.thumbnail,
+                content.hasThumbnail(),
                 ContentTypeViewModel.from(content.contentType),
                 CategoryViewModel.from(content.category),
                 content.groupList[0].server.uuid,

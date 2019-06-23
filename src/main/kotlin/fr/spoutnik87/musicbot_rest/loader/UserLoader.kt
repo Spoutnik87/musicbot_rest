@@ -2,10 +2,9 @@ package fr.spoutnik87.musicbot_rest.loader
 
 import fr.spoutnik87.musicbot_rest.AppConfig
 import fr.spoutnik87.musicbot_rest.UUID
-import fr.spoutnik87.musicbot_rest.constant.RoleEnum
 import fr.spoutnik87.musicbot_rest.model.User
-import fr.spoutnik87.musicbot_rest.repository.RoleRepository
 import fr.spoutnik87.musicbot_rest.repository.UserRepository
+import fr.spoutnik87.musicbot_rest.service.RoleService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.ApplicationListener
 import org.springframework.context.event.ContextRefreshedEvent
@@ -27,13 +26,12 @@ class UserLoader : ApplicationListener<ContextRefreshedEvent> {
     private lateinit var bCryptPasswordEncoder: BCryptPasswordEncoder
 
     @Autowired
-    private lateinit var roleRepository: RoleRepository
+    private lateinit var roleService: RoleService
 
     @Autowired
     private lateinit var appConfig: AppConfig
 
     override fun onApplicationEvent(contextRefreshedEvent: ContextRefreshedEvent) {
-        val role = roleRepository.findByName(RoleEnum.BOT.value)
-        userRepository.save(User(uuid.v4(), appConfig.botUsername, "Bot", "Bot", "Bot", bCryptPasswordEncoder.encode(appConfig.botPassword), role!!))
+        userRepository.save(User(uuid.v4(), appConfig.botUsername, "Bot", "Bot", "Bot", bCryptPasswordEncoder.encode(appConfig.botPassword), roleService.BOT))
     }
 }

@@ -8,6 +8,7 @@ import fr.spoutnik87.musicbot_rest.util.AuthenticationHelper
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
 class UserService {
@@ -26,6 +27,7 @@ class UserService {
         return userRepository.findByEmail(email)
     }
 
+    @Transactional
     fun create(email: String, nickname: String, firstname: String, lastname: String, password: String, role: Role): User? {
         if (!validEmail(email) || !validNickname(nickname) || !validFirstname(firstname) || !validLastname(lastname) || !validPassword(password)) {
             return null
@@ -33,6 +35,7 @@ class UserService {
         return userRepository.save(User(uuid.v4(), email, nickname, firstname, lastname, bCryptPasswordEncoder.encode(password), role))
     }
 
+    @Transactional
     fun update(user: User, nickname: String?, firstname: String?, lastname: String?, password: String?): User? {
         var updated = false
         if (validNickname(nickname)) {

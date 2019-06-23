@@ -2,6 +2,7 @@ package fr.spoutnik87.musicbot_rest
 
 import fr.spoutnik87.musicbot_rest.controller.CategoryController
 import fr.spoutnik87.musicbot_rest.repository.CategoryRepository
+import fr.spoutnik87.musicbot_rest.repository.ContentRepository
 import fr.spoutnik87.musicbot_rest.repository.ServerRepository
 import fr.spoutnik87.musicbot_rest.repository.UserRepository
 import fr.spoutnik87.musicbot_rest.security.SecurityConfiguration
@@ -42,6 +43,9 @@ class CategoryControllerTest {
 
     @MockBean
     private lateinit var serverRepository: ServerRepository
+
+    @MockBean
+    private lateinit var contentRepository: ContentRepository
 
     @MockBean(name = "UUID")
     private lateinit var uuid: UUID

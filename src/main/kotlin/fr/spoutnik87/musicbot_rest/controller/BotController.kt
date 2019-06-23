@@ -60,7 +60,7 @@ class BotController {
         if (!content.hasMedia()) {
             return ResponseEntity(HttpStatus.BAD_REQUEST)
         }
-        if (!authenticatedUser.hasPlayMediaPermission(content)) {
+        if (!authenticatedUser.hasPlayMediaPermission(content.server)) {
             return ResponseEntity(HttpStatus.FORBIDDEN)
         }
         if (!content.server.isLinked) {
@@ -84,7 +84,7 @@ class BotController {
         if (!content.hasMedia()) {
             return ResponseEntity(HttpStatus.BAD_REQUEST)
         }
-        if (!authenticatedUser.hasStopMediaPermission(content)) {
+        if (!authenticatedUser.hasStopMediaPermission(content.server)) {
             return ResponseEntity(HttpStatus.FORBIDDEN)
         }
         if (!content.server.isLinked) {
@@ -105,7 +105,9 @@ class BotController {
             return ResponseEntity(HttpStatus.BAD_REQUEST)
         }
         val server = serverRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-        // TODO Check Permission
+        if (!authenticatedUser.hasClearQueuePermission(server)) {
+            return ResponseEntity(HttpStatus.FORBIDDEN)
+        }
         if (!server.isLinked) {
             return ResponseEntity(HttpStatus.BAD_REQUEST)
         }
@@ -126,7 +128,7 @@ class BotController {
         if (!content.hasMedia()) {
             return ResponseEntity(HttpStatus.BAD_REQUEST)
         }
-        if (!authenticatedUser.hasPlayMediaPermission(content)) {
+        if (!authenticatedUser.hasUpdatePositionMediaPermission(content.server)) {
             return ResponseEntity(HttpStatus.FORBIDDEN)
         }
         if (!content.server.isLinked) {
@@ -147,7 +149,9 @@ class BotController {
             return ResponseEntity(HttpStatus.BAD_REQUEST)
         }
         val server = serverRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-        // TODO Check Permission
+        if (!authenticatedUser.hasPauseMediaPermission(server)) {
+            return ResponseEntity(HttpStatus.FORBIDDEN)
+        }
         if (!server.isLinked) {
             return ResponseEntity(HttpStatus.BAD_REQUEST)
         }
@@ -165,7 +169,9 @@ class BotController {
             return ResponseEntity(HttpStatus.BAD_REQUEST)
         }
         val server = serverRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-        // TODO Check Permission
+        if (!authenticatedUser.hasResumeMediaPermission(server)) {
+            return ResponseEntity(HttpStatus.FORBIDDEN)
+        }
         if (!server.isLinked) {
             return ResponseEntity(HttpStatus.BAD_REQUEST)
         }

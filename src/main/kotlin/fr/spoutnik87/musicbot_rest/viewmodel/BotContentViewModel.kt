@@ -24,7 +24,7 @@ data class BotContentViewModel(
         val position: Long?,
         @JsonView(Views.Companion.Public::class)
         val paused: Boolean?
-) : Serializable {
+) : ViewModel {
 
     companion object {
         fun from(reader: BotContentReader?, content: Content, initiator: User): BotContentViewModel? {

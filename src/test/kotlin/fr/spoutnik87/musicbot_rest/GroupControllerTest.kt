@@ -2,10 +2,12 @@ package fr.spoutnik87.musicbot_rest
 
 import fr.spoutnik87.musicbot_rest.controller.GroupController
 import fr.spoutnik87.musicbot_rest.repository.GroupRepository
+import fr.spoutnik87.musicbot_rest.repository.PermissionRepository
 import fr.spoutnik87.musicbot_rest.repository.ServerRepository
 import fr.spoutnik87.musicbot_rest.repository.UserRepository
 import fr.spoutnik87.musicbot_rest.security.SecurityConfiguration
 import fr.spoutnik87.musicbot_rest.service.GroupService
+import fr.spoutnik87.musicbot_rest.service.PermissionService
 import fr.spoutnik87.musicbot_rest.service.UserService
 import fr.spoutnik87.musicbot_rest.util.Util
 import fr.spoutnik87.musicbot_rest.util.WebSecurityTestConfig
@@ -25,6 +27,7 @@ import org.springframework.test.web.servlet.MockMvc
 @ContextConfiguration(classes = [
     GroupController::class,
     UserService::class,
+    PermissionService::class,
     GroupService::class,
     SpringApplicationContext::class,
     BCryptPasswordEncoder::class,
@@ -42,6 +45,9 @@ class GroupControllerTest {
 
     @MockBean
     private lateinit var serverRepository: ServerRepository
+
+    @MockBean
+    private lateinit var permissionRepository: PermissionRepository
 
     @MockBean(name = "UUID")
     private lateinit var uuid: UUID

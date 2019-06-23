@@ -9,7 +9,9 @@ data class Server(
         @Column(nullable = false, unique = true)
         var uuid: String,
         @Column(nullable = false)
-        var name: String
+        var name: String,
+        @Column(nullable = false)
+        var thumbnailSize: Long
 ) : AuditModel(), Serializable {
 
     /**
@@ -22,10 +24,15 @@ data class Server(
     lateinit var defaultGroup: Group
 
     @ManyToOne
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "author_id")
+    lateinit var author: User
+
+    @ManyToOne
+    @JoinColumn(name = "owner_id")
     lateinit var owner: User
 
-    constructor(uuid: String, name: String, owner: User) : this(uuid, name) {
+    constructor(uuid: String, name: String, thumbnailSize: Long, author: User, owner: User) : this(uuid, name, thumbnailSize) {
+        this.author = author
         this.owner = owner
     }
 
@@ -43,6 +50,9 @@ data class Server(
 
     val contentList
         get() = groupSet.flatMap { it.contentList }.distinctBy { it.id }
+
+    val visibleContentList
+        get() = groupSet.flatMap { it.visibleContentList }.distinctBy { it.id }
 
     fun hasUser(user: User) = groupSet.any { it.hasUser(user) }
 

@@ -1,14 +1,16 @@
 package fr.spoutnik87.musicbot_rest.controller
 
 import com.fasterxml.jackson.annotation.JsonView
-import fr.spoutnik87.musicbot_rest.constant.PermissionEnum
 import fr.spoutnik87.musicbot_rest.constant.RoleEnum
-import fr.spoutnik87.musicbot_rest.model.Permission
 import fr.spoutnik87.musicbot_rest.model.Views
 import fr.spoutnik87.musicbot_rest.reader.ServerCreateReader
 import fr.spoutnik87.musicbot_rest.reader.ServerLinkReader
 import fr.spoutnik87.musicbot_rest.reader.ServerUpdateReader
-import fr.spoutnik87.musicbot_rest.repository.*
+import fr.spoutnik87.musicbot_rest.repository.GroupRepository
+import fr.spoutnik87.musicbot_rest.repository.ServerRepository
+import fr.spoutnik87.musicbot_rest.repository.UserGroupRepository
+import fr.spoutnik87.musicbot_rest.repository.UserRepository
+import fr.spoutnik87.musicbot_rest.service.PermissionService
 import fr.spoutnik87.musicbot_rest.service.ServerService
 import fr.spoutnik87.musicbot_rest.service.TokenService
 import fr.spoutnik87.musicbot_rest.service.UserService
@@ -18,7 +20,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import java.util.*
 
 @RestController
 @RequestMapping("server")
@@ -37,7 +38,7 @@ class ServerController {
     private lateinit var userGroupRepository: UserGroupRepository
 
     @Autowired
-    private lateinit var permissionRepository: PermissionRepository
+    private lateinit var permissionService: PermissionService
 
     @Autowired
     private lateinit var tokenService: TokenService
@@ -125,32 +126,8 @@ class ServerController {
     @PostMapping("")
     fun create(@RequestBody serverCreateReader: ServerCreateReader): ResponseEntity<Any> {
         val authenticatedUser = userService.getAuthenticatedUser() ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-        val createContentPermission = permissionRepository.findByValue(PermissionEnum.CREATE_CONTENT.value)
+        val permissions = permissionService.getDefaultCreateServerPermissions()
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-        val deleteContentPermission = permissionRepository.findByValue(PermissionEnum.DELETE_CONTENT.value)
-                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-        val readContentPermission = permissionRepository.findByValue(PermissionEnum.READ_CONTENT.value)
-                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-        val changeModePermission = permissionRepository.findByValue(PermissionEnum.CHANGE_MODE.value)
-                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-        val playMediaPermission = permissionRepository.findByValue(PermissionEnum.PLAY_MEDIA.value)
-                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-        val stopMediaPermission = permissionRepository.findByValue(PermissionEnum.STOP_MEDIA.value)
-                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-        val createCategoryPermission = permissionRepository.findByValue(PermissionEnum.CREATE_CATEGORY.value)
-                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-        val deleteCategoryPermission = permissionRepository.findByValue(PermissionEnum.DELETE_CATEGORY.value)
-                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-        val permissions = ArrayList<Permission>()
-        permissions.add(createContentPermission)
-        permissions.add(deleteContentPermission)
-        permissions.add(readContentPermission)
-        permissions.add(changeModePermission)
-        permissions.add(playMediaPermission)
-        permissions.add(stopMediaPermission)
-        permissions.add(createCategoryPermission)
-        permissions.add(deleteCategoryPermission)
-
         val server = serverService.create(serverCreateReader.name, authenticatedUser, permissions)
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         return ResponseEntity(ServerViewModel.from(server), HttpStatus.CREATED)
@@ -160,13 +137,12 @@ class ServerController {
     @PutMapping("/{id}")
     fun update(
             @PathVariable("id") uuid: String, @RequestBody serverUpdateReader: ServerUpdateReader): ResponseEntity<Any> {
-        val server = serverRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        var server = serverRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         val authenticatedUser = userService.getAuthenticatedUser() ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         if (!authenticatedUser.isOwner(server)) {
             return ResponseEntity(HttpStatus.FORBIDDEN)
         }
-        server.name = serverUpdateReader.name
-        serverRepository.save(server)
+        server = serverService.update(server, serverUpdateReader.name) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         return ResponseEntity(ServerViewModel.from(server), HttpStatus.ACCEPTED)
     }
 

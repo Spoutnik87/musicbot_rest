@@ -2,10 +2,13 @@ package fr.spoutnik87.musicbot_rest.service
 
 import fr.spoutnik87.musicbot_rest.UUID
 import fr.spoutnik87.musicbot_rest.model.Group
+import fr.spoutnik87.musicbot_rest.model.Permission
 import fr.spoutnik87.musicbot_rest.model.Server
+import fr.spoutnik87.musicbot_rest.model.User
 import fr.spoutnik87.musicbot_rest.repository.GroupRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
 class GroupService {
@@ -14,15 +17,23 @@ class GroupService {
     private lateinit var groupRepository: GroupRepository
 
     @Autowired
+    private lateinit var permissionService: PermissionService
+
+    @Autowired
     private lateinit var uuid: UUID
 
-    fun create(name: String, server: Server): Group? {
+    @Transactional
+    fun create(name: String, author: User, server: Server, permissions: List<Permission> = permissionService.allInitialPermissions): Group? {
         if (!validName(name)) {
             return null
         }
-        return groupRepository.save(Group(uuid.v4(), name, server))
+        /**
+         * TODO Generate thumbnail
+         */
+        return groupRepository.save(Group(uuid.v4(), name, 0, author, server, permissions))
     }
 
+    @Transactional
     fun update(group: Group, name: String?): Group? {
         var updated = false
         if (validName(name)) {

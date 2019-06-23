@@ -16,7 +16,7 @@ data class UserGroupViewModel(
         val member: Boolean,
         @JsonView(Views.Companion.Public::class)
         val permissions: List<String>
-) {
+) : ViewModel {
     companion object {
 
         fun from(group: Group, user: User): UserGroupViewModel {

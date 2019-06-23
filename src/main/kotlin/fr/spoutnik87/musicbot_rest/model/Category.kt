@@ -9,14 +9,21 @@ data class Category(
         @Column(nullable = false, unique = true)
         var uuid: String,
         @Column(nullable = false)
-        var name: String
+        var name: String,
+        @Column(nullable = false)
+        var thumbnailSize: Long
 ) : AuditModel(), Serializable {
+
+    @ManyToOne
+    @JoinColumn(name = "author_id")
+    lateinit var author: User
 
     @ManyToOne
     @JoinColumn(name = "server_id")
     lateinit var server: Server
 
-    constructor(uuid: String, name: String, server: Server) : this(uuid, name) {
+    constructor(uuid: String, name: String, thumbnailSize: Long, user: User, server: Server) : this(uuid, name, thumbnailSize) {
+        this.author = user
         this.server = server
     }
 

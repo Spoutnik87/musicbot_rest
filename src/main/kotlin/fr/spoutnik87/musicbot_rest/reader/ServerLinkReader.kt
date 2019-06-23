@@ -4,5 +4,4 @@ data class ServerLinkReader(
         val userId: String,
         val guildId: String,
         val token: String
-) {
-}
+)
