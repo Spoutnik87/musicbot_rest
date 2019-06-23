@@ -12,7 +12,7 @@ data class CategoryViewModel(
         val name: String,
         @JsonView(Views.Companion.Public::class)
         val serverId: String
-) : Serializable {
+) : ViewModel {
 
     companion object {
         fun from(category: Category) = CategoryViewModel(category.uuid, category.name, category.server.uuid)

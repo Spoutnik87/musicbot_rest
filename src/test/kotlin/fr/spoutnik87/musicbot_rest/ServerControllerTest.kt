@@ -13,10 +13,7 @@ import fr.spoutnik87.musicbot_rest.service.PermissionService
 import fr.spoutnik87.musicbot_rest.service.ServerService
 import fr.spoutnik87.musicbot_rest.service.TokenService
 import fr.spoutnik87.musicbot_rest.service.UserService
-import fr.spoutnik87.musicbot_rest.util.ServerFactory
-import fr.spoutnik87.musicbot_rest.util.UserFactory
-import fr.spoutnik87.musicbot_rest.util.Util
-import fr.spoutnik87.musicbot_rest.util.WebSecurityTestConfig
+import fr.spoutnik87.musicbot_rest.util.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentMatchers
@@ -99,20 +96,19 @@ class ServerControllerTest {
     @WithMockUser(username = "user@test.com", authorities = ["USER"])
     fun create_ValidParameters_ReturnServer() {
         Mockito.`when`(uuid.v4()).thenReturn("token")
-        Mockito.`when`(userRepository.findByEmail("user@test.com"))
-                .thenReturn(UserFactory().createBasicUser().build())
-        Mockito.`when`(permissionRepository.findByValue(PermissionEnum.CREATE_CONTENT.value)).thenReturn(Permission("createMediaToken", PermissionEnum.CREATE_CONTENT.value))
-        Mockito.`when`(permissionRepository.findByValue(PermissionEnum.DELETE_CONTENT.value)).thenReturn(Permission("deleteMediaToken", PermissionEnum.DELETE_CONTENT.value))
-        Mockito.`when`(permissionRepository.findByValue(PermissionEnum.READ_CONTENT.value)).thenReturn(Permission("readMediaToken", PermissionEnum.READ_CONTENT.value))
-        Mockito.`when`(permissionRepository.findByValue(PermissionEnum.CHANGE_MODE.value)).thenReturn(Permission("changeModeToken", PermissionEnum.CHANGE_MODE.value))
-        Mockito.`when`(permissionRepository.findByValue(PermissionEnum.PLAY_MEDIA.value)).thenReturn(Permission("playMediaToken", PermissionEnum.PLAY_MEDIA.value))
-        Mockito.`when`(permissionRepository.findByValue(PermissionEnum.STOP_MEDIA.value)).thenReturn(Permission("stopMediaToken", PermissionEnum.STOP_MEDIA.value))
-        Mockito.`when`(permissionRepository.findByValue(PermissionEnum.PAUSE_MEDIA.value)).thenReturn(Permission("pauseMediaToken", PermissionEnum.PAUSE_MEDIA.value))
-        Mockito.`when`(permissionRepository.findByValue(PermissionEnum.RESUME_MEDIA.value)).thenReturn(Permission("resumeMediaToken", PermissionEnum.RESUME_MEDIA.value))
-        Mockito.`when`(permissionRepository.findByValue(PermissionEnum.UPDATE_POSITION_MEDIA.value)).thenReturn(Permission("updatePositionMediaToken", PermissionEnum.UPDATE_POSITION_MEDIA.value))
-        Mockito.`when`(permissionRepository.findByValue(PermissionEnum.CLEAR_QUEUE.value)).thenReturn(Permission("clearQueueToken", PermissionEnum.CLEAR_QUEUE.value))
-        Mockito.`when`(permissionRepository.findByValue(PermissionEnum.CREATE_CATEGORY.value)).thenReturn(Permission("createCategoryToken", PermissionEnum.CREATE_CATEGORY.value))
-        Mockito.`when`(permissionRepository.findByValue(PermissionEnum.DELETE_CATEGORY.value)).thenReturn(Permission("deleteCategoryToken", PermissionEnum.DELETE_CATEGORY.value))
+        Mockito.`when`(userRepository.findByEmail("user@test.com")).thenReturn(UserFactory().createBasicUser().build())
+        Mockito.`when`(permissionRepository.findByValue(PermissionEnum.CREATE_CONTENT.value)).thenReturn(PermissionFactory().create(PermissionEnum.CREATE_CONTENT).build())
+        Mockito.`when`(permissionRepository.findByValue(PermissionEnum.DELETE_CONTENT.value)).thenReturn(PermissionFactory().create(PermissionEnum.DELETE_CONTENT).build())
+        Mockito.`when`(permissionRepository.findByValue(PermissionEnum.READ_CONTENT.value)).thenReturn(PermissionFactory().create(PermissionEnum.READ_CONTENT).build())
+        Mockito.`when`(permissionRepository.findByValue(PermissionEnum.CHANGE_MODE.value)).thenReturn(PermissionFactory().create(PermissionEnum.CHANGE_MODE).build())
+        Mockito.`when`(permissionRepository.findByValue(PermissionEnum.PLAY_MEDIA.value)).thenReturn(PermissionFactory().create(PermissionEnum.PLAY_MEDIA).build())
+        Mockito.`when`(permissionRepository.findByValue(PermissionEnum.STOP_MEDIA.value)).thenReturn(PermissionFactory().create(PermissionEnum.STOP_MEDIA).build())
+        Mockito.`when`(permissionRepository.findByValue(PermissionEnum.PAUSE_MEDIA.value)).thenReturn(PermissionFactory().create(PermissionEnum.PAUSE_MEDIA).build())
+        Mockito.`when`(permissionRepository.findByValue(PermissionEnum.RESUME_MEDIA.value)).thenReturn(PermissionFactory().create(PermissionEnum.RESUME_MEDIA).build())
+        Mockito.`when`(permissionRepository.findByValue(PermissionEnum.UPDATE_POSITION_MEDIA.value)).thenReturn(PermissionFactory().create(PermissionEnum.UPDATE_POSITION_MEDIA).build())
+        Mockito.`when`(permissionRepository.findByValue(PermissionEnum.CLEAR_QUEUE.value)).thenReturn(PermissionFactory().create(PermissionEnum.CLEAR_QUEUE).build())
+        Mockito.`when`(permissionRepository.findByValue(PermissionEnum.CREATE_CATEGORY.value)).thenReturn(PermissionFactory().create(PermissionEnum.CREATE_CATEGORY).build())
+        Mockito.`when`(permissionRepository.findByValue(PermissionEnum.DELETE_CATEGORY.value)).thenReturn(PermissionFactory().create(PermissionEnum.DELETE_CATEGORY).build())
         Mockito.`when`(serverRepository.save(ArgumentMatchers.any(Server::class.java))).then { it.getArgument(0) }
         Mockito.`when`(groupRepository.save(ArgumentMatchers.any(Group::class.java))).then { it.getArgument(0) }
 
@@ -143,10 +139,10 @@ class ServerControllerTest {
     @Test
     @WithMockUser(username = "user@test.com", authorities = ["USER"])
     fun update_ValidParameters_ReturnServer() {
-        val group = Group("groupToken", "Group")
-        val server = Server("serverToken", "server")
+        val group = Group("groupToken", "Group", 0)
+        val server = Server("serverToken", "server", 0)
         Mockito.`when`(userRepository.findByEmail("user@test.com"))
-                .thenReturn(UserFactory().createBasicUser().inServer(group, server, listOf()).build())
+                .thenReturn(UserFactory().createBasicUser().inServer(group, server).build())
         Mockito.`when`(serverRepository.findByUuid("serverToken")).thenReturn(server)
         Mockito.`when`(serverRepository.save(ArgumentMatchers.any(Server::class.java))).then { it.getArgument(0) }
 
@@ -203,10 +199,10 @@ class ServerControllerTest {
     @Test
     @WithMockUser(username = "user@test.com", authorities = ["USER"])
     fun getById_ValidParameters_ReturnServer() {
-        val group = Group("groupToken", "Group")
-        val server = Server("serverToken", "server")
+        val group = Group("groupToken", "Group", 0)
+        val server = Server("serverToken", "server", 0)
         Mockito.`when`(userRepository.findByEmail("user@test.com"))
-                .thenReturn(UserFactory().createBasicUser().inServer(group, server, listOf()).build())
+                .thenReturn(UserFactory().createBasicUser().inServer(group, server).build())
         Mockito.`when`(serverRepository.findByUuid("serverToken")).thenReturn(server)
 
         Util.basicTest(mockMvc, HttpMethod.GET, "/server/serverToken", HashMap(), HttpStatus.OK, "{\"id\":\"serverToken\",\"name\":\"server\",\"ownerId\":\"basicUserToken\",\"linked\":false}")
@@ -263,11 +259,11 @@ class ServerControllerTest {
     fun linkGuildToServer_ServerAlreadyLinked_ReturnBadRequestStatus() {
         Mockito.`when`(userRepository.findByEmail("bot@test.com"))
                 .thenReturn(UserFactory().createBotUser().build())
-        val group = Group("groupToken", "Group")
-        val server = Server("serverToken", "server")
+        val group = Group("groupToken", "Group", 0)
+        val server = Server("serverToken", "server", 0)
         server.guildId = "guildId"
         Mockito.`when`(userRepository.findByEmail("user@test.com"))
-                .thenReturn(UserFactory().createBasicUser().inServer(group, server, listOf()).build())
+                .thenReturn(UserFactory().createBasicUser().inServer(group, server).build())
         Mockito.`when`(serverRepository.findByUuid("serverToken")).thenReturn(server)
 
         val linkServerToken = tokenService.createServerLinkToken("serverToken")
@@ -284,10 +280,10 @@ class ServerControllerTest {
     fun linkGuildToServer_ExpiredToken_ReturnBadRequestStatus() {
         Mockito.`when`(userRepository.findByEmail("bot@test.com"))
                 .thenReturn(UserFactory().createBotUser().build())
-        val group = Group("groupToken", "Group")
-        val server = Server("serverToken", "server")
+        val group = Group("groupToken", "Group", 0)
+        val server = Server("serverToken", "server", 0)
         Mockito.`when`(userRepository.findByEmail("user@test.com"))
-                .thenReturn(UserFactory().createBasicUser().inServer(group, server, listOf()).build())
+                .thenReturn(UserFactory().createBasicUser().inServer(group, server).build())
         Mockito.`when`(serverRepository.findByUuid("serverToken")).thenReturn(server)
 
         val linkServerToken = JWT.create()
@@ -308,10 +304,10 @@ class ServerControllerTest {
     fun linkGuildToServer_ValidParameters_ReturnServer() {
         Mockito.`when`(userRepository.findByEmail("bot@test.com"))
                 .thenReturn(UserFactory().createBotUser().build())
-        val group = Group("groupToken", "Group")
-        val server = Server("serverToken", "server")
+        val group = Group("groupToken", "Group", 0)
+        val server = Server("serverToken", "server", 0)
         Mockito.`when`(userRepository.findByEmail("user@test.com"))
-                .thenReturn(UserFactory().createBasicUser().inServer(group, server, listOf()).build())
+                .thenReturn(UserFactory().createBasicUser().inServer(group, server).build())
         Mockito.`when`(serverRepository.findByUuid("serverToken")).thenReturn(server)
 
         val linkServerToken = JWT.create()

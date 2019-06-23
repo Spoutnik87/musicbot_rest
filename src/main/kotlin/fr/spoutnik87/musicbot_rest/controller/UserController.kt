@@ -124,9 +124,7 @@ class UserController {
         if (defaultGroup.server.hasUser(user)) {
             return ResponseEntity(HttpStatus.BAD_REQUEST)
         }
-        val permissions = permissionService.getDefaultJoinServerPermissions()
-                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-        val userGroup = UserGroup(user, defaultGroup, permissions)
+        val userGroup = UserGroup(user, defaultGroup)
         userGroupRepository.save(userGroup)
         if (!user.isLinked) {
             user.userId = serverJoinTokenReader.userId
@@ -153,13 +151,13 @@ class UserController {
             return ResponseEntity(HttpStatus.FORBIDDEN)
         }
         if (userUpdateReader.nickname != null) {
-            user.nickname = userUpdateReader.nickname!!
+            user.nickname = userUpdateReader.nickname
         }
         if (userUpdateReader.firstname != null) {
-            user.firstname = userUpdateReader.firstname!!
+            user.firstname = userUpdateReader.firstname
         }
         if (userUpdateReader.lastname != null) {
-            user.lastname = userUpdateReader.lastname!!
+            user.lastname = userUpdateReader.lastname
         }
         userRepository.save(user)
         return ResponseEntity(UserViewModel.from(user), HttpStatus.OK)

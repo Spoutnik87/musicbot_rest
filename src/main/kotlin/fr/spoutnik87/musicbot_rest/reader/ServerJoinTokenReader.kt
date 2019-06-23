@@ -4,5 +4,4 @@ data class ServerJoinTokenReader(
         val guildId: String,
         val userId: String,
         val serverJoinToken: String
-) {
-}
+)

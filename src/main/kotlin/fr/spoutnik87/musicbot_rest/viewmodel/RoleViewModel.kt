@@ -11,7 +11,7 @@ data class RoleViewModel(
         val name: String,
         @JsonView(Views.Companion.Private::class)
         val lvl: Int
-) {
+) : ViewModel {
 
     companion object {
 

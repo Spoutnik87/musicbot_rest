@@ -28,6 +28,12 @@ data class User(
      */
     var userId: String? = null
 
+    val thumbnailSize: Long? = null
+
+    @ManyToOne
+    @JoinColumn(name = "group_id")
+    lateinit var group: Group
+
     @ManyToOne
     @JoinColumn(name = "role_id")
     lateinit var role: Role
@@ -43,25 +49,37 @@ data class User(
     val ownedServerSet: MutableSet<Server> = HashSet()
 
     @OneToMany(mappedBy = "author", cascade = [CascadeType.ALL])
-    val ownedContentSet: MutableSet<Content> = HashSet()
+    val createdContentSet: MutableSet<Content> = HashSet()
+
+    @OneToMany(mappedBy = "author", cascade = [CascadeType.ALL])
+    val createdCategorySet: MutableSet<Category> = HashSet()
+
+    @OneToMany(mappedBy = "author", cascade = [CascadeType.ALL])
+    val createdGroupSet: MutableSet<Group> = HashSet()
 
     val groupList
-        get() = userGroupSet.map { it.group }
+        get() = userGroupSet.map { it.group }.distinctBy { it.id }
 
     val isLinked
         get() = userId != null
 
     val serverList
-        get() = userGroupSet.map { it.group.server }
+        get() = groupList.map { it.server }.distinctBy { it.id }
 
     val spaceUsed
-        get() = ownedContentSet.map { it.spaceUsed }.reduce { acc, l -> acc + l }
+        get() = createdContentSet.map { it.spaceUsed }.reduce { acc, l -> acc + l }
 
     val ownedServerCount
-        get() = ownedServerSet
+        get() = ownedServerSet.size
 
-    val ownedContentCount
-        get() = ownedContentSet.size
+    val createdContentCount
+        get() = createdContentSet.size
+
+    val createdCategoryCount
+        get() = createdCategorySet.size
+
+    val createdGroupCount
+        get() = createdGroupSet.size
 
     /**
      * Return true if this user is the owner of the specified server.
@@ -69,42 +87,70 @@ data class User(
     fun isOwner(server: Server) = ownedServerSet.any { it.id == server.id }
 
     /**
+     * Return true if this user created the specified content.
+     */
+    fun isAuthor(content: Content) = createdContentSet.any { it.id == content.id }
+
+    /**
+     * Return true if this user created the specified category.
+     */
+    fun isAuthor(category: Category) = createdCategorySet.any { it.id == category.id }
+
+    /**
+     * Return true if this user created the specified group.
+     */
+    fun isAuthor(group: Group) = createdGroupSet.any { it.id == group.id }
+
+    /**
      * Return true if this user is a member of the specified server.
      */
     fun hasServer(server: Server) = serverList.any { it.id == server.id }
 
-    fun getPermissions(group: Group) = userGroupSet.filter { it.group.id == group.id }.flatMap { it.permissionSet }
+    /**
+     * Get accessible contents.
+     */
+    fun getVisibleContents(server: Server) = groupList.filter { it.server.id == server.id }.flatMap { it.visibleContentList }.distinctBy { it.id }
 
-    fun hasPermission(group: Group, permission: Permission) = userGroupSet.filter { it.group.id == group.id }.any { it.hasPermission(permission) }
+    /**
+     * Get user permissions in the specified Server.
+     */
+    fun getPermissions(server: Server) = groupList.filter { it.server.id == server.id }.flatMap { it.permissionSet }.distinctBy { it.id }
 
-    fun hasPermission(group: Group, permissionEnum: PermissionEnum) = userGroupSet.filter { it.group.id == group.id }.any { it.hasPermission(permissionEnum) }
+    /**
+     * Get user permissions in the specified Group.
+     */
+    fun getPermissions(group: Group) = groupList.filter { it.id == group.id }.flatMap { it.permissionSet }
 
-    fun hasReadContentPermission(content: Content) = content.groupList.any { hasPermission(it, PermissionEnum.READ_CONTENT) }
+    fun hasPermission(group: Group, permission: Permission) = getPermissions(group).any { it.id == permission.id }
 
-    fun hasDeleteContentPermission(content: Content) = content.groupList.any { hasPermission(it, PermissionEnum.DELETE_CONTENT) }
+    fun hasPermission(group: Group, permissionEnum: PermissionEnum) = getPermissions(group).any { it.value == permissionEnum.value }
 
-    fun hasCreateContentPermission(group: Group) = groupList.filter { it.id == group.id }.any { hasPermission(it, PermissionEnum.CREATE_CONTENT) }
+    fun hasPermission(server: Server, permission: Permission) = getPermissions(server).any { it.id == permission.id }
 
-    fun hasCreateContentPermission(content: Content) = content.groupList.any { hasPermission(it, PermissionEnum.CREATE_CONTENT) }
+    fun hasPermission(server: Server, permissionEnum: PermissionEnum) = getPermissions(server).any { it.value == permissionEnum.value }
 
-    fun hasCreateCategoryPermission(server: Server) = server.groupSet.any { hasPermission(it, PermissionEnum.CREATE_CATEGORY) }
+    fun hasReadContentPermission(server: Server) = hasPermission(server, PermissionEnum.READ_CONTENT)
 
-    fun hasCreateCategoryPermission(category: Category) = hasCreateCategoryPermission(category.server)
+    fun hasDeleteContentPermission(server: Server) = hasPermission(server, PermissionEnum.DELETE_CONTENT)
 
-    fun hasDeleteCategoryPermission(category: Category) = category.server.groupSet.any { hasPermission(it, PermissionEnum.DELETE_CATEGORY) }
+    fun hasCreateContentPermission(server: Server) = hasPermission(server, PermissionEnum.CREATE_CONTENT)
 
-    fun hasPlayMediaPermission(content: Content) = content.contentGroupSet.flatMap { it.group.userGroupSet }.filter { it.user.id == id }.any { it.hasPermission(PermissionEnum.PLAY_MEDIA) }
+    fun hasCreateCategoryPermission(server: Server) = hasPermission(server, PermissionEnum.CREATE_CATEGORY)
 
-    fun hasStopMediaPermission(server: Server) = server.groupSet.flatMap { it.userGroupSet }.filter { it.user.id == id }.any { it.hasPermission(PermissionEnum.STOP_MEDIA) }
+    fun hasDeleteCategoryPermission(server: Server) = hasPermission(server, PermissionEnum.DELETE_CATEGORY)
 
-    fun hasPauseMediaPermission(server: Server) = server.groupSet.flatMap { it.userGroupSet }.filter { it.user.id == id }.any { it.hasPermission(PermissionEnum.PAUSE_MEDIA) }
+    fun hasPlayMediaPermission(server: Server) = hasPermission(server, PermissionEnum.PLAY_MEDIA)
 
-    fun hasResumeMediaPermission(server: Server) = server.groupSet.flatMap { it.userGroupSet }.filter { it.user.id == id }.any { it.hasPermission(PermissionEnum.RESUME_MEDIA) }
+    fun hasStopMediaPermission(server: Server) = hasPermission(server, PermissionEnum.STOP_MEDIA)
 
-    fun hasUpdatePositionMediaPermission(server: Server) = server.groupSet.flatMap { it.userGroupSet }.filter { it.user.id == id }.any { it.hasPermission(PermissionEnum.UPDATE_POSITION_MEDIA) }
+    fun hasPauseMediaPermission(server: Server) = hasPermission(server, PermissionEnum.PAUSE_MEDIA)
+
+    fun hasResumeMediaPermission(server: Server) = hasPermission(server, PermissionEnum.RESUME_MEDIA)
+
+    fun hasUpdatePositionMediaPermission(server: Server) = hasPermission(server, PermissionEnum.UPDATE_POSITION_MEDIA)
 
     /**
      * Return true if this user is allowed to clear @param server queue.
      */
-    fun hasClearQueuePermission(server: Server) = server.groupSet.flatMap { it.userGroupSet }.filter { it.user.id == id }.any { it.hasPermission(PermissionEnum.CLEAR_QUEUE) }
+    fun hasClearQueuePermission(server: Server) = hasPermission(server, PermissionEnum.CLEAR_QUEUE)
 }

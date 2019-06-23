@@ -15,7 +15,7 @@ data class ServerViewModel(
         @JsonView(Views.Companion.Public::class)
         val linked: Boolean
 
-) {
+) : ViewModel {
 
     companion object {
 

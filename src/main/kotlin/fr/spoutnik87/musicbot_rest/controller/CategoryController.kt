@@ -69,7 +69,7 @@ class CategoryController {
         if (!authenticatedUser.hasCreateCategoryPermission(server)) {
             return ResponseEntity(HttpStatus.FORBIDDEN)
         }
-        val category = categoryService.create(categoryCreateReader.name, server)
+        val category = categoryService.create(categoryCreateReader.name, authenticatedUser, server)
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         return ResponseEntity(CategoryViewModel.from(category), HttpStatus.ACCEPTED)
     }
@@ -79,7 +79,7 @@ class CategoryController {
     fun update(@PathVariable("id") uuid: String, @RequestBody categoryUpdateReader: CategoryUpdateReader): ResponseEntity<Any> {
         val authenticatedUser = userService.getAuthenticatedUser() ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         var category = categoryRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-        if (!authenticatedUser.hasCreateCategoryPermission(category)) {
+        if (!authenticatedUser.hasCreateCategoryPermission(category.server)) {
             return ResponseEntity(HttpStatus.FORBIDDEN)
         }
         category = categoryService.update(category, categoryUpdateReader.name)
@@ -92,7 +92,7 @@ class CategoryController {
     fun delete(@PathVariable("id") uuid: String): ResponseEntity<Any> {
         val authenticatedUser = userService.getAuthenticatedUser() ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         val category = categoryRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-        if (!authenticatedUser.hasDeleteCategoryPermission(category)) {
+        if (!authenticatedUser.hasDeleteCategoryPermission(category.server)) {
             return ResponseEntity(HttpStatus.FORBIDDEN)
         }
         if (contentRepository.findByCategory(category).isNotEmpty()) {

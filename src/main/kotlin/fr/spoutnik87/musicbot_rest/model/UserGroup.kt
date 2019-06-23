@@ -15,7 +15,7 @@ data class UserGroup(
         var group: Group
 ) : AuditModel(), Serializable {
 
-    @ManyToMany(cascade = [CascadeType.ALL])
+    /*@ManyToMany(cascade = [CascadeType.ALL])
     @JoinTable(name = "user_group_permission", joinColumns = [JoinColumn(name = "user_group_id", referencedColumnName = "id")], inverseJoinColumns = [JoinColumn(name = "permission_id", referencedColumnName = "id")])
     var permissionSet: MutableSet<Permission> = HashSet()
 
@@ -25,5 +25,5 @@ data class UserGroup(
 
     fun hasPermission(permission: Permission) = permissionSet.any { it.id == permission.id }
 
-    fun hasPermission(permissionEnum: PermissionEnum) = permissionSet.any { it.value == permissionEnum.value }
+    fun hasPermission(permissionEnum: PermissionEnum) = permissionSet.any { it.value == permissionEnum.value }*/
 }

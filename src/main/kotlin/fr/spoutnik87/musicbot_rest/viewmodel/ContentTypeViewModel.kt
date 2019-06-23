@@ -10,7 +10,7 @@ data class ContentTypeViewModel(
         val id: String,
         @JsonView(Views.Companion.Public::class)
         val value: String
-) : Serializable {
+) : ViewModel {
 
     companion object {
         fun from(contentType: ContentType) = ContentTypeViewModel(contentType.uuid, contentType.value)

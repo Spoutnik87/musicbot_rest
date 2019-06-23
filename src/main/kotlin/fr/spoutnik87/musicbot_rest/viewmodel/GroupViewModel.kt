@@ -11,7 +11,7 @@ data class GroupViewModel(
         val name: String,
         @JsonView(Views.Companion.Public::class)
         val serverId: String
-) {
+) : ViewModel {
 
     companion object {
 

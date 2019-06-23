@@ -53,8 +53,8 @@ class UserFactory {
         return this
     }
 
-    fun inServer(group: Group, server: Server, permissions: List<Permission>, owner: Boolean = false): UserFactory {
-        val userGroup = UserGroup(user, group, permissions)
+    fun inServer(group: Group, server: Server, owner: Boolean = false): UserFactory {
+        val userGroup = UserGroup(user, group)
         user.userGroupSet.add(userGroup)
         group.userGroupSet.add(userGroup)
         group.server = server

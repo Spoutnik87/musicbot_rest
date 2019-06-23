@@ -18,7 +18,7 @@ data class UserViewModel(
         val lastname: String,
         @JsonView(Views.Companion.Mixed::class)
         val role: RoleViewModel
-) {
+) : ViewModel {
 
     companion object {
 

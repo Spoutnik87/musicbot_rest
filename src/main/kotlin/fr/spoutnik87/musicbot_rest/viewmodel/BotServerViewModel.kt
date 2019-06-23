@@ -11,7 +11,7 @@ data class BotServerViewModel(
         val queue: List<BotContentViewModel>,
         @JsonView(Views.Companion.Public::class)
         val playing: BotContentViewModel?
-) : Serializable {
+) : ViewModel {
 
     /*companion object {
         fun from(reader: BotServerReader, server: Server, initiator: User) = BotServerViewModel(server.uuid, reader.queue.trackList.map { BotContentViewModel.from(it, initiator)!! }, BotContentViewModel.from(reader.currentlyPlaying, initiator))

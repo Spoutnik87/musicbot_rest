@@ -60,7 +60,7 @@ class BotController {
         if (!content.hasMedia()) {
             return ResponseEntity(HttpStatus.BAD_REQUEST)
         }
-        if (!authenticatedUser.hasPlayMediaPermission(content)) {
+        if (!authenticatedUser.hasPlayMediaPermission(content.server)) {
             return ResponseEntity(HttpStatus.FORBIDDEN)
         }
         if (!content.server.isLinked) {

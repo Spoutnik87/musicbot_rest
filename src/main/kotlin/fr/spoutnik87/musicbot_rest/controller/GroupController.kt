@@ -66,7 +66,7 @@ class GroupController {
         if (!authenticatedUser.isOwner(server)) {
             return ResponseEntity(HttpStatus.FORBIDDEN)
         }
-        val group = groupService.create(groupCreateReader.name, server) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        val group = groupService.create(groupCreateReader.name, authenticatedUser, server) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         return ResponseEntity(GroupViewModel.from(group), HttpStatus.ACCEPTED)
     }
 

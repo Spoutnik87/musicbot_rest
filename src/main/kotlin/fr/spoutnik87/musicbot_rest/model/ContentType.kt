@@ -1,5 +1,6 @@
 package fr.spoutnik87.musicbot_rest.model
 
+import fr.spoutnik87.musicbot_rest.constant.ContentTypeEnum
 import java.io.Serializable
 import javax.persistence.*
 
@@ -14,4 +15,7 @@ data class ContentType(
 
     @OneToMany(mappedBy = "contentType", cascade = [CascadeType.ALL])
     val contentSet: MutableSet<Content> = HashSet()
+
+    val toEnum
+        get() = ContentTypeEnum.valueOf(value)
 }

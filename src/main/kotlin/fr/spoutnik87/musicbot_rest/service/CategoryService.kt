@@ -3,9 +3,11 @@ package fr.spoutnik87.musicbot_rest.service
 import fr.spoutnik87.musicbot_rest.UUID
 import fr.spoutnik87.musicbot_rest.model.Category
 import fr.spoutnik87.musicbot_rest.model.Server
+import fr.spoutnik87.musicbot_rest.model.User
 import fr.spoutnik87.musicbot_rest.repository.CategoryRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
 class CategoryService {
@@ -16,13 +18,18 @@ class CategoryService {
     @Autowired
     private lateinit var uuid: UUID
 
-    fun create(name: String, server: Server): Category? {
+    @Transactional
+    fun create(name: String, author: User, server: Server): Category? {
         if (!validName(name)) {
             return null
         }
-        return categoryRepository.save(Category(uuid.v4(), name, server))
+        /**
+         * TODO Generate thumbnail
+         */
+        return categoryRepository.save(Category(uuid.v4(), name, 0, author, server))
     }
 
+    @Transactional
     fun update(category: Category, name: String?): Category? {
         var updated = false
         if (validName(name)) {

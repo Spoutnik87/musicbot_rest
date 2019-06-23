@@ -1,5 +1,6 @@
 package fr.spoutnik87.musicbot_rest.model
 
+import fr.spoutnik87.musicbot_rest.constant.ContentTypeEnum
 import java.io.Serializable
 import javax.persistence.*
 
@@ -25,9 +26,6 @@ data class Content(
     @Column(nullable = false)
     var media: Boolean = false
 
-    @Column(nullable = false)
-    var thumbnail: Boolean = false
-
     @ManyToOne
     @JoinColumn(name = "author_id")
     lateinit var author: User
@@ -43,6 +41,14 @@ data class Content(
     @OneToMany(mappedBy = "content", cascade = [CascadeType.ALL])
     val contentGroupSet: MutableSet<ContentGroup> = HashSet()
 
+    @OneToOne(cascade = [CascadeType.ALL])
+    @JoinColumn(name = "local_metadata_id")
+    var localMetadata: LocalMetadata? = null
+
+    @OneToOne(cascade = [CascadeType.ALL])
+    @JoinColumn(name = "youtube_metadata_id")
+    var youtubeMetadata: YoutubeMetadata? = null
+
     val groupList
         get() = contentGroupSet.map { it.group }
 
@@ -52,6 +58,12 @@ data class Content(
     val spaceUsed
         get() = (thumbnailSize ?: 0) + (mediaSize ?: 0)
 
+    val isLocalContent
+        get() = contentType.value == ContentTypeEnum.LOCAL.value
+
+    val isYoutubeContent
+        get() = contentType.value == ContentTypeEnum.YOUTUBE.value
+
     constructor(uuid: String, name: String, description: String, author: User, contentType: ContentType, category: Category) : this(uuid, name, description) {
         this.author = author
         this.contentType = contentType
@@ -60,5 +72,5 @@ data class Content(
 
     fun hasMedia() = media
 
-    fun hasThumbnail() = thumbnail
+    fun hasThumbnail() = thumbnailSize != null
 }

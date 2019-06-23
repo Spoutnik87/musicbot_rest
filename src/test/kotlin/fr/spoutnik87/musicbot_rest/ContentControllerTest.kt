@@ -4,15 +4,11 @@ import fr.spoutnik87.musicbot_rest.constant.ContentTypeEnum
 import fr.spoutnik87.musicbot_rest.constant.PermissionEnum
 import fr.spoutnik87.musicbot_rest.controller.ContentController
 import fr.spoutnik87.musicbot_rest.model.*
+import fr.spoutnik87.musicbot_rest.reader.VisibleGroupReader
 import fr.spoutnik87.musicbot_rest.repository.*
 import fr.spoutnik87.musicbot_rest.security.SecurityConfiguration
-import fr.spoutnik87.musicbot_rest.service.ContentService
-import fr.spoutnik87.musicbot_rest.service.FileService
-import fr.spoutnik87.musicbot_rest.service.ImageService
-import fr.spoutnik87.musicbot_rest.service.UserService
-import fr.spoutnik87.musicbot_rest.util.UserFactory
-import fr.spoutnik87.musicbot_rest.util.Util
-import fr.spoutnik87.musicbot_rest.util.WebSecurityTestConfig
+import fr.spoutnik87.musicbot_rest.service.*
+import fr.spoutnik87.musicbot_rest.util.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentMatchers
@@ -33,6 +29,7 @@ import org.springframework.test.web.servlet.MockMvc
     ContentController::class,
     UserService::class,
     ContentService::class,
+    ContentTypeService::class,
     AppConfig::class,
     SpringApplicationContext::class,
     BCryptPasswordEncoder::class,
@@ -69,6 +66,9 @@ class ContentControllerTest {
     @MockBean
     private lateinit var imageService: ImageService
 
+    @MockBean
+    private lateinit var youtubeService: YoutubeService
+
     @MockBean(name = "UUID")
     private lateinit var uuid: UUID
 
@@ -78,8 +78,9 @@ class ContentControllerTest {
     @Test
     fun createContent_NotAuthenticated_ReturnForbiddenStatus() {
         val body = HashMap<String, Any>()
-        body["groupId"] = "groupToken"
+        body["visibleGroupList"] = listOf(VisibleGroupReader("groupToken", true))
         body["categoryId"] = "categoryToken"
+        body["contentType"] = "LOCAL"
         body["name"] = "New content"
         body["description"] = "Desc"
         Util.basicTestWithBody(mockMvc, HttpMethod.POST, "/content", HashMap(), body, HttpStatus.FORBIDDEN)
@@ -94,6 +95,7 @@ class ContentControllerTest {
         val body = HashMap<String, Any>()
         body["group"] = "groupToken"
         body["categoryId"] = "categoryToken"
+        body["contentType"] = "LOCAL"
         body["name"] = "New content"
         body["description"] = "Desc"
         Util.basicTestWithBody(mockMvc, HttpMethod.POST, "/content", HashMap(), body, HttpStatus.BAD_REQUEST)
@@ -106,8 +108,9 @@ class ContentControllerTest {
                 .thenReturn(UserFactory().createBasicUser().build())
 
         val body = HashMap<String, Any>()
-        body["groupId"] = "invalidGroupToken"
+        body["visibleGroupList"] = listOf(VisibleGroupReader("invalidGroupToken", true))
         body["categoryId"] = "categoryToken"
+        body["contentType"] = "LOCAL"
         body["name"] = "New content"
         body["description"] = "Desc"
         Util.basicTestWithBody(mockMvc, HttpMethod.POST, "/content", HashMap(), body, HttpStatus.BAD_REQUEST)
@@ -116,17 +119,22 @@ class ContentControllerTest {
     @Test
     @WithMockUser(username = "user@test.com", authorities = ["USER"])
     fun createContent_InvalidMediaType_ReturnBadRequestStatus() {
-        val group = Group("groupToken", "Group")
-        val server = Server("serverToken", "Server")
+        val server = Server("serverToken", "Server", 0)
+        val group = GroupFactory().server(server,
+                listOf(PermissionFactory().create(PermissionEnum.CREATE_CONTENT).build())
+        ).build()
+        val user = UserFactory().createBasicUser().inServer(group, server).build()
         Mockito.`when`(userRepository.findByEmail("user@test.com"))
-                .thenReturn(UserFactory().createBasicUser().inServer(group, server,
-                        listOf(Permission("permissionToken", PermissionEnum.CREATE_CONTENT.value))).build())
-        Mockito.`when`(groupRepository.findByUuid("groupToken")).thenReturn(group)
-        Mockito.`when`(categoryRepository.findByUuid("categoryToken")).thenReturn(Category("categoryToken", "Category", server))
+                .thenReturn(user)
+        Mockito.`when`(uuid.v4()).thenReturn("token")
+        Mockito.`when`(groupRepository.findByUuidAndServer("groupToken", server)).thenReturn(group)
+        Mockito.`when`(contentTypeRepository.findByValue(ContentTypeEnum.LOCAL.value)).thenReturn(ContentType("localContentTypeId", ContentTypeEnum.LOCAL.value))
+        Mockito.`when`(categoryRepository.findByUuid("categoryToken")).thenReturn(Category("categoryToken", "Category", 0, user, server))
 
         val body = HashMap<String, Any>()
-        body["groupId"] = "groupToken"
+        body["visibleGroupList"] = listOf(VisibleGroupReader("groupToken", true))
         body["categoryId"] = "categoryToken"
+        body["contentType"] = "invalidContentType"
         body["name"] = "New content"
         body["description"] = "Desc"
         Util.basicTestWithBody(mockMvc, HttpMethod.POST, "/content", HashMap(), body, HttpStatus.BAD_REQUEST)
@@ -135,17 +143,21 @@ class ContentControllerTest {
     @Test
     @WithMockUser(username = "user@test.com", authorities = ["USER"])
     fun createContent_InvalidCategory_ReturnBadRequestStatus() {
-        val group = Group("groupToken", "Group")
-        val server = Server("serverToken", "Server")
+        val server = Server("serverToken", "Server", 0)
+        val group = GroupFactory().server(server,
+                listOf(PermissionFactory().create(PermissionEnum.CREATE_CONTENT).build())
+        ).build()
+        val user = UserFactory().createBasicUser().inServer(group, server).build()
         Mockito.`when`(userRepository.findByEmail("user@test.com"))
-                .thenReturn(UserFactory().createBasicUser().inServer(group, server,
-                        listOf(Permission("permissionToken", PermissionEnum.CREATE_CONTENT.value))).build())
-        Mockito.`when`(groupRepository.findByUuid("groupToken")).thenReturn(group)
-        Mockito.`when`(categoryRepository.findByUuid("categoryToken")).thenReturn(Category("categoryToken", "Category", server))
+                .thenReturn(user)
+        Mockito.`when`(groupRepository.findByUuidAndServer("groupToken", server)).thenReturn(group)
+        Mockito.`when`(contentTypeRepository.findByValue(ContentTypeEnum.LOCAL.value)).thenReturn(ContentType("localContentTypeId", ContentTypeEnum.LOCAL.value))
+        Mockito.`when`(categoryRepository.findByUuid("categoryToken")).thenReturn(Category("categoryToken", "Category", 0, user, server))
 
         val body = HashMap<String, Any>()
-        body["groupId"] = "groupToken"
+        body["visibleGroupList"] = listOf(VisibleGroupReader("groupToken", true))
         body["categoryId"] = "invalidCategoryToken"
+        body["contentType"] = "LOCAL"
         body["name"] = "New content"
         body["description"] = "Desc"
         Util.basicTestWithBody(mockMvc, HttpMethod.POST, "/content", HashMap(), body, HttpStatus.BAD_REQUEST)
@@ -154,18 +166,20 @@ class ContentControllerTest {
     @Test
     @WithMockUser(username = "user@test.com", authorities = ["USER"])
     fun createContent_NoCreatePermission_ReturnForbiddenStatus() {
-        val group = Group("groupToken", "Group")
-        val server = Server("serverToken", "Server")
+        val server = Server("serverToken", "Server", 0)
+        val group = GroupFactory().server(server).build()
+        val user = UserFactory().createBasicUser().inServer(group, server).build()
         Mockito.`when`(userRepository.findByEmail("user@test.com"))
-                .thenReturn(UserFactory().createBasicUser().inServer(group, server,
-                        listOf(Permission("permissionToken", PermissionEnum.CREATE_CONTENT.value))).build())
-        Mockito.`when`(groupRepository.findByUuid("groupToken")).thenReturn(group)
-        Mockito.`when`(categoryRepository.findByUuid("categoryToken")).thenReturn(Category("categoryToken", "Category", server))
-        Mockito.`when`(groupRepository.findByUuid("groupToken2")).thenReturn(Group("groupToken2", "Group"))
+                .thenReturn(user)
+        Mockito.`when`(groupRepository.findByUuidAndServer("groupToken", server)).thenReturn(group)
+        Mockito.`when`(contentTypeRepository.findByValue(ContentTypeEnum.LOCAL.value)).thenReturn(ContentType("localContentTypeId", ContentTypeEnum.LOCAL.value))
+        Mockito.`when`(categoryRepository.findByUuid("categoryToken")).thenReturn(Category("categoryToken", "Category", 0, user, server))
+        Mockito.`when`(groupRepository.findByUuid("groupToken2")).thenReturn(GroupFactory().create("groupToken2", "Group").server(server).build())
 
         val body = HashMap<String, Any>()
-        body["groupId"] = "groupToken2"
+        body["visibleGroupList"] = listOf(VisibleGroupReader("groupToken2", true))
         body["categoryId"] = "categoryToken"
+        body["contentType"] = "LOCAL"
         body["name"] = "New content"
         body["description"] = "Desc"
         Util.basicTestWithBody(mockMvc, HttpMethod.POST, "/content", HashMap(), body, HttpStatus.FORBIDDEN)
@@ -174,25 +188,28 @@ class ContentControllerTest {
     @Test
     @WithMockUser(username = "user@test.com", authorities = ["USER"])
     fun createContent_ValidParameters_ReturnMedia() {
-        val group = Group("groupToken", "Group")
-        val server = Server("serverToken", "Server")
+        val server = Server("serverToken", "Server", 0)
+        val group = GroupFactory().server(server,
+                listOf(PermissionFactory().create(PermissionEnum.CREATE_CONTENT).build())
+        ).build()
+        val user = UserFactory().createBasicUser().inServer(group, server).build()
         Mockito.`when`(userRepository.findByEmail("user@test.com"))
-                .thenReturn(UserFactory().createBasicUser().inServer(group, server,
-                        listOf(Permission("permissionToken", PermissionEnum.CREATE_CONTENT.value))).build())
-        Mockito.`when`(groupRepository.findByUuid("groupToken")).thenReturn(group)
-        Mockito.`when`(categoryRepository.findByUuid("categoryToken")).thenReturn(Category("categoryToken", "Category", server))
+                .thenReturn(user)
+        Mockito.`when`(groupRepository.findByUuidAndServer("groupToken", server)).thenReturn(group)
+        Mockito.`when`(categoryRepository.findByUuid("categoryToken")).thenReturn(Category("categoryToken", "Category", 0, user, server))
         Mockito.`when`(uuid.v4()).thenReturn("token")
-        Mockito.`when`(contentTypeRepository.findByValue(ContentTypeEnum.DEFAULT.value)).thenReturn(ContentType("mediaTypeToken", ContentTypeEnum.DEFAULT.value))
+        Mockito.`when`(contentTypeRepository.findByValue(ContentTypeEnum.LOCAL.value)).thenReturn(ContentType("localContentTypeId", ContentTypeEnum.LOCAL.value))
         Mockito.`when`(contentRepository.save(ArgumentMatchers.any(Content::class.java))).then { it.getArgument(0) }
         Mockito.`when`(contentGroupRepository.save(ArgumentMatchers.any(ContentGroup::class.java))).then { it.getArgument(0) }
         Mockito.`when`(imageService.generateRandomImage("token")).then { ByteArray(0) }
 
         val body = HashMap<String, Any>()
-        body["groupId"] = "groupToken"
+        body["visibleGroupList"] = listOf(VisibleGroupReader("groupToken", true))
         body["categoryId"] = "categoryToken"
+        body["contentType"] = "LOCAL"
         body["name"] = "New content"
         body["description"] = "Desc"
-        Util.basicTestWithBody(mockMvc, HttpMethod.POST, "/content", HashMap(), body, HttpStatus.CREATED, "{\"id\":\"token\",\"name\":\"New content\",\"description\":\"Desc\",\"mimeType\":null,\"thumbnailSize\":0,\"mediaSize\":null,\"media\":false,\"thumbnail\":true,\"duration\":null,\"serverId\":\"serverToken\", \"contentType\":{\"id\":\"mediaTypeToken\",\"value\":\"DEFAULT\"},\"category\":{\"id\":\"categoryToken\",\"name\":\"Category\",\"serverId\":\"serverToken\"},\"groups\":[{\"id\":\"groupToken\",\"name\":\"Group\",\"serverId\":\"serverToken\"}]}")
+        Util.basicTestWithBody(mockMvc, HttpMethod.POST, "/content", HashMap(), body, HttpStatus.CREATED, "{\"id\":\"token\",\"name\":\"New content\",\"description\":\"Desc\",\"mimeType\":null,\"thumbnailSize\":0,\"mediaSize\":null,\"media\":false,\"thumbnail\":true,\"duration\":null,\"serverId\":\"serverToken\", \"contentType\":{\"id\":\"localContentTypeId\",\"value\":\"LOCAL\"},\"category\":{\"id\":\"categoryToken\",\"name\":\"Category\",\"serverId\":\"serverToken\"},\"groups\":[{\"id\":\"groupToken\",\"name\":\"Group\",\"serverId\":\"serverToken\"}]}")
         Mockito.verify(contentRepository, Mockito.atLeastOnce()).save(Mockito.any())
     }
 
