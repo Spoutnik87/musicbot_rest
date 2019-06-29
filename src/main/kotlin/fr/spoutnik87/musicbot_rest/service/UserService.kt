@@ -22,6 +22,7 @@ class UserService {
     @Autowired
     private lateinit var bCryptPasswordEncoder: BCryptPasswordEncoder
 
+    @Transactional(readOnly = true)
     fun getAuthenticatedUser(): User? {
         val email = AuthenticationHelper.getAuthenticatedUserEmail() ?: return null
         return userRepository.findByEmail(email)

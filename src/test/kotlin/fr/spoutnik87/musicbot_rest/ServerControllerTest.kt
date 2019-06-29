@@ -5,14 +5,10 @@ import com.auth0.jwt.algorithms.Algorithm
 import fr.spoutnik87.musicbot_rest.constant.PermissionEnum
 import fr.spoutnik87.musicbot_rest.controller.ServerController
 import fr.spoutnik87.musicbot_rest.model.Group
-import fr.spoutnik87.musicbot_rest.model.Permission
 import fr.spoutnik87.musicbot_rest.model.Server
 import fr.spoutnik87.musicbot_rest.repository.*
 import fr.spoutnik87.musicbot_rest.security.SecurityConfiguration
-import fr.spoutnik87.musicbot_rest.service.PermissionService
-import fr.spoutnik87.musicbot_rest.service.ServerService
-import fr.spoutnik87.musicbot_rest.service.TokenService
-import fr.spoutnik87.musicbot_rest.service.UserService
+import fr.spoutnik87.musicbot_rest.service.*
 import fr.spoutnik87.musicbot_rest.util.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -37,6 +33,8 @@ import kotlin.collections.HashMap
     UserService::class,
     ServerService::class,
     PermissionService::class,
+    GroupService::class,
+    AppConfig::class,
     SpringApplicationContext::class,
     BCryptPasswordEncoder::class,
     WebSecurityTestConfig::class,
@@ -59,6 +57,12 @@ class ServerControllerTest {
 
     @MockBean
     private lateinit var permissionRepository: PermissionRepository
+
+    @MockBean
+    private lateinit var fileService: FileService
+
+    @MockBean
+    private lateinit var imageService: ImageService
 
     @Autowired
     private lateinit var tokenService: TokenService
@@ -111,6 +115,7 @@ class ServerControllerTest {
         Mockito.`when`(permissionRepository.findByValue(PermissionEnum.DELETE_CATEGORY.value)).thenReturn(PermissionFactory().create(PermissionEnum.DELETE_CATEGORY).build())
         Mockito.`when`(serverRepository.save(ArgumentMatchers.any(Server::class.java))).then { it.getArgument(0) }
         Mockito.`when`(groupRepository.save(ArgumentMatchers.any(Group::class.java))).then { it.getArgument(0) }
+        Mockito.`when`(imageService.generateRandomImage("token")).then { ByteArray(0) }
 
         val body = HashMap<String, Any>()
         body["name"] = "New server"

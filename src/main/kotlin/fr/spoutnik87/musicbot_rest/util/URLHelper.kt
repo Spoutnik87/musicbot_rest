@@ -5,7 +5,13 @@ import java.net.URL
 class URLHelper {
 
     companion object {
-        fun getQueryParameters(link: String) = getQueryParameters(URL(link))
+        fun getQueryParameters(link: String): List<Pair<String, String>> {
+            return try {
+                getQueryParameters(URL(link))
+            } catch (e: Exception) {
+                emptyList()
+            }
+        }
 
         fun getQueryParameters(link: URL): List<Pair<String, String>> {
             return link.query.split("&").mapNotNull {
