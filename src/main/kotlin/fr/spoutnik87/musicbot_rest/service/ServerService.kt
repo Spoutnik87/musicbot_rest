@@ -2,10 +2,7 @@ package fr.spoutnik87.musicbot_rest.service
 
 import fr.spoutnik87.musicbot_rest.AppConfig
 import fr.spoutnik87.musicbot_rest.UUID
-import fr.spoutnik87.musicbot_rest.model.Permission
-import fr.spoutnik87.musicbot_rest.model.Server
-import fr.spoutnik87.musicbot_rest.model.User
-import fr.spoutnik87.musicbot_rest.model.UserGroup
+import fr.spoutnik87.musicbot_rest.model.*
 import fr.spoutnik87.musicbot_rest.repository.GroupRepository
 import fr.spoutnik87.musicbot_rest.repository.ServerRepository
 import fr.spoutnik87.musicbot_rest.repository.UserGroupRepository
@@ -46,15 +43,24 @@ class ServerService {
         if (!validName(name)) {
             return null
         }
-        val uuid = uuid.v4()
-        val thumbnail = imageService.generateRandomImage(uuid)
-        var server = Server(uuid, name, thumbnail.size.toLong(), owner, owner)
-        val group = groupService.create("Default", owner, server, permissions) ?: return null
-        fileService.saveFile(appConfig.serverThumbnailsPath + server.uuid, thumbnail)
+        val serverUuid = uuid.v4()
+        val groupUuid = uuid.v4()
+        val serverThumbnail = imageService.generateRandomImage(serverUuid)
+        val groupThumbnail = imageService.generateRandomImage(groupUuid)
+        var server = Server(serverUuid, name, serverThumbnail.size.toLong(), owner, owner)
+        var group = Group(groupUuid, "Default", groupThumbnail.size.toLong())
+        group.author = owner
+        group.permissionSet = permissions.toMutableSet()
         server.defaultGroup = group
+        server = serverRepository.save(server)
+        group = server.defaultGroup
+        group.server = server
         var userGroup = UserGroup(owner, group)
         userGroupRepository.save(userGroup)
-        return serverRepository.save(server)
+        groupRepository.save(group)
+        fileService.saveFile(appConfig.serverThumbnailsPath + server.uuid, serverThumbnail)
+        fileService.saveFile(appConfig.groupThumbnailsPath + group.uuid, groupThumbnail)
+        return server
     }
 
     @Transactional

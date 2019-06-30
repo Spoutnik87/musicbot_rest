@@ -77,4 +77,7 @@ class YoutubeMetadata(
 
         @OneToOne(mappedBy = "youtubeMetadata")
         val content: Content? = null
+
+        val videoURL: String
+                get() = "https://www.youtube.com/watch?v=$videoId"
 }

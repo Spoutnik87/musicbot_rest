@@ -69,4 +69,15 @@ data class Content(
     }
 
     fun hasThumbnail() = thumbnailSize > 0
+
+    fun isPlayable(): Boolean {
+        if (isLocalContent) {
+            val mediaSize = localMetadata?.mediaSize
+            return mediaSize != null && mediaSize > 0
+        } else if (isYoutubeContent) {
+            val playable = youtubeMetadata?.playable
+            return playable != null && playable
+        }
+        return false
+    }
 }

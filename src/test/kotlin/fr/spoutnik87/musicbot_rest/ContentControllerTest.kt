@@ -213,7 +213,7 @@ class ContentControllerTest {
         body["contentType"] = "LOCAL"
         body["name"] = "New content"
         body["description"] = "Desc"
-        Util.basicTestWithBody(mockMvc, HttpMethod.POST, "/content", HashMap(), body, HttpStatus.CREATED, "{\"id\":\"token\",\"name\":\"New content\",\"description\":\"Desc\",\"thumbnail\":false,\"thumbnailSize\":0,\"duration\":null,\"serverId\":\"serverToken\", " +
+        Util.basicTestWithBody(mockMvc, HttpMethod.POST, "/content", HashMap(), body, HttpStatus.CREATED, "{\"id\":\"token\",\"createdAt\":0,\"name\":\"New content\",\"description\":\"Desc\",\"thumbnail\":false,\"thumbnailSize\":0,\"duration\":null,\"serverId\":\"serverToken\", " +
                 "\"contentType\":{\"id\":\"localContentTypeId\",\"value\":\"LOCAL\"},\"category\":{\"id\":\"categoryToken\",\"name\":\"Category\",\"serverId\":\"serverToken\"},\"groups\":[{\"id\":\"groupToken\",\"name\":\"Group\",\"serverId\":\"serverToken\"}]," +
                 "\"localMetadata\": null, \"youtubeMetadata\": null}")
         Mockito.verify(contentRepository, Mockito.atLeastOnce()).save(Mockito.any())

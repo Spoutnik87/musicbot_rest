@@ -28,7 +28,7 @@ class YoutubeService {
             contents.getElementsByTag("meta")
             var duration: Long = 0
             try {
-                var durationText = contents.allElements.attr("itemprop", "duration").attr("content").substring(2)
+                var durationText = contents.getElementsByAttributeValue("itemprop", "duration").attr("content").substring(2)
                 val minutes = durationText.substringBefore("M").toInt()
                 durationText = durationText.substringAfter("M")
                 val seconds = durationText.substringBefore("S").toInt()
@@ -37,7 +37,7 @@ class YoutubeService {
             var publishedAt: Long = 0
             try {
                 val format = SimpleDateFormat("YYYY-MM-dd")
-                publishedAt = format.parse(contents.allElements.attr("itemprop", "datePublished").attr("content")).time
+                publishedAt = format.parse(contents.getElementsByAttributeValue("itemprop", "datePublished").attr("content")).time
             } catch (e: Exception) {}
             YoutubeMetadataReader(
                     id,

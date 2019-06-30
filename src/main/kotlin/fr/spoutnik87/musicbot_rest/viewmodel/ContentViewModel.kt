@@ -8,6 +8,8 @@ data class ContentViewModel(
         @JsonView(Views.Companion.Public::class)
         val id: String,
         @JsonView(Views.Companion.Public::class)
+        val createdAt: Long,
+        @JsonView(Views.Companion.Public::class)
         val name: String,
         @JsonView(Views.Companion.Public::class)
         val description: String,
@@ -36,6 +38,7 @@ data class ContentViewModel(
         fun from(content: Content): ContentViewModel {
                 val viewModel = ContentViewModel(
                         content.uuid,
+                        content.createdAt,
                         content.name,
                         content.description,
                         content.thumbnailSize,

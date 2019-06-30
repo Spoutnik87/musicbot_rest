@@ -59,9 +59,9 @@ class BotService {
      * @param contentId Content model UUID
      * @param userId Discord user id
      */
-    fun playContent(guildId: String, contentId: String, userId: String): BotServerReader? {
+    fun playContent(guildId: String, contentId: String, userId: String, link: String? = null): BotServerReader? {
         return try {
-            val body = HttpEntity(PlayContentWriter(uuid.v4(), contentId, userId))
+            val body = HttpEntity(PlayContentWriter(uuid.v4(), contentId, userId, link))
             RestTemplate().postForObject(appConfig.botAddress + "/server/play/$guildId", body, BotServerReader::class.java)
         } catch (e: Exception) {
             null
