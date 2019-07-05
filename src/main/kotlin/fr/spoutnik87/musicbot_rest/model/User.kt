@@ -20,15 +20,15 @@ data class User(
         @Column(nullable = false)
         var lastname: String,
         @Column(nullable = false)
-        var password: String
+        var password: String,
+        @Column(nullable = false)
+        var thumbnailSize: Long
 ) : AuditModel(), Serializable {
 
     /**
      * Discord user unique Id
      */
     var userId: String? = null
-
-    val thumbnailSize: Long? = null
 
     @ManyToOne
     @JoinColumn(name = "group_id")
@@ -38,7 +38,7 @@ data class User(
     @JoinColumn(name = "role_id")
     lateinit var role: Role
 
-    constructor(uuid: String, email: String, nickname: String, firstname: String, lastname: String, password: String, role: Role) : this(uuid, email, nickname, firstname, lastname, password) {
+    constructor(uuid: String, email: String, nickname: String, firstname: String, lastname: String, password: String, role: Role, thumbnailSize: Long) : this(uuid, email, nickname, firstname, lastname, password, thumbnailSize) {
         this.role = role
     }
 
@@ -67,7 +67,7 @@ data class User(
         get() = groupList.map { it.server }.distinctBy { it.id }
 
     val spaceUsed
-        get() = createdContentSet.map { it.spaceUsed }.reduce { acc, l -> acc + l }
+        get() = thumbnailSize + createdContentSet.map { it.spaceUsed }.reduce { acc, l -> acc + l }
 
     val ownedServerCount
         get() = ownedServerSet.size
@@ -105,6 +105,8 @@ data class User(
      * Return true if this user is a member of the specified server.
      */
     fun hasServer(server: Server) = serverList.any { it.id == server.id }
+
+    fun hasThumbnail() = thumbnailSize > 0
 
     /**
      * Get accessible contents.

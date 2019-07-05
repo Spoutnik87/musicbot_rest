@@ -1,6 +1,7 @@
 package fr.spoutnik87.musicbot_rest.controller
 
 import com.fasterxml.jackson.annotation.JsonView
+import fr.spoutnik87.musicbot_rest.AppConfig
 import fr.spoutnik87.musicbot_rest.constant.RoleEnum
 import fr.spoutnik87.musicbot_rest.model.UserGroup
 import fr.spoutnik87.musicbot_rest.model.Views
@@ -8,16 +9,21 @@ import fr.spoutnik87.musicbot_rest.reader.ServerJoinTokenReader
 import fr.spoutnik87.musicbot_rest.reader.UserSignupReader
 import fr.spoutnik87.musicbot_rest.reader.UserUpdateReader
 import fr.spoutnik87.musicbot_rest.repository.*
+import fr.spoutnik87.musicbot_rest.service.FileService
 import fr.spoutnik87.musicbot_rest.service.PermissionService
 import fr.spoutnik87.musicbot_rest.service.TokenService
 import fr.spoutnik87.musicbot_rest.service.UserService
 import fr.spoutnik87.musicbot_rest.viewmodel.UserServerJoinTokenViewModel
 import fr.spoutnik87.musicbot_rest.viewmodel.UserViewModel
+import org.apache.commons.io.IOUtils
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.multipart.MultipartFile
+import java.io.BufferedInputStream
 
 @RestController
 @RequestMapping("user")
@@ -49,6 +55,12 @@ class UserController {
 
     @Autowired
     private lateinit var permissionService: PermissionService
+
+    @Autowired
+    private lateinit var appConfig: AppConfig
+
+    @Autowired
+    private lateinit var fileService: FileService
 
     @JsonView(Views.Companion.Mixed::class)
     @GetMapping("")
@@ -96,6 +108,18 @@ class UserController {
         val authenticatedUser = userService.getAuthenticatedUser() ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         var serverJoinToken = tokenService.createServerJoinToken(authenticatedUser.uuid)
         return ResponseEntity(UserServerJoinTokenViewModel(serverJoinToken), HttpStatus.OK)
+    }
+
+    @GetMapping("/{id}/thumbnail", produces = [MediaType.IMAGE_PNG_VALUE])
+    fun getThumbnail(@PathVariable("id") uuid: String): ResponseEntity<Any> {
+        val user = userService.getAuthenticatedUser() ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        if (user.role.name != RoleEnum.ADMIN.value) {
+            return ResponseEntity(HttpStatus.FORBIDDEN)
+        }
+        if (!user.hasThumbnail()) {
+            return ResponseEntity(HttpStatus.BAD_REQUEST)
+        }
+        return ResponseEntity(IOUtils.toByteArray(fileService.getFile(appConfig.userThumbnailsPath + user.uuid).toURI()), HttpStatus.OK)
     }
 
     @JsonView(Views.Companion.Public::class)
@@ -161,6 +185,17 @@ class UserController {
         }
         userRepository.save(user)
         return ResponseEntity(UserViewModel.from(user), HttpStatus.OK)
+    }
+
+    @PutMapping("/{id}/thumbnail")
+    fun updateThumbnail(@PathVariable("id") uuid: String, @RequestParam("file") file: MultipartFile): ResponseEntity<Any> {
+        var user = userService.getAuthenticatedUser() ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        if (user.uuid != uuid) {
+            return ResponseEntity(HttpStatus.FORBIDDEN)
+        }
+        user = userService.updateThumbnail(user, BufferedInputStream(file.inputStream))
+                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        return ResponseEntity(UserViewModel.from(user), HttpStatus.ACCEPTED)
     }
 
     @DeleteMapping("/{id}")

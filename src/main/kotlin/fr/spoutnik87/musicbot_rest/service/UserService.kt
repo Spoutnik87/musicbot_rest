@@ -1,5 +1,6 @@
 package fr.spoutnik87.musicbot_rest.service
 
+import fr.spoutnik87.musicbot_rest.AppConfig
 import fr.spoutnik87.musicbot_rest.UUID
 import fr.spoutnik87.musicbot_rest.model.Role
 import fr.spoutnik87.musicbot_rest.model.User
@@ -9,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.io.BufferedInputStream
 
 @Service
 class UserService {
@@ -22,6 +24,15 @@ class UserService {
     @Autowired
     private lateinit var bCryptPasswordEncoder: BCryptPasswordEncoder
 
+    @Autowired
+    private lateinit var appConfig: AppConfig
+
+    @Autowired
+    private lateinit var fileService: FileService
+
+    @Autowired
+    private lateinit var imageService: ImageService
+
     @Transactional(readOnly = true)
     fun getAuthenticatedUser(): User? {
         val email = AuthenticationHelper.getAuthenticatedUserEmail() ?: return null
@@ -33,7 +44,7 @@ class UserService {
         if (!validEmail(email) || !validNickname(nickname) || !validFirstname(firstname) || !validLastname(lastname) || !validPassword(password)) {
             return null
         }
-        return userRepository.save(User(uuid.v4(), email, nickname, firstname, lastname, bCryptPasswordEncoder.encode(password), role))
+        return userRepository.save(User(uuid.v4(), email, nickname, firstname, lastname, bCryptPasswordEncoder.encode(password), role, 0))
     }
 
     @Transactional
@@ -60,6 +71,29 @@ class UserService {
         } else {
             null
         }
+    }
+
+    @Transactional
+    fun updateThumbnail(user: User, inputStream: BufferedInputStream): User? {
+        if (!fileService.isImage(inputStream)) {
+            return null
+        }
+        if (user.hasThumbnail()) {
+            fileService.deleteFile(appConfig.userThumbnailsPath + user.uuid)
+            user.thumbnailSize = 0
+            userRepository.save(user)
+        }
+        val resizedThumbnail = try {
+            val resized = imageService.resize(inputStream.readBytes(), 400, 400)
+            inputStream.close()
+            resized
+        } catch (e: Exception) {
+            inputStream.close()
+            return null
+        }
+        fileService.saveFile(appConfig.userThumbnailsPath + user.uuid, resizedThumbnail)
+        user.thumbnailSize = resizedThumbnail.size.toLong()
+        return userRepository.save(user)
     }
 
     /**
