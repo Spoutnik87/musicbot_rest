@@ -23,4 +23,8 @@ class ContentTypeController {
     fun getAll(): ResponseEntity<Any> {
         return ResponseEntity(contentTypeService.allInitialContentTypes.map { ContentTypeViewModel.from(it) }, HttpStatus.OK)
     }
+
+    /**
+     * TODO getById
+     */
 }

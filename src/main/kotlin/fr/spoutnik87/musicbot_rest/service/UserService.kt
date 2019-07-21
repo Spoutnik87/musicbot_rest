@@ -100,30 +100,30 @@ class UserService {
      * Return true if email is valid.
      * Max length is 255 characters.
      */
-    private fun validEmail(email: String?) = email != null && email.length <= 255
+    private fun validEmail(email: String?) = email != null && email.length <= 255 && email.length > 3
 
 
     /**
      * Return true if nickname is valid.
      * Max length is 255 characters.
      */
-    private fun validNickname(nickname: String?) = nickname != null && nickname.length <= 255
+    private fun validNickname(nickname: String?) = nickname != null && nickname.length <= 255 && nickname.length > 1
 
     /**
      * Return true if name is valid.
      * Max length is 255 characters.
      */
-    private fun validFirstname(firstname: String?) = firstname != null && firstname.length <= 255
+    private fun validFirstname(firstname: String?) = firstname != null && firstname.length <= 255 && firstname.length > 1
 
     /**
      * Return true if lastname is valid.
      * Max length is 255 characters.
      */
-    private fun validLastname(lastname: String?) = lastname != null && lastname.length <= 255
+    private fun validLastname(lastname: String?) = lastname != null && lastname.length <= 255 && lastname.length > 1
 
     /**
      * Return true if password is valid.
      * Max length is 255 characters.
      */
-    private fun validPassword(password: String?) = password != null && password.length <= 255
+    private fun validPassword(password: String?) = password != null && password.length <= 255 && password.length >= 6
 }
