@@ -22,7 +22,7 @@ class PermissionLoader : ApplicationListener<ContextRefreshedEvent> {
 
     override fun onApplicationEvent(contextRefreshedEvent: ContextRefreshedEvent) {
         PermissionEnum.values().forEach {
-            permissionRepository.save(Permission(uuid.v4(), it.value))
+            permissionRepository.findByValue(it.value) ?: permissionRepository.save(Permission(uuid.v4(), it.value))
         }
     }
 }

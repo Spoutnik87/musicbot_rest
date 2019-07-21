@@ -22,7 +22,7 @@ class RoleLoader : ApplicationListener<ContextRefreshedEvent> {
 
     override fun onApplicationEvent(contextRefreshedEvent: ContextRefreshedEvent) {
         RoleEnum.values().forEach {
-            roleRepository.save(Role(uuid.v4(), it.value, it.lvl))
+            roleRepository.findByName(it.value) ?: roleRepository.save(Role(uuid.v4(), it.value, it.lvl))
         }
     }
 }

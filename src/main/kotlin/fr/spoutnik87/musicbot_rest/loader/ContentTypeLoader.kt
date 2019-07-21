@@ -22,7 +22,7 @@ class ContentTypeLoader : ApplicationListener<ContextRefreshedEvent> {
 
     override fun onApplicationEvent(contextRefreshedEvent: ContextRefreshedEvent) {
         ContentTypeEnum.values().forEach {
-            this.contentTypeRepository.save(ContentType(uuid.v4(), it.value))
+            this.contentTypeRepository.findByValue(it.value) ?: this.contentTypeRepository.save(ContentType(uuid.v4(), it.value))
         }
     }
 }

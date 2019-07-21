@@ -8,7 +8,7 @@ import javax.persistence.*
 data class MimeType(
         @Column(nullable = false, unique = true)
         var uuid: String,
-        @Column(nullable = false)
+        @Column(nullable = false, unique = true)
         var value: String
 ): AuditModel(), Serializable {
 
