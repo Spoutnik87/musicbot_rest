@@ -112,8 +112,9 @@ class ServerController {
     @GetMapping(value = ["/list/{userId}", "/list"])
     fun getByUserId(@PathVariable("userId", required = false) userUuid: String?): ResponseEntity<Any> {
         val authenticatedUser = userService.getAuthenticatedUser() ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        // TODO To rafacto
         if (authenticatedUser.uuid == userUuid || userUuid == null) {
-            return ResponseEntity(authenticatedUser.ownedServerSet.map { ServerViewModel.from(it) }, HttpStatus.OK)
+            return ResponseEntity(authenticatedUser.serverList.map { ServerViewModel.from(it) }, HttpStatus.OK)
         }
         if (authenticatedUser.role.name != RoleEnum.ADMIN.value) {
             return ResponseEntity(HttpStatus.FORBIDDEN)
