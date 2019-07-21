@@ -37,7 +37,7 @@ class CategoryService {
         val uuid = uuid.v4()
         val thumbnail = imageService.generateRandomImage(uuid)
         fileService.saveFile(appConfig.categoryThumbnailsPath + uuid, thumbnail)
-        return categoryRepository.save(Category(uuid, name, 0, author, server))
+        return categoryRepository.save(Category(uuid, name, thumbnail.size.toLong(), author, server))
     }
 
     @Transactional
