@@ -11,7 +11,7 @@ class UserFactory {
 
     fun create(uuid: String, email: String, nickname: String, firstname: String, lastname: String,
                password: String, role: Role = Role("userRoleToken", "USER", 2)): UserFactory {
-        user = User(uuid, email, nickname, firstname, lastname, password, role)
+        user = User(uuid, email, nickname, firstname, lastname, password, role, 0)
         return this
     }
 

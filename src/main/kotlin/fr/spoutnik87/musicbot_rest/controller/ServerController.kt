@@ -1,25 +1,25 @@
 package fr.spoutnik87.musicbot_rest.controller
 
 import com.fasterxml.jackson.annotation.JsonView
+import fr.spoutnik87.musicbot_rest.AppConfig
 import fr.spoutnik87.musicbot_rest.constant.RoleEnum
 import fr.spoutnik87.musicbot_rest.model.Views
 import fr.spoutnik87.musicbot_rest.reader.ServerCreateReader
 import fr.spoutnik87.musicbot_rest.reader.ServerLinkReader
 import fr.spoutnik87.musicbot_rest.reader.ServerUpdateReader
-import fr.spoutnik87.musicbot_rest.repository.GroupRepository
 import fr.spoutnik87.musicbot_rest.repository.ServerRepository
-import fr.spoutnik87.musicbot_rest.repository.UserGroupRepository
 import fr.spoutnik87.musicbot_rest.repository.UserRepository
-import fr.spoutnik87.musicbot_rest.service.PermissionService
-import fr.spoutnik87.musicbot_rest.service.ServerService
-import fr.spoutnik87.musicbot_rest.service.TokenService
-import fr.spoutnik87.musicbot_rest.service.UserService
+import fr.spoutnik87.musicbot_rest.service.*
 import fr.spoutnik87.musicbot_rest.viewmodel.ServerLinkTokenViewModel
 import fr.spoutnik87.musicbot_rest.viewmodel.ServerViewModel
+import org.apache.commons.io.IOUtils
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.multipart.MultipartFile
+import java.io.BufferedInputStream
 
 @RestController
 @RequestMapping("server")
@@ -32,12 +32,6 @@ class ServerController {
     private lateinit var serverRepository: ServerRepository
 
     @Autowired
-    private lateinit var groupRepository: GroupRepository
-
-    @Autowired
-    private lateinit var userGroupRepository: UserGroupRepository
-
-    @Autowired
     private lateinit var permissionService: PermissionService
 
     @Autowired
@@ -48,6 +42,12 @@ class ServerController {
 
     @Autowired
     private lateinit var serverService: ServerService
+
+    @Autowired
+    private lateinit var fileService: FileService
+
+    @Autowired
+    private lateinit var appConfig: AppConfig
 
     @JsonView(Views.Companion.Public::class)
     @GetMapping("/{id}")
@@ -122,6 +122,19 @@ class ServerController {
         return ResponseEntity(user.ownedServerSet.map { ServerViewModel.from(it) }, HttpStatus.OK)
     }
 
+    @GetMapping("/{id}/thumbnail", produces = [MediaType.IMAGE_PNG_VALUE])
+    fun getThumbnail(@PathVariable("id") uuid: String): ResponseEntity<Any> {
+        val authenticatedUser = userService.getAuthenticatedUser() ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        val server = serverRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        if (!server.hasUser(authenticatedUser)) {
+            return ResponseEntity(HttpStatus.FORBIDDEN)
+        }
+        if (!server.hasThumbnail()) {
+            return ResponseEntity(HttpStatus.BAD_REQUEST)
+        }
+        return ResponseEntity(IOUtils.toByteArray(fileService.getFile(appConfig.serverThumbnailsPath + server.uuid).toURI()), HttpStatus.OK)
+    }
+
     @JsonView(Views.Companion.Public::class)
     @PostMapping("")
     fun create(@RequestBody serverCreateReader: ServerCreateReader): ResponseEntity<Any> {
@@ -143,6 +156,18 @@ class ServerController {
             return ResponseEntity(HttpStatus.FORBIDDEN)
         }
         server = serverService.update(server, serverUpdateReader.name) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        return ResponseEntity(ServerViewModel.from(server), HttpStatus.ACCEPTED)
+    }
+
+    @PutMapping("/{id}/thumbnail")
+    fun updateThumbnail(@PathVariable("id") uuid: String, @RequestParam("file") file: MultipartFile): ResponseEntity<Any> {
+        val authenticatedUser = userService.getAuthenticatedUser() ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        var server = serverRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        if (!authenticatedUser.isOwner(server)) {
+            return ResponseEntity(HttpStatus.FORBIDDEN)
+        }
+        server = serverService.updateThumbnail(server, BufferedInputStream(file.inputStream))
+                ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         return ResponseEntity(ServerViewModel.from(server), HttpStatus.ACCEPTED)
     }
 

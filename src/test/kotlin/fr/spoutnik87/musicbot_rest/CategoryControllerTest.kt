@@ -7,6 +7,8 @@ import fr.spoutnik87.musicbot_rest.repository.ServerRepository
 import fr.spoutnik87.musicbot_rest.repository.UserRepository
 import fr.spoutnik87.musicbot_rest.security.SecurityConfiguration
 import fr.spoutnik87.musicbot_rest.service.CategoryService
+import fr.spoutnik87.musicbot_rest.service.FileService
+import fr.spoutnik87.musicbot_rest.service.ImageService
 import fr.spoutnik87.musicbot_rest.service.UserService
 import fr.spoutnik87.musicbot_rest.util.Util
 import fr.spoutnik87.musicbot_rest.util.WebSecurityTestConfig
@@ -27,6 +29,7 @@ import org.springframework.test.web.servlet.MockMvc
     CategoryController::class,
     UserService::class,
     CategoryService::class,
+    AppConfig::class,
     SpringApplicationContext::class,
     BCryptPasswordEncoder::class,
     WebSecurityTestConfig::class,
@@ -46,6 +49,12 @@ class CategoryControllerTest {
 
     @MockBean
     private lateinit var contentRepository: ContentRepository
+
+    @MockBean
+    private lateinit var fileService: FileService
+
+    @MockBean
+    private lateinit var imageService: ImageService
 
     @MockBean(name = "UUID")
     private lateinit var uuid: UUID

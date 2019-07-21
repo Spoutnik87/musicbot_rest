@@ -6,6 +6,7 @@ import fr.spoutnik87.musicbot_rest.model.Role
 import fr.spoutnik87.musicbot_rest.repository.RoleRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
 class RoleService {
@@ -28,9 +29,11 @@ class RoleService {
     val BOT
         get() = getByValue(RoleEnum.BOT)
 
+    @Transactional(readOnly = true)
     fun getByValue(value: String) = roleRepository.findByName(value)
 
     @Throws(InitialRoleNotFoundException::class)
+    @Transactional(readOnly = true)
     fun getByValue(role: RoleEnum) = roleRepository.findByName(role.value)
             ?: throw InitialRoleNotFoundException(role.value)
 }

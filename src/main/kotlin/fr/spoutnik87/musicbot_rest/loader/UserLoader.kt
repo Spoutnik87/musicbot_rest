@@ -32,6 +32,6 @@ class UserLoader : ApplicationListener<ContextRefreshedEvent> {
     private lateinit var appConfig: AppConfig
 
     override fun onApplicationEvent(contextRefreshedEvent: ContextRefreshedEvent) {
-        userRepository.save(User(uuid.v4(), appConfig.botUsername, "Bot", "Bot", "Bot", bCryptPasswordEncoder.encode(appConfig.botPassword), roleService.BOT))
+        userRepository.save(User(uuid.v4(), appConfig.botUsername, "Bot", "Bot", "Bot", bCryptPasswordEncoder.encode(appConfig.botPassword), roleService.BOT, 0))
     }
 }

@@ -10,9 +10,7 @@ import fr.spoutnik87.musicbot_rest.model.Role
 import fr.spoutnik87.musicbot_rest.model.User
 import fr.spoutnik87.musicbot_rest.repository.*
 import fr.spoutnik87.musicbot_rest.security.SecurityConfiguration
-import fr.spoutnik87.musicbot_rest.service.PermissionService
-import fr.spoutnik87.musicbot_rest.service.TokenService
-import fr.spoutnik87.musicbot_rest.service.UserService
+import fr.spoutnik87.musicbot_rest.service.*
 import fr.spoutnik87.musicbot_rest.util.ServerFactory
 import fr.spoutnik87.musicbot_rest.util.UserFactory
 import fr.spoutnik87.musicbot_rest.util.Util
@@ -38,6 +36,7 @@ import java.util.*
     UserController::class,
     UserService::class,
     PermissionService::class,
+    AppConfig::class,
     SpringApplicationContext::class,
     BCryptPasswordEncoder::class,
     WebSecurityTestConfig::class,
@@ -68,6 +67,12 @@ class UserControllerTest {
     @MockBean
     private lateinit var permissionRepository: PermissionRepository
 
+    @MockBean
+    private lateinit var fileService: FileService
+
+    @MockBean
+    private lateinit var imageService: ImageService
+
     @Autowired
     private lateinit var tokenService: TokenService
 
@@ -86,6 +91,7 @@ class UserControllerTest {
         Mockito.`when`(roleRepository.findByName(RoleEnum.USER.value))
                 .thenReturn(Role("token", "USER", 2))
         Mockito.`when`(userRepository.save(ArgumentMatchers.any(User::class.java))).then { it.getArgument(0) }
+        Mockito.`when`(imageService.generateRandomImage("token")).then { ByteArray(0) }
 
         val params = HashMap<String, Any>()
         params["email"] = "test@test.com"
@@ -114,7 +120,7 @@ class UserControllerTest {
                                 "Firstname",
                                 "Lastname",
                                 bCryptPasswordEncoder.encode("password"),
-                                Role("token", "USER", 2)))
+                                Role("token", "USER", 2), 0))
 
         val params = HashMap<String, Any>()
         params["email"] = "user@test.com"

@@ -1,10 +1,10 @@
 package fr.spoutnik87.musicbot_rest.model
 
+import org.springframework.data.annotation.CreatedDate
+import org.springframework.data.annotation.LastModifiedDate
 import org.springframework.data.jpa.domain.support.AuditingEntityListener
 import java.io.Serializable
 import javax.persistence.*
-import org.springframework.data.annotation.LastModifiedDate
-import org.springframework.data.annotation.CreatedDate
 
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener::class)
@@ -19,8 +19,8 @@ abstract class AuditModel : Serializable {
 
     @Column(nullable = false, updatable = false)
     @CreatedDate
-    private val createdAt: Long = 0
+    val createdAt: Long = 0
 
     @LastModifiedDate
-    private val updatedAt: Long = 0
+    val updatedAt: Long = 0
 }

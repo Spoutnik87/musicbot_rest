@@ -57,7 +57,7 @@ class BotController {
             return ResponseEntity(HttpStatus.BAD_REQUEST)
         }
         val content = contentRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-        if (!content.hasMedia()) {
+        if (!content.isPlayable()) {
             return ResponseEntity(HttpStatus.BAD_REQUEST)
         }
         if (!authenticatedUser.hasPlayMediaPermission(content.server)) {
@@ -66,7 +66,7 @@ class BotController {
         if (!content.server.isLinked) {
             return ResponseEntity(HttpStatus.BAD_REQUEST)
         }
-        val reader = botService.playContent(content.server.guildId!!, content.uuid, authenticatedUser.userId!!)
+        val reader = botService.playContent(content.server.guildId!!, content.uuid, authenticatedUser.userId!!, content.youtubeMetadata?.videoURL)
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         val server = serverRepository.findByGuildId(reader.guildId) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         val viewModel = botService.toBotServerViewModel(server, reader) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
@@ -81,7 +81,7 @@ class BotController {
             return ResponseEntity(HttpStatus.BAD_REQUEST)
         }
         val content = contentRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-        if (!content.hasMedia()) {
+        if (!content.isPlayable()) {
             return ResponseEntity(HttpStatus.BAD_REQUEST)
         }
         if (!authenticatedUser.hasStopMediaPermission(content.server)) {
@@ -125,7 +125,7 @@ class BotController {
             return ResponseEntity(HttpStatus.BAD_REQUEST)
         }
         val content = contentRepository.findByUuid(uuid) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-        if (!content.hasMedia()) {
+        if (!content.isPlayable()) {
             return ResponseEntity(HttpStatus.BAD_REQUEST)
         }
         if (!authenticatedUser.hasUpdatePositionMediaPermission(content.server)) {

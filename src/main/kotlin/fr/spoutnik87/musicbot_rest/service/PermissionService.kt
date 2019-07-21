@@ -6,6 +6,7 @@ import fr.spoutnik87.musicbot_rest.model.Permission
 import fr.spoutnik87.musicbot_rest.repository.PermissionRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
 class PermissionService {
@@ -56,11 +57,14 @@ class PermissionService {
         get() = getByValue(PermissionEnum.DELETE_CATEGORY)
 
     @Throws(InitialPermissionNotFoundException::class)
+    @Transactional(readOnly = true)
     fun getByValue(permission: PermissionEnum) = permissionRepository.findByValue(permission.value)
             ?: throw InitialPermissionNotFoundException(permission.value)
 
+    @Transactional(readOnly = true)
     fun getByValue(value: String) = permissionRepository.findByValue(value)
 
+    @Transactional(readOnly = true)
     fun getDefaultCreateServerPermissions(): List<Permission>? {
         return try {
             listOf(
@@ -82,6 +86,7 @@ class PermissionService {
         }
     }
 
+    @Transactional(readOnly = true)
     fun getDefaultJoinServerPermissions(): List<Permission>? {
         return try {
             listOf(

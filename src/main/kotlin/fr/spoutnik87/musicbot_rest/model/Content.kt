@@ -12,19 +12,12 @@ data class Content(
         @Column(nullable = false)
         var name: String,
         @Column(nullable = false, length = 2000)
-        var description: String
+        var description: String,
+        @Column(nullable = false)
+        var thumbnailSize: Long
 ) : AuditModel(), Serializable {
 
-    var mimeType: String? = null
-
-    var mediaSize: Long? = null
-
-    var thumbnailSize: Long? = null
-
     var duration: Long? = null
-
-    @Column(nullable = false)
-    var media: Boolean = false
 
     @ManyToOne
     @JoinColumn(name = "author_id")
@@ -56,7 +49,7 @@ data class Content(
         get() = groupList[0].server
 
     val spaceUsed
-        get() = (thumbnailSize ?: 0) + (mediaSize ?: 0)
+        get() = (thumbnailSize) + (localMetadata?.mediaSize ?: 0)
 
     val isLocalContent
         get() = contentType.value == ContentTypeEnum.LOCAL.value
@@ -64,13 +57,27 @@ data class Content(
     val isYoutubeContent
         get() = contentType.value == ContentTypeEnum.YOUTUBE.value
 
-    constructor(uuid: String, name: String, description: String, author: User, contentType: ContentType, category: Category) : this(uuid, name, description) {
+    constructor(uuid: String, name: String, description: String, thumbnailSize: Long, author: User, contentType: ContentType, category: Category) : this(uuid, name, description, thumbnailSize) {
         this.author = author
         this.contentType = contentType
         this.category = category
     }
 
-    fun hasMedia() = media
+    fun hasMedia(): Boolean {
+        val mediaSize = localMetadata?.mediaSize
+        return mediaSize != null && mediaSize > 0
+    }
 
-    fun hasThumbnail() = thumbnailSize != null
+    fun hasThumbnail() = thumbnailSize > 0
+
+    fun isPlayable(): Boolean {
+        if (isLocalContent) {
+            val mediaSize = localMetadata?.mediaSize
+            return mediaSize != null && mediaSize > 0
+        } else if (isYoutubeContent) {
+            val playable = youtubeMetadata?.playable
+            return playable != null && playable
+        }
+        return false
+    }
 }

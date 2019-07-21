@@ -30,6 +30,7 @@ import org.springframework.test.web.servlet.MockMvc
     UserService::class,
     ContentService::class,
     ContentTypeService::class,
+    MimeTypeService::class,
     AppConfig::class,
     SpringApplicationContext::class,
     BCryptPasswordEncoder::class,
@@ -56,6 +57,9 @@ class ContentControllerTest {
 
     @MockBean
     private lateinit var categoryRepository: CategoryRepository
+
+    @MockBean
+    private lateinit var mimeTypeRepository: MimeTypeRepository
 
     @MockBean
     private lateinit var serverRepository: ServerRepository
@@ -209,7 +213,9 @@ class ContentControllerTest {
         body["contentType"] = "LOCAL"
         body["name"] = "New content"
         body["description"] = "Desc"
-        Util.basicTestWithBody(mockMvc, HttpMethod.POST, "/content", HashMap(), body, HttpStatus.CREATED, "{\"id\":\"token\",\"name\":\"New content\",\"description\":\"Desc\",\"mimeType\":null,\"thumbnailSize\":0,\"mediaSize\":null,\"media\":false,\"thumbnail\":true,\"duration\":null,\"serverId\":\"serverToken\", \"contentType\":{\"id\":\"localContentTypeId\",\"value\":\"LOCAL\"},\"category\":{\"id\":\"categoryToken\",\"name\":\"Category\",\"serverId\":\"serverToken\"},\"groups\":[{\"id\":\"groupToken\",\"name\":\"Group\",\"serverId\":\"serverToken\"}]}")
+        Util.basicTestWithBody(mockMvc, HttpMethod.POST, "/content", HashMap(), body, HttpStatus.CREATED, "{\"id\":\"token\",\"createdAt\":0,\"name\":\"New content\",\"description\":\"Desc\",\"thumbnail\":false,\"thumbnailSize\":0,\"duration\":null,\"serverId\":\"serverToken\", " +
+                "\"contentType\":{\"id\":\"localContentTypeId\",\"value\":\"LOCAL\"},\"category\":{\"id\":\"categoryToken\",\"name\":\"Category\",\"serverId\":\"serverToken\"},\"groups\":[{\"id\":\"groupToken\",\"name\":\"Group\",\"serverId\":\"serverToken\"}]," +
+                "\"localMetadata\": null, \"youtubeMetadata\": null}")
         Mockito.verify(contentRepository, Mockito.atLeastOnce()).save(Mockito.any())
     }
 

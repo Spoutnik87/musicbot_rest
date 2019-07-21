@@ -29,4 +29,6 @@ data class Category(
 
     @OneToMany(mappedBy = "category", cascade = [CascadeType.ALL])
     val contentSet: MutableSet<Content> = HashSet()
+
+    fun hasThumbnail() = thumbnailSize > 0
 }

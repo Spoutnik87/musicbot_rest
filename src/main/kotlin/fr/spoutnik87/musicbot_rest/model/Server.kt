@@ -59,4 +59,6 @@ data class Server(
     fun hasGroup(group: Group) = groupSet.any { it.id == group.id }
 
     fun hasContent(content: Content) = contentList.any { it.id == content.id }
+
+    fun hasThumbnail() = thumbnailSize > 0
 }

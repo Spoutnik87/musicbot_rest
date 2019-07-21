@@ -1,5 +1,6 @@
 package fr.spoutnik87.musicbot_rest.service
 
+import fr.spoutnik87.musicbot_rest.AppConfig
 import fr.spoutnik87.musicbot_rest.UUID
 import fr.spoutnik87.musicbot_rest.model.*
 import fr.spoutnik87.musicbot_rest.repository.GroupRepository
@@ -8,6 +9,7 @@ import fr.spoutnik87.musicbot_rest.repository.UserGroupRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.io.BufferedInputStream
 
 @Service
 class ServerService {
@@ -24,31 +26,40 @@ class ServerService {
     @Autowired
     private lateinit var uuid: UUID
 
+    @Autowired
+    private lateinit var groupService: GroupService
+
+    @Autowired
+    private lateinit var imageService: ImageService
+
+    @Autowired
+    private lateinit var appConfig: AppConfig
+
+    @Autowired
+    private lateinit var fileService: FileService
+
     @Transactional
     fun create(name: String, owner: User, permissions: List<Permission>): Server? {
         if (!validName(name)) {
             return null
         }
-        var group = Group(uuid.v4(),"Default", 0)
+        val serverUuid = uuid.v4()
+        val groupUuid = uuid.v4()
+        val serverThumbnail = imageService.generateRandomImage(serverUuid)
+        val groupThumbnail = imageService.generateRandomImage(groupUuid)
+        var server = Server(serverUuid, name, serverThumbnail.size.toLong(), owner, owner)
+        var group = Group(groupUuid, "Default", groupThumbnail.size.toLong())
         group.author = owner
-        /**
-         * TODO Generate thumbnail
-         */
-        var server = Server(uuid.v4(), name, 0, owner, owner)
+        group.permissionSet = permissions.toMutableSet()
         server.defaultGroup = group
-        /**
-         * Persist group and server
-         */
         server = serverRepository.save(server)
         group = server.defaultGroup
-        /**
-         * Link group to server and persist
-         */
         group.server = server
-        group.permissionSet = permissions.toMutableSet()
-        groupRepository.save(group)
         var userGroup = UserGroup(owner, group)
         userGroupRepository.save(userGroup)
+        groupRepository.save(group)
+        fileService.saveFile(appConfig.serverThumbnailsPath + server.uuid, serverThumbnail)
+        fileService.saveFile(appConfig.groupThumbnailsPath + group.uuid, groupThumbnail)
         return server
     }
 
@@ -64,6 +75,29 @@ class ServerService {
         } else {
             null
         }
+    }
+
+    @Transactional
+    fun updateThumbnail(server: Server, inputStream: BufferedInputStream): Server? {
+        if (!fileService.isImage(inputStream)) {
+            return null
+        }
+        if (server.hasThumbnail()) {
+            fileService.deleteFile(appConfig.categoryThumbnailsPath + server.uuid)
+            server.thumbnailSize = 0
+            serverRepository.save(server)
+        }
+        val resizedThumbnail = try {
+            val resized = imageService.resize(inputStream.readBytes(), 400, 400)
+            inputStream.close()
+            resized
+        } catch (e: Exception) {
+            inputStream.close()
+            return null
+        }
+        fileService.saveFile(appConfig.serverThumbnailsPath + server.uuid, resizedThumbnail)
+        server.thumbnailSize = resizedThumbnail.size.toLong()
+        return serverRepository.save(server)
     }
 
     /**

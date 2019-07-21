@@ -56,4 +56,6 @@ data class Group(
     fun hasPermission(permission: Permission) = permissionSet.any { it.id == permission.id }
 
     fun hasPermission(permissionEnum: PermissionEnum) = permissionSet.any { it.value == permissionEnum.value }
+
+    fun hasThumbnail() = thumbnailSize > 0
 }

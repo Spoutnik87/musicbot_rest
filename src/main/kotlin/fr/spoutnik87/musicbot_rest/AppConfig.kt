@@ -30,6 +30,15 @@ class AppConfig {
     val contentThumbnailsPath
         get() = "$applicationPath/contents/thumbnails/"
 
+    val userThumbnailsPath
+        get() = "$applicationPath/users/thumbnails/"
+
     val serverThumbnailsPath
         get() = "$applicationPath/servers/thumbnails/"
+
+    val groupThumbnailsPath
+        get() = "$applicationPath/groups/thumbnails/"
+
+    val categoryThumbnailsPath
+        get() = "$applicationPath/categories/thumbnails/"
 }

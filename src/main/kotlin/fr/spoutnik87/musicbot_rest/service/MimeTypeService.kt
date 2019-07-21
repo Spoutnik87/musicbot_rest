@@ -6,6 +6,7 @@ import fr.spoutnik87.musicbot_rest.model.MimeType
 import fr.spoutnik87.musicbot_rest.repository.MimeTypeRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
 class MimeTypeService {
@@ -29,8 +30,10 @@ class MimeTypeService {
         get() = findByValue(MimeTypeEnum.AUDIO_MPEG)
 
     @Throws(InitialMimeTypeNotFoundException::class)
+    @Transactional(readOnly = true)
     fun findByValue(mimeType: MimeTypeEnum) = mimeTypeRepository.findByValue(mimeType.value)
             ?: throw InitialMimeTypeNotFoundException(mimeType.value)
 
+    @Transactional(readOnly = true)
     fun findByValue(value: String) = mimeTypeRepository.findByValue(value)
 }
