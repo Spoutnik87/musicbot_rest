@@ -22,7 +22,7 @@ class MimeTypeLoader : ApplicationListener<ContextRefreshedEvent> {
 
     override fun onApplicationEvent(contextRefreshedEvent: ContextRefreshedEvent) {
         MimeTypeEnum.values().forEach {
-            mimeTypeRepository.save(MimeType(uuid.v4(), it.value))
+            mimeTypeRepository.findByValue(it.value) ?: mimeTypeRepository.save(MimeType(uuid.v4(), it.value))
         }
     }
 }
