@@ -4,5 +4,7 @@ data class PlayContentWriter(
         val uid: String,
         val id: String,
         val initiator: String,
-        val link: String? = null
+        val link: String? = null,
+        val name: String,
+        val duration: Long?
 )

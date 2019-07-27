@@ -38,9 +38,9 @@ class BotService {
 
     fun toBotContentViewModel(reader: BotContentReader?): BotContentViewModel? {
         reader ?: return null
-        val content = contentRepository.findByUuid(reader.id) ?: return null
-        val user = userRepository.findByUserId(reader.initiator) ?: return null
-        return BotContentViewModel.from(reader, content, user)
+        val content = reader.id?.let { contentRepository.findByUuid(it) }
+        val user = reader.initiator?.let { userRepository.findByUserId(it) }
+        return BotContentViewModel.from(reader, content, user, reader.link)
     }
 
     /**
@@ -59,9 +59,9 @@ class BotService {
      * @param contentId Content model UUID
      * @param userId Discord user id
      */
-    fun playContent(guildId: String, contentId: String, userId: String, link: String? = null): BotServerReader? {
+    fun playContent(guildId: String, contentId: String, userId: String, link: String? = null, name: String, duration: Long?): BotServerReader? {
         return try {
-            val body = HttpEntity(PlayContentWriter(uuid.v4(), contentId, userId, link))
+            val body = HttpEntity(PlayContentWriter(uuid.v4(), contentId, userId, link, name, duration))
             RestTemplate().postForObject(appConfig.botAddress + "/server/play/$guildId", body, BotServerReader::class.java)
         } catch (e: Exception) {
             null

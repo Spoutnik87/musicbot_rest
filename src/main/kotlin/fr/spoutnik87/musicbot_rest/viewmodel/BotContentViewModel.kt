@@ -5,21 +5,20 @@ import fr.spoutnik87.musicbot_rest.model.Content
 import fr.spoutnik87.musicbot_rest.model.User
 import fr.spoutnik87.musicbot_rest.model.Views
 import fr.spoutnik87.musicbot_rest.reader.BotContentReader
-import java.io.Serializable
 
 data class BotContentViewModel(
         @JsonView(Views.Companion.Public::class)
         val uid: String,
         @JsonView(Views.Companion.Public::class)
-        val id: String,
+        val id: String?,
         @JsonView(Views.Companion.Public::class)
-        val name: String,
+        val name: String?,
         @JsonView(Views.Companion.Public::class)
-        val initiator: BotContentInitiatorViewModel,
+        val link: String?,
+        @JsonView(Views.Companion.Public::class)
+        val initiator: BotContentInitiatorViewModel?,
         @JsonView(Views.Companion.Public::class)
         val duration: Long,
-        @JsonView(Views.Companion.Public::class)
-        val startTime: Long?,
         @JsonView(Views.Companion.Public::class)
         val position: Long?,
         @JsonView(Views.Companion.Public::class)
@@ -27,10 +26,9 @@ data class BotContentViewModel(
 ) : ViewModel {
 
     companion object {
-        fun from(reader: BotContentReader?, content: Content, initiator: User): BotContentViewModel? {
+        fun from(reader: BotContentReader?, content: Content?, initiator: User?, link: String? = null): BotContentViewModel? {
             return if (reader != null) {
-                BotContentViewModel(reader.uid, reader.id, content.name, BotContentInitiatorViewModel(initiator.uuid, initiator.nickname), content.duration
-                        ?: return null, reader.startTime, reader.position, reader.paused)
+                BotContentViewModel(reader.uid, reader.id, content?.name ?: reader.name ?: return null, link, initiator?.let { BotContentInitiatorViewModel(initiator.uuid, initiator.nickname) }, content?.duration ?: reader.duration ?: return null, reader.position, reader.paused)
             } else {
                 null
             }
