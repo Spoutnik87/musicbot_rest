@@ -66,7 +66,7 @@ class BotController {
         if (!content.server.isLinked) {
             return ResponseEntity(HttpStatus.BAD_REQUEST)
         }
-        val reader = botService.playContent(content.server.guildId!!, content.uuid, authenticatedUser.userId!!, content.youtubeMetadata?.videoURL)
+        val reader = botService.playContent(content.server.guildId!!, content.uuid, authenticatedUser.userId!!, content.youtubeMetadata?.videoURL, content.name, content.duration)
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         val server = serverRepository.findByGuildId(reader.guildId) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         val viewModel = botService.toBotServerViewModel(server, reader) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
