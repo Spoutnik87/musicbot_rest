@@ -5,6 +5,7 @@ import fr.spoutnik87.musicbot_rest.UUID
 import fr.spoutnik87.musicbot_rest.model.*
 import fr.spoutnik87.musicbot_rest.repository.ContentGroupRepository
 import fr.spoutnik87.musicbot_rest.repository.ContentRepository
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -40,6 +41,8 @@ class ContentService {
 
     @Autowired
     private lateinit var mimeTypeService: MimeTypeService
+
+    private val logger = LoggerFactory.getLogger(ContentService::class.java)
 
     val allContents: List<Content>
         get() = contentRepository.findAll()
@@ -120,6 +123,7 @@ class ContentService {
         if (youtubeMetadata?.videoId == null) {
             return null
         }
+        logger.info("Synchronizing YouTube metadata for content with id : ${content.id}")
         val metadata = youtubeService.loadMetadata(youtubeMetadata.videoId)
         if (metadata != null) {
             content.duration = metadata.duration

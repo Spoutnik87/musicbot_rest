@@ -1,6 +1,7 @@
 package fr.spoutnik87.musicbot_rest.controller
 
 import com.fasterxml.jackson.annotation.JsonView
+import fr.spoutnik87.musicbot_rest.constant.RoleEnum
 import fr.spoutnik87.musicbot_rest.model.Views
 import fr.spoutnik87.musicbot_rest.reader.BotPositionReader
 import fr.spoutnik87.musicbot_rest.reader.BotStopContentReader
@@ -44,8 +45,7 @@ class BotController {
         if (!server.hasUser(authenticatedUser)) {
             return ResponseEntity(HttpStatus.BAD_REQUEST)
         }
-        val reader = botService.getServerStatus(server.guildId!!) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
-        val viewModel = botService.toBotServerViewModel(server, reader) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        val viewModel = botService.getCachedServerStatus(server.guildId!!) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         return ResponseEntity(viewModel, HttpStatus.OK)
     }
 
@@ -179,5 +179,18 @@ class BotController {
                 ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         val viewModel = botService.toBotServerViewModel(server, reader) ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
         return ResponseEntity(viewModel, HttpStatus.OK)
+    }
+
+    @JsonView(Views.Companion.Private::class)
+    @PostMapping("/state/{guildId}")
+    fun updateStatus(@PathVariable("guildId") guildId: String): ResponseEntity<Any> {
+        val authenticatedUser = userService.getAuthenticatedUser() ?: return ResponseEntity(HttpStatus.BAD_REQUEST)
+        if (authenticatedUser.role.name != RoleEnum.BOT.value) {
+            return ResponseEntity(HttpStatus.FORBIDDEN)
+        }
+        botService.getServerStatus(guildId)?.let{ status -> serverRepository.findByGuildId(guildId)?.let { server -> botService.toBotServerViewModel(server, status) } }?.let {
+            botService.updateServerStatus(guildId, it)
+        }
+        return ResponseEntity(HttpStatus.ACCEPTED)
     }
 }

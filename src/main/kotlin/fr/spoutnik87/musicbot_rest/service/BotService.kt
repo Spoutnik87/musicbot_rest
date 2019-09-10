@@ -1,11 +1,14 @@
 package fr.spoutnik87.musicbot_rest.service
 
+import com.github.benmanes.caffeine.cache.Caffeine
+import com.github.benmanes.caffeine.cache.LoadingCache
 import fr.spoutnik87.musicbot_rest.AppConfig
 import fr.spoutnik87.musicbot_rest.UUID
 import fr.spoutnik87.musicbot_rest.model.Server
 import fr.spoutnik87.musicbot_rest.reader.BotContentReader
 import fr.spoutnik87.musicbot_rest.reader.BotServerReader
 import fr.spoutnik87.musicbot_rest.repository.ContentRepository
+import fr.spoutnik87.musicbot_rest.repository.ServerRepository
 import fr.spoutnik87.musicbot_rest.repository.UserRepository
 import fr.spoutnik87.musicbot_rest.viewmodel.BotContentViewModel
 import fr.spoutnik87.musicbot_rest.viewmodel.BotServerViewModel
@@ -14,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpEntity
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
+import java.util.concurrent.TimeUnit
 
 @Service
 class BotService {
@@ -29,6 +33,38 @@ class BotService {
 
     @Autowired
     private lateinit var uuid: UUID
+
+    @Autowired
+    private lateinit var webSocketPlayerService: WebSocketPlayerService
+
+    @Autowired
+    private lateinit var serverRepository: ServerRepository
+
+    private var states: LoadingCache<String, BotServerViewModel>? = null
+
+    init {
+        states = Caffeine.newBuilder().maximumSize(10000)
+                .expireAfterWrite(15, TimeUnit.MINUTES)
+                .refreshAfterWrite(10, TimeUnit.MINUTES)
+                .build { getServerStatus(it).let { res -> serverRepository.findByGuildId(it)?.let { server -> res?.let { state -> toBotServerViewModel(server, state) } } } }
+    }
+
+    private fun checkUpdateByGuildId(guildId: String, oldState: BotServerReader?, newState: BotServerReader?) {
+        if (oldState != newState) {
+
+        }
+    }
+
+    /**
+     * @param id Server's UUID
+     */
+    private fun checkUpdate(id: String, oldState: BotServerReader?, newState: BotServerReader) {
+        if (oldState != newState) {
+            serverRepository.findByGuildId(newState.guildId)?.let { toBotServerViewModel(it, newState) }?.let {
+                webSocketPlayerService.sendMessage(id, it)
+            }
+        }
+    }
 
     fun toBotServerViewModel(server: Server, reader: BotServerReader): BotServerViewModel? {
         return BotServerViewModel(server.uuid, reader.queue.trackList.map {
@@ -52,6 +88,14 @@ class BotService {
         } catch (e: Exception) {
             null
         }
+    }
+
+    fun getCachedServerStatus(guildId: String): BotServerViewModel? {
+        return states?.get(guildId)
+    }
+
+    fun updateServerStatus(guildId: String, botServerViewModel: BotServerViewModel) {
+        states?.put(guildId, botServerViewModel)
     }
 
     /**
